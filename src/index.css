@@ -1,0 +1,49 @@
+@font-face {
+  font-family: 'Pokemon GB';
+  src: url('/fonts/Pokemon_GB.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Pokemon GB", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Pokemon GB", ui-monospace, SFMono-Regular, monospace;
+  --font-retro: "Pokemon GB", cursive;
+}
+
+@layer base {
+  :root {
+    --background: #09090b;
+    --foreground: #fafafa;
+    --primary: #ef4444; /* Vibrant Red */
+    --primary-foreground: #ffffff;
+    --card: #18181b;
+    --card-foreground: #fafafa;
+    --border: #27272a;
+    --input: #27272a;
+    --accent: #27272a;
+    --muted: #27272a;
+    --muted-foreground: #a1a1aa;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+  }
+
+  /* Glassmorphism utility */
+  .glass {
+    background: rgba(24, 24, 27, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-red {
+    background: rgba(239, 68, 68, 0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  }
+}
