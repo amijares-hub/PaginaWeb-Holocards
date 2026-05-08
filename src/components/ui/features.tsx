@@ -73,15 +73,14 @@ export function Features({
 
   return (
     <section className="py-24 px-6 overflow-hidden bg-black/40 border-y border-white/5">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-20">
-          <span className="text-red-500 font-black text-xs uppercase tracking-[0.4em]">
-            {sectionSubtitle}
-          </span>
-          <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white mt-4 mb-6">
-            {sectionTitle}
-          </h2>
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="mb-12 sm:mb-20 text-center sm:text-left">
+          <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-6">
+            <div>
+              <p className="text-red-500 font-mono font-black text-[10px] uppercase tracking-[0.4em] mb-2">{sectionSubtitle}</p>
+              <h2 className="text-3xl sm:text-5xl md:text-7xl font-black italic tracking-tighter uppercase leading-[0.9]">{sectionTitle}</h2>
+            </div>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-2 lg:gap-20 gap-12 items-center">
@@ -100,13 +99,13 @@ export function Features({
                   ref={(el) => {
                     featureRefs.current[index] = el;
                   }}
-                  className="relative cursor-pointer flex-shrink-0"
+                  className="relative cursor-pointer flex-shrink-0 w-full md:w-auto"
                   onClick={() => handleFeatureClick(index)}
                 >
                   {/* Feature Content */}
                   <div
                     className={cn(
-                      "flex lg:flex-row flex-col items-start gap-6 p-6 transition-all duration-500 rounded-3xl border",
+                      "flex lg:flex-row flex-col items-center lg:items-start gap-4 sm:gap-6 p-4 sm:p-6 transition-all duration-500 rounded-3xl border text-center lg:text-left",
                       isActive
                         ? "bg-zinc-900/80 border-white/10 shadow-2xl shadow-red-900/10"
                         : "bg-transparent border-transparent grayscale opacity-40 hover:opacity-70"
@@ -125,10 +124,10 @@ export function Features({
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-1 sm:space-y-2">
                       <h3
                         className={cn(
-                          "text-xl font-black uppercase italic tracking-tight transition-colors duration-500",
+                          "text-lg sm:text-xl font-black uppercase italic tracking-tight transition-colors duration-500",
                           isActive ? "text-white" : "text-zinc-500"
                         )}
                       >
@@ -136,7 +135,7 @@ export function Features({
                       </h3>
                       <p
                         className={cn(
-                          "text-sm font-medium transition-colors duration-500 line-clamp-2",
+                          "text-xs sm:text-sm font-medium transition-colors duration-500 line-clamp-2",
                           isActive ? "text-zinc-400" : "text-zinc-600"
                         )}
                       >
@@ -190,7 +189,7 @@ export function Features({
                     <span className="text-red-500 font-mono font-black text-[10px] tracking-[0.4em] uppercase mb-2 block">
                       Featured_Asset
                     </span>
-                    <h4 className="text-3xl font-black italic uppercase text-white tracking-tighter">
+                    <h4 className="text-xl sm:text-3xl font-black italic uppercase text-white tracking-tighter">
                       {features[currentFeature].title}
                     </h4>
                   </motion.div>

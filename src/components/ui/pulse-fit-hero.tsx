@@ -201,22 +201,22 @@ export function PulseFitHero({
           transition={{ duration: 1, delay: 0.8 }}
           className="relative z-10 w-full overflow-hidden"
           style={{
-            paddingTop: "60px",
-            paddingBottom: "60px",
+            paddingTop: "40px",
+            paddingBottom: "40px",
           }}
         >
-          {/* Gradient Overlays */}
+          {/* Gradient Overlays - reduced width on mobile */}
           <div
             className="absolute left-0 top-0 bottom-0 z-10 pointer-events-none"
             style={{
-              width: "150px",
+              width: "clamp(50px, 10vw, 150px)",
               background: "linear-gradient(90deg, #09090b 0%, rgba(9, 9, 11, 0) 100%)",
             }}
           />
           <div
             className="absolute right-0 top-0 bottom-0 z-10 pointer-events-none"
             style={{
-              width: "150px",
+              width: "clamp(50px, 10vw, 150px)",
               background: "linear-gradient(270deg, #09090b 0%, rgba(9, 9, 11, 0) 100%)",
             }}
           />
@@ -231,27 +231,27 @@ export function PulseFitHero({
               x: {
                 repeat: Infinity,
                 repeatType: "loop",
-                duration: programs.length * 3,
+                duration: programs.length * 5,
                 ease: "linear",
               },
             }}
             style={{
-              gap: "24px",
-              paddingLeft: "24px",
+              gap: "16px",
+              paddingLeft: "16px",
             }}
           >
             {/* Duplicate programs for seamless loop */}
             {[...programs, ...programs].map((program, index) => (
               <motion.div
                 key={index}
-                whileHover={{ scale: 1.05, y: -10 }}
+                whileHover={{ scale: 1.02, y: -5 }}
                 transition={{ duration: 0.3 }}
                 onClick={program.onClick}
                 className="flex-shrink-0 cursor-pointer relative overflow-hidden group"
                 style={{
-                  width: "356px",
-                  height: "480px",
-                  borderRadius: "32px",
+                  width: "clamp(280px, 80vw, 356px)",
+                  height: "clamp(380px, 60vh, 480px)",
+                  borderRadius: "24px",
                   boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
                   border: "1px solid rgba(255, 255, 255, 0.05)",
                 }}

@@ -9,9 +9,11 @@ import {
   Bell,
   Search,
   User,
-  CreditCard
+  CreditCard,
+  Menu,
+  X
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
 
@@ -24,6 +26,7 @@ const navItems = [
 
 export default function AdminLayout() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
   const location = useLocation();
@@ -84,20 +87,29 @@ export default function AdminLayout() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <header className="sticky top-0 h-16 border-b border-[#27272a] bg-[#09090b]/80 backdrop-blur-xl flex items-center justify-between px-8 z-50">
-          <div className="flex items-center gap-6">
+        <header className="sticky top-0 h-16 border-b border-[#27272a] bg-[#09090b]/80 backdrop-blur-xl flex items-center justify-between px-4 sm:px-8 z-50">
+          <div className="flex items-center gap-4 sm:gap-6">
+            {/* Mobile Menu Toggle */}
+            <button 
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 lg:hidden text-zinc-400 hover:text-white"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+
             <Link 
               to="/" 
-              className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-bold uppercase tracking-widest transition-all group"
+              className="hidden xs:flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-bold uppercase tracking-widest transition-all group"
             >
               <LogOut className="w-3.5 h-3.5 rotate-180 group-hover:-translate-x-1 transition-transform" />
-              <span>Sair para Home</span>
+              <span className="hidden sm:inline">Sair para Home</span>
             </Link>
-            <div className="relative w-72">
+            
+            <div className="relative w-40 sm:w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
               <input 
                 type="text" 
-                placeholder="Search assets..."
+                placeholder="Search..."
                 className="w-full bg-zinc-900/50 border border-[#27272a] rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-red-500 transition-all font-mono"
               />
             </div>
@@ -190,10 +202,76 @@ export default function AdminLayout() {
 
         {/* Dynamic Page Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar relative">
-          <div className="p-8">
+          <div className="p-4 sm:p-8">
             <Outlet />
           </div>
         </div>
+
+        {/* Mobile Sidebar Overlay */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <>
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] lg:hidden"
+              />
+              <motion.aside 
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="fixed top-0 left-0 bottom-0 w-72 bg-[#09090b] border-r border-[#27272a] z-[70] lg:hidden flex flex-col"
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-red-600 rounded flex items-center justify-center font-bold">S</div>
+                      <span className="text-xl font-bold tracking-tight text-white">SASORI<span className="text-red-500">LABS</span></span>
+                    </div>
+                    <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-zinc-400 hover:text-white">
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                  
+                  <nav className="space-y-1">
+                    {navItems.map((item) => (
+                      <Link 
+                        key={item.path} 
+                        to={item.path}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={cn(
+                          "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group",
+                          location.pathname === item.path 
+                            ? "bg-red-600/10 text-red-500" 
+                            : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+                        )}
+                      >
+                        <item.icon className={cn(
+                          "w-5 h-5",
+                          location.pathname === item.path ? "text-red-500" : "text-zinc-500 group-hover:text-zinc-300"
+                        )} />
+                        <span className="font-medium">{item.label}</span>
+                      </Link>
+                    ))}
+                  </nav>
+                </div>
+
+                <div className="mt-auto p-6 border-t border-[#27272a]">
+                  <button 
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 px-4 py-3 w-full text-zinc-400 hover:text-white transition-colors"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span className="font-medium">Logout</span>
+                  </button>
+                </div>
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );

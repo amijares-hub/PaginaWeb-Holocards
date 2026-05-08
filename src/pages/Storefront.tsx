@@ -352,18 +352,7 @@ export default function Storefront() {
         </div>
       </section>
 
-      {/* Floating Admin Quick Access */}
-      <div className="fixed bottom-8 right-8 z-50">
-        <Link 
-          to="/admin"
-          className="group flex items-center gap-3 bg-white text-black pl-6 pr-3 py-3 rounded-full font-black italic uppercase text-[10px] tracking-[0.2em] shadow-2xl hover:bg-red-600 hover:text-white transition-all duration-500 scale-90 hover:scale-100"
-        >
-          System_Access
-          <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center group-hover:bg-white transition-colors border border-white/10">
-            <LayoutDashboard className="w-5 h-5 text-white group-hover:text-red-600" />
-          </div>
-        </Link>
-      </div>
+
 
       {/* Protocol Features Carousel */}
       <TrustGrid startIndex={6} />

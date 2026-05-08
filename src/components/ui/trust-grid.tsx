@@ -70,11 +70,11 @@ export function TrustGrid({ startIndex, className }: TrustGridProps) {
   return (
     <section className={cn("py-12 bg-black/20 border-y border-white/5", className)}>
       <div className="max-w-[100vw] mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 divide-x divide-white/5 border-white/5">
+        <div className="grid grid-cols-1 md:grid-cols-3 md:divide-x divide-y md:divide-y-0 divide-white/5 border-white/5">
           {items.map((item, index) => (
             <div 
               key={index} 
-              className="group p-12 bg-[#09090b] transition-all hover:bg-zinc-900/50 flex flex-col items-center text-center"
+              className="group p-8 sm:p-12 bg-[#09090b] transition-all hover:bg-zinc-900/50 flex flex-col items-center text-center"
             >
               <div className="space-y-6 max-w-sm">
                 <div className="flex flex-col items-center gap-4">

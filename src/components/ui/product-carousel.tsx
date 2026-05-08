@@ -57,20 +57,20 @@ export function ProductCarousel({ cards }: ProductCarouselProps) {
 
   return (
     <div className="relative w-full overflow-hidden py-12">
-      {/* Gradient Overlays */}
-      <div className="absolute left-0 top-0 bottom-0 z-10 w-32 bg-gradient-to-r from-[#09090b] to-transparent pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 z-10 w-32 bg-gradient-to-l from-[#09090b] to-transparent pointer-events-none" />
+      {/* Gradient Overlays - responsive width */}
+      <div className="absolute left-0 top-0 bottom-0 z-10 w-16 sm:w-32 bg-gradient-to-r from-[#09090b] to-transparent pointer-events-none" />
+      <div className="absolute right-0 top-0 bottom-0 z-10 w-16 sm:w-32 bg-gradient-to-l from-[#09090b] to-transparent pointer-events-none" />
 
       <motion.div
-        className="flex gap-6 whitespace-nowrap"
+        className="flex gap-4 sm:gap-6 whitespace-nowrap"
         animate={{
-          x: [0, -((cards.length * 324) + (cards.length * 24))],
+          x: [0, -((cards.length * (window.innerWidth < 640 ? 240 : 320)))], // Adjusted for responsive width
         }}
         transition={{
           x: {
             repeat: Infinity,
             repeatType: "loop",
-            duration: cards.length * 4,
+            duration: cards.length * 5,
             ease: "linear",
           },
         }}
@@ -78,7 +78,7 @@ export function ProductCarousel({ cards }: ProductCarouselProps) {
         {displayCards.map((card, index) => (
           <div
             key={`${card.id}-${index}`}
-            className="w-80 group flex-shrink-0"
+            className="w-[200px] sm:w-[260px] md:w-80 group flex-shrink-0"
           >
             <div className="relative aspect-[3/4] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900/50">
               <img
@@ -106,10 +106,10 @@ export function ProductCarousel({ cards }: ProductCarouselProps) {
                 <span className="text-red-500 font-mono font-black italic text-[9px] uppercase tracking-[0.3em] mb-1 block">
                   {card.category}
                 </span>
-                <h3 className="text-xl font-black italic uppercase tracking-tighter text-white mb-1 truncate">
+                <h3 className="text-base sm:text-xl font-black italic uppercase tracking-tighter text-white mb-0.5 sm:mb-1 truncate">
                   {card.name}
                 </h3>
-                <p className="text-sm font-bold text-white/60">
+                <p className="text-[10px] sm:text-sm font-bold text-white/60">
                   {formatCurrency(card.price)}
                 </p>
               </div>

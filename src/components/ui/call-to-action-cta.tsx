@@ -117,13 +117,13 @@ const CtaCard = React.forwardRef<HTMLDivElement, CtaCardProps>(
             </motion.div>
             
             <motion.h2
-              className="text-4xl font-black italic tracking-tighter md:text-5xl lg:text-7xl uppercase text-white leading-[0.9]"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black italic tracking-tighter uppercase text-white leading-[0.9]"
               variants={itemVariants}
             >
               {title}
             </motion.h2>
             <motion.p
-              className="mt-8 max-w-xl text-lg md:text-xl font-medium text-zinc-400 uppercase tracking-wide leading-relaxed"
+              className="mt-6 sm:mt-8 max-w-xl text-base sm:text-lg md:text-xl font-medium text-zinc-400 uppercase tracking-wide leading-relaxed"
               variants={itemVariants}
             >
               {description}

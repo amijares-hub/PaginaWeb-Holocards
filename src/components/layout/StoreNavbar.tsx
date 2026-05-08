@@ -13,6 +13,41 @@ import { useStore } from '../../lib/StoreContext';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { StoreDrawer } from './StoreDrawer';
+import { motion as m } from 'framer-motion';
+
+const PokeballIcon = ({ isOpen, size = 8 }: { isOpen: boolean; size?: number }) => (
+  <m.div 
+    animate={{ 
+      rotate: isOpen ? 180 : 0,
+      scale: isOpen ? 1.1 : 1
+    }}
+    whileHover={{ scale: 1.1 }}
+    whileTap={{ scale: 0.9 }}
+    className={cn(
+      "relative flex items-center justify-center cursor-pointer",
+      size === 8 ? "w-8 h-8" : "w-14 h-14"
+    )}
+  >
+    <div className={cn(
+      "absolute inset-0 rounded-full border-2 border-black overflow-hidden bg-white shadow-2xl",
+      isOpen ? "shadow-red-600/40" : "shadow-black/40"
+    )}>
+      <div className="absolute top-0 left-0 right-0 h-1/2 bg-red-600 border-b-[2px] border-black" />
+      <div className="absolute top-1/2 left-0 right-0 h-1/2 bg-white" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1/3 h-1/3 bg-white border-2 border-black rounded-full z-10 flex items-center justify-center">
+        <div className={cn(
+          "w-1/2 h-1/2 rounded-full transition-colors duration-300",
+          isOpen ? "bg-red-500 animate-pulse" : "bg-zinc-200"
+        )} />
+      </div>
+    </div>
+    
+    {/* Pulse Effect when closed */}
+    {!isOpen && (
+      <div className="absolute inset-0 rounded-full bg-red-600/20 animate-ping -z-10" />
+    )}
+  </m.div>
+);
 
 export const StoreNavbar = () => {
   const { cart, favorites } = useStore();
@@ -38,12 +73,16 @@ export const StoreNavbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-[100]">
       {/* Upper Navbar */}
-      <div className="bg-black/80 backdrop-blur-xl border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-8">
+      {/* Upper Navbar */}
+      <div className={cn(
+        "transition-all duration-300",
+        isMenuOpen ? "bg-black" : "bg-black/80 backdrop-blur-xl border-b border-white/5"
+      )}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-20 flex items-center justify-between gap-4">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group shrink-0">
-            <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center font-black italic text-xl transform group-hover:rotate-12 transition-transform shadow-lg shadow-red-600/20 font-retro pt-1">S</div>
-            <span className="text-xl font-black tracking-tighter uppercase italic hidden sm:block font-retro">SASORI<span className="text-red-500 underline decoration-2 underline-offset-4">LABS</span></span>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-600 rounded-lg sm:rounded-xl flex items-center justify-center font-black italic text-lg sm:text-xl transform group-hover:rotate-12 transition-transform shadow-lg shadow-red-600/20 font-retro pt-1">S</div>
+            <span className="text-lg sm:text-xl font-black tracking-tighter uppercase italic block font-retro">SASORI<span className="text-red-500 underline decoration-2 underline-offset-4">LABS</span></span>
           </Link>
 
           {/* Desktop Search Bar */}
@@ -63,7 +102,7 @@ export const StoreNavbar = () => {
           {/* Desktop Nav Actions */}
           <div className="hidden md:flex items-center gap-6 shrink-0">
             <Link to="/catalog" className="text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">Catálogo</Link>
-            <Link to="/admin" className="text-xs font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">Admin_Portal</Link>
+
             
             <div className="flex items-center gap-4 border-l border-white/10 pl-6">
               <button 
@@ -104,34 +143,34 @@ export const StoreNavbar = () => {
 
           {/* Mobile Actions */}
           <div className="flex md:hidden items-center gap-4">
-            <button onClick={() => setIsSearchOpen(true)} className="p-2">
-              <Search className="w-6 h-6 text-zinc-400" />
+            <button 
+              onClick={() => setIsSearchOpen(true)} 
+              className="p-2 text-zinc-400 hover:text-white transition-colors"
+            >
+              <Search className="w-6 h-6" />
             </button>
             <button 
                onClick={() => {
                 setDrawerTab('cart');
                 setIsDrawerOpen(true);
               }} 
-              className="relative p-2"
+              className="relative p-2 text-zinc-400 hover:text-white transition-colors"
             >
-              <ShoppingCart className="w-6 h-6 text-zinc-400" />
+              <ShoppingCart className="w-6 h-6" />
               {cartCount > 0 && (
-                <span className="absolute top-1 right-1 bg-red-600 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center">
+                <span className="absolute top-1 right-1 bg-red-600 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center ring-2 ring-black">
                   {cartCount}
                 </span>
               )}
-            </button>
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2">
-               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Lower Sticky Menu */}
-      <div className="bg-black/90 backdrop-blur-xl border-b border-white/5 py-3 overflow-x-auto no-scrollbar">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-center gap-12 sm:gap-16">
+      {/* Lower Sticky Menu - Desktop Only */}
+      <div className="hidden md:block bg-black/90 backdrop-blur-xl border-b border-white/5 py-2.5 overflow-x-auto no-scrollbar scroll-smooth">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-start sm:justify-center gap-8 sm:gap-16">
             {[
               { label: 'HOME', path: '/' },
               { label: 'MEGAEVOLUCION', path: '/catalog?category=mega' },
@@ -143,7 +182,7 @@ export const StoreNavbar = () => {
               <Link 
                 key={item.label} 
                 to={item.path}
-                className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 hover:text-red-500 transition-colors whitespace-nowrap"
+                className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.1em] sm:tracking-[0.2em] text-zinc-400 hover:text-red-500 transition-colors whitespace-nowrap px-2"
               >
                 {item.label}
               </Link>
@@ -195,33 +234,45 @@ export const StoreNavbar = () => {
             className="fixed inset-0 z-[90] bg-[#09090b] pt-24 px-6 md:hidden"
           >
             <div className="space-y-6">
-              <Link onClick={() => setIsMenuOpen(false)} to="/" className="block text-4xl font-black uppercase italic tracking-tighter hover:text-red-500 transition-colors">Home</Link>
-              <Link onClick={() => setIsMenuOpen(false)} to="/catalog" className="block text-4xl font-black uppercase italic tracking-tighter hover:text-red-500 transition-colors">Catálogo</Link>
-              <button 
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  setDrawerTab('favorites');
-                  setIsDrawerOpen(true);
-                }} 
-                className="block text-4xl font-black uppercase italic tracking-tighter hover:text-red-500 transition-colors text-left"
-              >
-                Favoritos ({favoritesCount})
-              </button>
-              <Link onClick={() => setIsMenuOpen(false)} to="/admin" className="block text-4xl font-black uppercase italic tracking-tighter hover:text-red-500 transition-colors">Admin Portal</Link>
-              <Link onClick={() => setIsMenuOpen(false)} to="/login" className="block text-4xl font-black uppercase italic tracking-tighter hover:text-red-500 transition-colors">Login</Link>
+              <Link onClick={() => setIsMenuOpen(false)} to="/" className="block text-2xl font-black uppercase italic tracking-tighter hover:text-red-500 transition-colors">Home</Link>
+              
+              {/* Categories Section */}
+              <div className="space-y-3 pt-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-red-500 mb-4">Colecciones</p>
+                {[
+                  { label: 'MEGAEVOLUCION', path: '/catalog?category=mega' },
+                  { label: 'ESCARLATA Y PURPURA', path: '/catalog?category=scarlet-violet' },
+                  { label: 'ESPADA Y ESCUDO', path: '/catalog?category=sword-shield' },
+                  { label: 'VINTAGE', path: '/catalog?category=vintage' },
+                  { label: 'POKEMON', path: '/catalog?category=pokemon' }
+                ].map(item => (
+                  <Link 
+                    key={item.label} 
+                    to={item.path}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block text-xl font-black uppercase italic tracking-tighter hover:text-red-500 transition-colors border-l-2 border-white/5 pl-4 ml-1"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+
+              <div className="space-y-4 pt-6 border-t border-white/5">
+                <button 
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    setDrawerTab('favorites');
+                    setIsDrawerOpen(true);
+                  }} 
+                  className="block text-2xl font-black uppercase italic tracking-tighter hover:text-red-500 transition-colors text-left w-full"
+                >
+                  Favoritos ({favoritesCount})
+                </button>
+                <Link onClick={() => setIsMenuOpen(false)} to="/login" className="block text-2xl font-black uppercase italic tracking-tighter hover:text-red-500 transition-colors text-zinc-500">Login</Link>
+              </div>
             </div>
 
-            <div className="mt-12 pt-12 border-t border-white/5 space-y-4">
-               <div className="flex items-center gap-3 p-4 bg-zinc-900 rounded-2xl">
-                 <div className="w-10 h-10 rounded-full bg-red-600/20 flex items-center justify-center">
-                    <Zap className="w-5 h-5 text-red-500" />
-                 </div>
-                 <div>
-                   <p className="text-xs font-black uppercase tracking-widest text-white">Sasori Labs Elite</p>
-                   <p className="text-[10px] text-zinc-500 uppercase">Acesse descontos exclusivos</p>
-                 </div>
-               </div>
-            </div>
+
           </motion.div>
         )}
       </AnimatePresence>
@@ -231,6 +282,16 @@ export const StoreNavbar = () => {
         onClose={() => setIsDrawerOpen(false)} 
         tab={drawerTab} 
       />
+
+      {/* Floating Mobile Menu Button - Pokeball */}
+      <div className="fixed bottom-10 left-0 right-0 flex justify-center z-[120] md:hidden pointer-events-none">
+        <button 
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="relative group p-0 m-0 bg-transparent border-none outline-none focus:outline-none active:scale-95 transition-transform pointer-events-auto"
+        >
+          <PokeballIcon isOpen={isMenuOpen} size={14} />
+        </button>
+      </div>
     </nav>
   );
 };

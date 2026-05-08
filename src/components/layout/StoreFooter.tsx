@@ -11,9 +11,9 @@ import { cn } from '../../lib/utils';
 
 export const StoreFooter = () => {
   return (
-    <footer className="bg-[#050505] pt-24 pb-12 border-t border-white/5 selection:bg-red-500/30">
+    <footer className="bg-[#050505] pt-16 pb-12 border-t border-white/5 selection:bg-red-500/30">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-12 mb-20">
           
           {/* Brand Section */}
           <div className="lg:col-span-1 space-y-8">
@@ -45,21 +45,21 @@ export const StoreFooter = () => {
           </div>
 
           {/* Partner Section */}
-          <div className="flex flex-col items-center lg:items-start gap-6">
-            <div className="bg-[#111] p-6 rounded-3xl border border-white/5 w-full flex flex-col items-center">
+          <div className="flex flex-col items-center lg:items-start gap-6 sm:col-span-2 lg:col-span-1">
+            <div className="bg-[#111] p-6 rounded-3xl border border-white/5 w-full flex flex-col items-center max-w-sm">
                <img 
                 src="https://www.cgccards.com/images/cgccards-logo-white.svg" 
                 alt="CGC Authorized Dealer" 
-                className="h-10 mb-6 brightness-100"
+                className="h-8 sm:h-10 mb-6 brightness-100"
                />
                <div className="text-center">
                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-red-600">Authorized Dealer</p>
                </div>
             </div>
-            <div className="bg-white/5 rounded-full p-8 border border-white/10 w-40 h-40 flex items-center justify-center text-center">
+            <div className="bg-white/5 rounded-full p-6 sm:p-8 border border-white/10 w-32 h-32 sm:w-40 sm:h-40 flex items-center justify-center text-center">
                <div className="flex flex-col">
-                 <span className="text-[18px] font-black italic text-white uppercase leading-none font-retro">TF_GC</span>
-                 <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest font-retro pt-1">Sasori Awards</span>
+                 <span className="text-[14px] sm:text-[18px] font-black italic text-white uppercase leading-none font-retro">TF_GC</span>
+                 <span className="text-[8px] sm:text-[10px] font-bold text-red-600 uppercase tracking-widest font-retro pt-1">Sasori Awards</span>
                </div>
             </div>
           </div>
