@@ -8,8 +8,12 @@ import {
   Zap,
   Package,
   Plus,
-  Minus
+  Minus,
+  User,
+  ShieldCheck,
+  QrCode
 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import { cn, formatCurrency } from '../../lib/utils';
 import { useStore } from '../../lib/StoreContext';
 import { getInventory } from '../../lib/inventory-db';
@@ -24,6 +28,9 @@ export default function POS() {
   const [rarityFilter, setRarityFilter] = useState('All');
   const [setFilter, setSetFilter] = useState('All');
   const [priceFilter, setPriceFilter] = useState(10000);
+  const [scannedUser, setScannedUser] = useState<any>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [searchUserQuery, setSearchUserQuery] = useState('');
 
   const inventoryWithImages = (getInventory() || []).map((card, index) => ({
     ...card,
@@ -64,6 +71,26 @@ export default function POS() {
     const matchesPrice = i.price <= priceFilter;
     return matchesSearch && matchesRarity && matchesSet && matchesPrice;
   });
+
+  const scanTrainerID = async () => {
+    if (!searchUserQuery) return;
+    setIsScanning(true);
+    
+    // Search by ID or Email
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .or(`id.eq.${searchUserQuery},email.ilike.%${searchUserQuery}%`)
+      .single();
+
+    if (!error && data) {
+      setScannedUser(data);
+      setSearchUserQuery('');
+    } else {
+      alert('TRAINER NOT FOUND: Identity node not detected.');
+    }
+    setIsScanning(false);
+  };
 
   return (
     <div className="flex gap-6 h-[calc(100vh-180px)]">
@@ -151,6 +178,48 @@ export default function POS() {
             Current Session
           </h2>
           <button onClick={() => setCart([])} className="text-xs text-zinc-500 hover:text-white uppercase font-bold">Clear</button>
+        </div>
+
+        {/* Trainer Scanner Section */}
+        <div className="px-6 py-4 border-b border-white/5 bg-black/20">
+          {!scannedUser ? (
+            <div className="flex gap-2">
+              <input 
+                type="text" 
+                placeholder="Scan ID or Enter Email..."
+                value={searchUserQuery}
+                onChange={(e) => setSearchUserQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && scanTrainerID()}
+                className="flex-1 bg-zinc-950 border border-white/10 rounded-lg py-2 px-3 text-[10px] font-mono focus:border-cyan-500 outline-none"
+              />
+              <button 
+                onClick={scanTrainerID}
+                disabled={isScanning}
+                className="p-2 bg-cyan-500/10 border border-cyan-500/20 rounded-lg text-cyan-400 hover:bg-cyan-500/20 transition-all"
+              >
+                <QrCode className={cn("w-4 h-4", isScanning && "animate-pulse")} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4 bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-3 animate-in fade-in slide-in-from-top-2">
+              <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400">
+                <User className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-white truncate">{scannedUser.email.split('@')[0]}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-[8px] font-mono text-cyan-400/70 uppercase">Lvl {scannedUser.level}</span>
+                  <span className="text-[8px] font-mono text-zinc-500 uppercase">Tier: {scannedUser.tier}</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setScannedUser(null)}
+                className="text-[10px] font-bold text-zinc-500 hover:text-white uppercase tracking-tighter"
+              >
+                Reset
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">

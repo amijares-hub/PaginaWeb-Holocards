@@ -7,8 +7,12 @@ import {
   Menu, 
   X,
   User,
-  Zap
+  Zap,
+  Bell,
+  Trash2,
+  Check
 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 import { useStore } from '../../lib/StoreContext';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -56,7 +60,43 @@ export const StoreNavbar = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState<'cart' | 'favorites'>('cart');
   const [searchTerm, setSearchTerm] = useState('');
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    fetchNotifications();
+    const sub = supabase
+      .channel('notifications')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_notifications' }, () => {
+        fetchNotifications();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(sub); };
+  }, []);
+
+  const fetchNotifications = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data, error } = await supabase
+      .from('user_notifications')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (!error && data) {
+      setNotifications(data);
+      setUnreadCount(data.filter(n => !n.read).length);
+    }
+  };
+
+  const markAsRead = async (id: string) => {
+    await supabase.from('user_notifications').update({ read: true }).eq('id', id);
+    fetchNotifications();
+  };
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const favoritesCount = favorites.length;
@@ -134,6 +174,82 @@ export const StoreNavbar = () => {
                 )}
               </button>
               
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative group p-2 rounded-full hover:bg-white/5 transition-colors"
+                >
+                  <Bell className={cn("w-6 h-6 text-zinc-400 group-hover:text-cyan-400 transition-colors", unreadCount > 0 && "animate-pulse")} />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-2 right-2 bg-cyan-500 text-black text-[8px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center ring-2 ring-black">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {showNotifications && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      className="absolute right-0 mt-4 w-80 bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden z-[110]"
+                    >
+                      <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-cyan-400">Incoming Data</h3>
+                        <span className="text-[8px] font-mono text-zinc-500">Node Sync: Active</span>
+                      </div>
+                      <div className="max-h-96 overflow-y-auto custom-scrollbar">
+                        {notifications.length === 0 ? (
+                          <div className="p-8 text-center opacity-30">
+                            <Bell className="w-8 h-8 mx-auto mb-2" />
+                            <p className="text-[10px] font-mono uppercase tracking-widest">No signals detected</p>
+                          </div>
+                        ) : (
+                          notifications.map((n) => (
+                            <div 
+                              key={n.id} 
+                              className={cn(
+                                "p-4 border-b border-white/5 hover:bg-white/[0.02] transition-colors relative group/n",
+                                !n.read && "bg-cyan-500/[0.03]"
+                              )}
+                            >
+                              {!n.read && <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan-500" />}
+                              <div className="flex gap-3">
+                                <div className="p-2 rounded-lg bg-zinc-900 border border-white/5 shrink-0">
+                                  {n.type === 'gift' ? <Zap className="w-3.5 h-3.5 text-yellow-500" /> : <Bell className="w-3.5 h-3.5 text-zinc-500" />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[11px] text-zinc-200 leading-relaxed mb-1">{n.message}</p>
+                                  <p className="text-[8px] font-mono text-zinc-600 uppercase tracking-tighter">
+                                    {new Date(n.created_at).toLocaleTimeString()} • {n.type}
+                                  </p>
+                                </div>
+                                {!n.read && (
+                                  <button 
+                                    onClick={() => markAsRead(n.id)}
+                                    className="opacity-0 group-hover/n:opacity-100 p-1.5 hover:bg-cyan-500/10 rounded-md transition-all"
+                                  >
+                                    <Check className="w-3 h-3 text-cyan-400" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <Link 
+                        to="/perfil" 
+                        onClick={() => setShowNotifications(false)}
+                        className="block p-3 text-center text-[9px] font-black uppercase tracking-widest text-zinc-500 hover:text-white bg-black hover:bg-white/5 transition-all"
+                      >
+                        Open Control Center
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
               <Link to="/login" className="w-10 h-10 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center hover:bg-zinc-800 transition-colors">
                 <User className="w-5 h-5 text-zinc-400" />
               </Link>

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogOut, Shield, Zap, Package, ArrowLeft, Trophy, Star, Lock, Activity, Hexagon, Database, ChevronRight, CheckCircle, Clock, Store, ShoppingCart, History, MapPin, Box } from 'lucide-react';
+import { LogOut, Shield, Zap, Package, ArrowLeft, Trophy, Star, Lock, Activity, Hexagon, Database, ChevronRight, CheckCircle, Clock, Store, ShoppingCart, History, MapPin, Box, QrCode } from 'lucide-react';
+import QRCode from 'react-qr-code';
 import { cn } from '../lib/utils';
 
 interface ProductDetails {
@@ -207,22 +208,76 @@ export default function UserProfile() {
         {/* LEFT COLUMN: IDENTITY & BATTLE PASS */}
         <div className="xl:col-span-4 space-y-8">
           
-          {/* Identity Card */}
+          {/* Trainer ID Card (Holographic) */}
+          <motion.section
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="group relative h-[220px] perspective-1000 mb-8"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/30 via-purple-500/20 to-red-500/30 rounded-[2rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+            
+            <div className="relative h-full bg-gradient-to-br from-zinc-900 to-black border border-white/10 rounded-[2rem] p-6 overflow-hidden shadow-2xl transition-all duration-500 group-hover:shadow-cyan-500/10">
+              <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(circle_at_50%_50%,rgba(34,211,238,0.2)_0%,transparent_50%)] animate-pulse"></div>
+              
+              <div className="relative z-10 flex h-full gap-6">
+                {/* QR Section - Coming Soon Overlay */}
+                <div className="w-1/3 relative group/qr">
+                  <div className="p-2 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 blur-[4px] grayscale opacity-40">
+                    <QRCode value="coming_soon" size={80} level="L" fgColor="#333" />
+                  </div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2">
+                    <Lock className="w-6 h-6 text-cyan-400/60 mb-1" />
+                    <span className="text-[7px] font-black text-cyan-400 uppercase tracking-tighter">Physical ID<br/>Coming Soon</span>
+                  </div>
+                </div>
+
+                <div className="flex-1 flex flex-col justify-between py-1">
+                  <div>
+                    <h3 className="text-[9px] font-black text-cyan-400 uppercase tracking-[0.3em] mb-1">Trainer Registry</h3>
+                    <p className="text-xl font-black text-white uppercase tracking-tighter italic">
+                      {profileData.email.split('@')[0]}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-[7px] font-mono text-zinc-500 uppercase">Tier</span>
+                      <p className="text-[10px] font-bold text-white uppercase tracking-widest">Apex Legend</p>
+                    </div>
+                    <div>
+                      <span className="text-[7px] font-mono text-zinc-500 uppercase">Vault Size</span>
+                      <p className="text-[10px] font-bold text-green-400 uppercase tracking-widest">{userCollection.length} ENTITIES</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1 h-1 rounded-full bg-cyan-400 animate-pulse"></div>
+                      <span className="text-[7px] font-mono text-cyan-400/70 uppercase">Online Profile Active</span>
+                    </div>
+                    <div className="text-[8px] font-black text-zinc-600 tracking-tighter">SASORI_GEN_IV</div>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+            </div>
+          </motion.section>
+
+          {/* Identity & Progress Section */}
           <motion.section 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
             className="group relative p-[1px] rounded-[2rem] overflow-hidden bg-gradient-to-b from-white/10 to-transparent"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-red-500/20 via-transparent to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-            
-            <div className="relative bg-[#080808]/90 backdrop-blur-xl rounded-[calc(2rem-1px)] p-8 h-full">
+            <div className="relative bg-[#080808]/90 backdrop-blur-xl rounded-[calc(2rem-1px)] p-8">
               <div className="flex justify-between items-start mb-8">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/10 flex items-center justify-center shadow-2xl relative">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/10 flex items-center justify-center relative shadow-2xl">
                   <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full"></div>
-                  <Shield className="w-8 h-8 text-red-500 relative z-10" />
+                  <Shield className="w-7 h-7 text-red-500 relative z-10" />
                 </div>
                 <div className="text-right">
-                  <div className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase mb-1">Clearance Level</div>
+                  <div className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase mb-1">Clearance</div>
                   <div className="flex items-center justify-end gap-1.5 text-cyan-400 font-bold">
                     <Zap className="w-4 h-4" />
                     <span className="text-xl">Lvl {profileData.level}</span>
@@ -230,30 +285,22 @@ export default function UserProfile() {
                 </div>
               </div>
 
-              <div className="space-y-1 mb-10">
-                <h1 className="text-3xl font-black tracking-tight text-white uppercase">
-                  {profileData.email.split('@')[0]}
-                </h1>
-                <div className="flex items-center gap-2 text-zinc-500 text-xs font-mono tracking-widest">
-                  <Database className="w-3.5 h-3.5" />
-                  ID: {session?.user?.id.substring(0,12)}
-                </div>
-              </div>
-
-              <div className="mb-10">
+              <div className="mb-8">
                 <Link 
                   to="/profile/settings"
-                  className="flex items-center justify-center gap-2 w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/50 rounded-xl text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-cyan-400 transition-all group/settings"
+                  className="flex items-center justify-center gap-2 w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/50 rounded-xl text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-cyan-400 transition-all group/settings shadow-lg"
                 >
-                  <Shield className="w-3.5 h-3.5 group-hover/settings:rotate-12 transition-transform" />
-                  Manage Identity Matrix
+                  <Shield className="w-3.5 h-3.5" />
+                  Edit Identity Matrix
                 </Link>
+                <p className="text-[8px] text-center text-zinc-600 mt-2 font-mono uppercase tracking-[0.2em] italic">
+                  Complete mission for +250 EXP reward
+                </p>
               </div>
 
-              {/* Progress Gauge */}
               <div className="space-y-3">
                 <div className="flex justify-between items-end">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Experience Sync</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Experience Points</span>
                   <span className="text-xs font-mono text-zinc-300">
                     <span className="text-white font-bold">{profileData.points % MAX_POINTS_PER_LEVEL}</span> / {MAX_POINTS_PER_LEVEL}
                   </span>
@@ -264,9 +311,7 @@ export default function UserProfile() {
                     animate={{ width: `${progressPercentage}%` }}
                     transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
                     className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-600 via-red-400 to-cyan-400 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.8)]"
-                  >
-                    <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.4)_50%,transparent_100%)] w-full animate-[shimmer_2s_infinite]"></div>
-                  </motion.div>
+                  />
                 </div>
               </div>
             </div>

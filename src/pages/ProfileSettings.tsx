@@ -58,10 +58,22 @@ export default function ProfileSettings() {
     if (!session) return;
     
     setSaving(true);
+
+    // 1. Check current profile state for rewards eligibility
+    const { data: currentProfile } = await supabase
+      .from('user_profiles')
+      .select('phone, address_street, points, pokeballs')
+      .eq('id', session.user.id)
+      .single();
+
+    const isFirstCompletion = !currentProfile?.phone && !currentProfile?.address_street && formData.phone && formData.address_street;
+
     const { error } = await supabase
       .from('user_profiles')
       .update({
         ...formData,
+        points: isFirstCompletion ? (currentProfile?.points || 0) + 250 : currentProfile?.points,
+        pokeballs: isFirstCompletion ? (currentProfile?.pokeballs || 0) + 5 : currentProfile?.pokeballs,
         updated_at: new Date().toISOString()
       })
       .eq('id', session.user.id);
@@ -69,7 +81,9 @@ export default function ProfileSettings() {
     if (error) {
       alert('UPDATE FAILED: Protocol breach detected or network unstable.');
     } else {
-      // Show success state or redirect
+      if (isFirstCompletion) {
+        alert('MISSION COMPLETE: +250 EXP & 5 Pokéballs awarded for Identity Synchronization!');
+      }
       setTimeout(() => navigate('/perfil'), 500);
     }
     setSaving(false);
