@@ -60,15 +60,9 @@ export function PulseFitHero({
   return (
     <section
       className={cn(
-        "relative w-full min-h-screen flex flex-col overflow-hidden",
+        "relative w-full min-h-screen flex flex-col overflow-hidden bg-[linear-gradient(180deg,rgba(9,9,11,0.5)_0%,rgba(24,24,27,0.7)_50%,rgba(9,9,11,1)_100%),url('/Imagenes/banner%201.png')] bg-cover bg-center bg-fixed",
         className
       )}
-      style={{
-        backgroundImage: "linear-gradient(180deg, rgba(9,9,11,0.5) 0%, rgba(24,24,27,0.7) 50%, rgba(9,9,11,1) 100%), url('/Imagenes/banner%201.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed"
-      }}
       role="banner"
       aria-label="Hero section"
     >
@@ -85,30 +79,18 @@ export function PulseFitHero({
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="flex flex-col items-center text-center max-w-4xl"
-            style={{ gap: "32px" }}
+            className="flex flex-col items-center text-center max-w-4xl gap-8"
           >
             {/* Title */}
             <h1
-              className="font-sans font-black italic uppercase tracking-tighter"
-              style={{
-                fontSize: "clamp(36px, 6vw, 72px)",
-                lineHeight: "1.1",
-                color: "#E1E0CC",
-                letterSpacing: "-0.04em",
-              }}
+              className="font-sans font-black italic uppercase tracking-tighter text-[#E1E0CC] text-[clamp(36px,6vw,72px)] leading-[1.1] tracking-[-0.04em]"
             >
               {title}
             </h1>
 
             {/* Subtitle */}
             <p
-              className="font-sans font-medium uppercase tracking-widest text-[#E1E0CC]"
-              style={{
-                fontSize: "clamp(14px, 1.5vw, 16px)",
-                lineHeight: "1.6",
-                maxWidth: "700px",
-              }}
+              className="font-sans font-medium uppercase tracking-widest text-[#E1E0CC] text-[clamp(14px,1.5vw,16px)] leading-[1.6] max-w-[700px]"
             >
               {subtitle}
             </p>
@@ -176,12 +158,7 @@ export function PulseFitHero({
                       key={index}
                       src={avatar}
                       alt={`User ${index + 1}`}
-                      className="rounded-full border-2 border-[#1a1a1a]"
-                      style={{
-                        width: "40px",
-                        height: "40px",
-                        objectFit: "cover",
-                      }}
+                      className="rounded-full border-2 border-[#1a1a1a] w-10 h-10 object-cover"
                     />
                   ))}
                 </div>
@@ -202,31 +179,19 @@ export function PulseFitHero({
           initial={{ opacity: 0, y: 100 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.8 }}
-          className="relative z-10 w-full overflow-hidden"
-          style={{
-            paddingTop: "40px",
-            paddingBottom: "40px",
-          }}
+          className="relative z-10 w-full overflow-hidden py-10"
         >
           {/* Gradient Overlays - reduced width on mobile */}
           <div
-            className="absolute left-0 top-0 bottom-0 z-10 pointer-events-none"
-            style={{
-              width: "clamp(50px, 10vw, 150px)",
-              background: "linear-gradient(90deg, #09090b 0%, rgba(9, 9, 11, 0) 100%)",
-            }}
+            className="absolute left-0 top-0 bottom-0 z-10 pointer-events-none w-[clamp(50px,10vw,150px)] bg-gradient-to-r from-[#09090b] to-transparent"
           />
           <div
-            className="absolute right-0 top-0 bottom-0 z-10 pointer-events-none"
-            style={{
-              width: "clamp(50px, 10vw, 150px)",
-              background: "linear-gradient(270deg, #09090b 0%, rgba(9, 9, 11, 0) 100%)",
-            }}
+            className="absolute right-0 top-0 bottom-0 z-10 pointer-events-none w-[clamp(50px,10vw,150px)] bg-gradient-to-l from-[#09090b] to-transparent"
           />
 
           {/* Scrolling Container */}
           <motion.div
-            className="flex items-center"
+            className="flex items-center gap-4 pl-4"
             animate={{
               x: [0, -((programs.length * 380) / 2)],
             }}
@@ -238,10 +203,6 @@ export function PulseFitHero({
                 ease: "linear",
               },
             }}
-            style={{
-              gap: "16px",
-              paddingLeft: "16px",
-            }}
           >
             {/* Duplicate programs for seamless loop */}
             {[...programs, ...programs].map((program, index) => (
@@ -250,43 +211,23 @@ export function PulseFitHero({
                 whileHover={{ scale: 1.02, y: -5 }}
                 transition={{ duration: 0.3 }}
                 onClick={program.onClick}
-                className="flex-shrink-0 cursor-pointer relative overflow-hidden group"
-                style={{
-                  width: "clamp(280px, 80vw, 356px)",
-                  height: "clamp(380px, 60vh, 480px)",
-                  borderRadius: "24px",
-                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
-                  border: "1px solid rgba(255, 255, 255, 0.05)",
-                }}
+                className="flex-shrink-0 cursor-pointer relative overflow-hidden group w-[clamp(280px,80vw,356px)] h-[clamp(380px,60vh,480px)] rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.4)] border border-white/5"
               >
                 {/* Image */}
                 <img
                   src={program.image}
                   alt={program.title}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                  className="transition-transform duration-700 group-hover:scale-110"
+                  className="transition-transform duration-700 group-hover:scale-110 w-full h-full object-cover"
                 />
 
                 {/* Gradient Overlay */}
                 <div
-                  className="absolute inset-0 z-10"
-                  style={{
-                    background: "linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.8) 100%)",
-                  }}
+                  className="absolute inset-0 z-10 bg-gradient-to-b from-transparent to-black/80"
                 />
 
                 {/* Text Content */}
                 <div
-                  className="absolute bottom-0 left-0 right-0 p-8 z-20"
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "12px",
-                  }}
+                  className="absolute bottom-0 left-0 right-0 p-8 z-20 flex flex-col gap-3"
                 >
                   <span
                     className="font-mono font-black italic text-red-500 uppercase tracking-[0.3em] text-[10px]"
@@ -294,11 +235,7 @@ export function PulseFitHero({
                     {program.category}
                   </span>
                   <h3
-                    className="font-sans font-black italic uppercase tracking-tighter text-white"
-                    style={{
-                      fontSize: "26px",
-                      lineHeight: "1.1",
-                    }}
+                    className="font-sans font-black italic uppercase tracking-tighter text-white text-[26px] leading-[1.1]"
                   >
                     {program.title}
                   </h3>

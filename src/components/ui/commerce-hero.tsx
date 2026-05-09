@@ -48,13 +48,7 @@ export function CommerceHero() {
     <div className="w-full relative container px-2 mx-auto max-w-7xl min-h-screen">
 
         <div 
-          className="mt-6 rounded-2xl relative border border-white/5 overflow-hidden"
-          style={{
-            backgroundImage: "linear-gradient(to bottom, rgba(9, 9, 11, 0.5), rgba(9, 9, 11, 0.95)), url('/Imagenes/banner%201.png')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundAttachment: 'fixed'
-          }}
+          className="mt-6 rounded-2xl relative border border-white/5 overflow-hidden bg-[linear-gradient(to_bottom,rgba(9,9,11,0.5),rgba(9,9,11,0.95)),url('/Imagenes/banner%201.png')] bg-cover bg-center bg-fixed"
         >
           <header className="flex items-center">
             <div className="w-full md:w-2/3 lg:w-1/2 bg-[#09090b]/95 backdrop-blur-sm p-4 rounded-br-2xl flex items-center gap-2 border-r border-b border-white/5">

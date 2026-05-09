@@ -155,7 +155,7 @@ export default function UserProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center font-sans">
         <div className="relative w-24 h-24 flex items-center justify-center">
           <div className="absolute inset-0 border-[1px] border-cyan-500/20 rounded-full animate-[spin_4s_linear_infinite]"></div>
           <div className="absolute inset-2 border-[1px] border-red-500/30 rounded-full animate-[spin_3s_linear_infinite_reverse]"></div>
@@ -167,8 +167,7 @@ export default function UserProfile() {
 
   return (
     <div 
-      className="min-h-screen bg-[#030303] text-zinc-100 overflow-x-hidden pb-24 selection:bg-cyan-500/30"
-      style={{ fontFamily: "'Inter', 'Outfit', system-ui, sans-serif" }} // Forcing a modern sans-serif font to override global pixel fonts
+      className="min-h-screen bg-[#030303] text-zinc-100 overflow-x-hidden pb-24 selection:bg-cyan-500/30 font-sans"
     >
       {/* Dynamic Background */}
       <div className="fixed inset-0 z-0 pointer-events-none opacity-40">

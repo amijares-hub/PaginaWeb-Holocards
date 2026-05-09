@@ -11,7 +11,8 @@ import {
   User,
   CreditCard,
   Menu,
-  X
+  X,
+  Crosshair
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../../lib/supabase';
@@ -22,6 +23,7 @@ const navItems = [
   { icon: Package, label: 'Inventory', path: '/admin/inventory' },
   { icon: ShoppingCart, label: 'Orders', path: '/admin/orders' },
   { icon: CreditCard, label: 'POS Terminal', path: '/admin/pos' },
+  { icon: Crosshair, label: 'Users Engine', path: '/admin/users' },
 ];
 
 export default function AdminLayout() {
@@ -76,6 +78,7 @@ export default function AdminLayout() {
           <button 
             onClick={handleLogout}
             className="flex items-center gap-3 px-4 py-3 w-full text-zinc-400 hover:text-white transition-colors"
+            title="Logout"
           >
             <LogOut className="w-5 h-5" />
             <span className="font-medium">Logout</span>
@@ -92,6 +95,7 @@ export default function AdminLayout() {
             <button 
               onClick={() => setIsMobileMenuOpen(true)}
               className="p-2 lg:hidden text-zinc-400 hover:text-white"
+              title="Open Mobile Menu"
             >
               <Menu className="w-6 h-6" />
             </button>
@@ -115,7 +119,7 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg relative">
+            <button className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg relative" title="Notifications">
               <Bell className="w-5 h-5" />
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-[#09090b]"></span>
             </button>
@@ -125,6 +129,7 @@ export default function AdminLayout() {
               <button 
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 className="flex items-center gap-3 hover:bg-zinc-800/50 p-1 rounded-xl transition-colors group"
+                title="Toggle Profile Menu"
               >
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-bold group-hover:text-red-500 transition-colors">Admin User</p>
@@ -146,6 +151,7 @@ export default function AdminLayout() {
                       <div 
                         onClick={() => setEmailAlerts(!emailAlerts)}
                         className="flex items-center justify-between group cursor-pointer"
+                        title="Toggle Email Alerts"
                       >
                         <div className="flex flex-col">
                           <span className="text-xs font-bold text-zinc-200">Email Alerts</span>
@@ -164,6 +170,7 @@ export default function AdminLayout() {
                       <div 
                         onClick={() => setPushNotifications(!pushNotifications)}
                         className="flex items-center justify-between group cursor-pointer"
+                        title="Toggle Push Notifications"
                       >
                         <div className="flex flex-col">
                           <span className="text-xs font-bold text-zinc-200">Push Notifications</span>
@@ -188,6 +195,7 @@ export default function AdminLayout() {
                     <button 
                       onClick={handleLogout}
                       className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:text-white hover:bg-red-600/10 transition-all text-xs font-black uppercase tracking-widest"
+                      title="Sign Out Protocol"
                     >
                       <LogOut className="w-4 h-4" />
                       Sign Out Protocol
@@ -229,7 +237,7 @@ export default function AdminLayout() {
                     <div className="flex items-center">
                       <img src="https://dopieoflkqfalnuvpwch.supabase.co/storage/v1/object/public/Imagen%20De%20Logo%20de%20Empresa/logo%20Holocard.jpg" alt="HoloCards" className="h-8 w-auto object-contain" />
                     </div>
-                    <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-zinc-400 hover:text-white">
+                    <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-zinc-400 hover:text-white" title="Close Menu">
                       <X className="w-6 h-6" />
                     </button>
                   </div>
@@ -261,6 +269,7 @@ export default function AdminLayout() {
                   <button 
                     onClick={handleLogout}
                     className="flex items-center gap-3 px-4 py-3 w-full text-zinc-400 hover:text-white transition-colors"
+                    title="Logout"
                   >
                     <LogOut className="w-5 h-5" />
                     <span className="font-medium">Logout</span>

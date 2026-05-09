@@ -20,6 +20,7 @@ import Login from './pages/Login';
 import CheckoutFunnel from './pages/CheckoutFunnel';
 import AdminLayout from './components/layout/AdminLayout';
 import UserProfile from './pages/UserProfile';
+import UsersEngine from './pages/admin/UsersEngine';
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -77,6 +78,7 @@ export default function App() {
               <Route path="inventory" element={<Inventory />} />
               <Route path="orders" element={<Orders />} />
               <Route path="pos" element={<POS />} />
+              <Route path="users" element={<UsersEngine />} />
             </Route>
 
             {/* Catch-all */}

@@ -27,16 +27,16 @@ export const StoreFooter = () => {
             </p>
 
             <div className="flex gap-4">
-              <a href="#" className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all">
+              <a href="#" className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all" title="Twitter">
                 <Twitter className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all">
+              <a href="#" className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all" title="Instagram">
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all">
+              <a href="#" className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all" title="YouTube">
                 <Youtube className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all">
+              <a href="#" className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all" title="Telegram">
                 <Send className="w-5 h-5" />
               </a>
             </div>
@@ -44,7 +44,10 @@ export const StoreFooter = () => {
 
           {/* Partner Section */}
           <div className="flex flex-col items-center lg:items-start gap-6 sm:col-span-2 lg:col-span-1">
-            <div className="bg-[#111] p-6 rounded-3xl border border-white/5 w-full flex flex-col items-center max-w-sm">
+            <div 
+              className="bg-[#111] p-6 rounded-3xl border border-white/5 w-full flex flex-col items-center max-w-sm"
+              title="CGC Authorized Dealer Badge"
+            >
                <img 
                 src="https://www.cgccards.com/images/cgccards-logo-white.svg" 
                 alt="CGC Authorized Dealer" 
@@ -54,7 +57,10 @@ export const StoreFooter = () => {
                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-red-600">Authorized Dealer</p>
                </div>
             </div>
-            <div className="bg-white/5 rounded-full p-6 sm:p-8 border border-white/10 w-32 h-32 sm:w-40 sm:h-40 flex items-center justify-center text-center">
+            <div 
+              className="bg-white/5 rounded-full p-6 sm:p-8 border border-white/10 w-32 h-32 sm:w-40 sm:h-40 flex items-center justify-center text-center"
+              title="Sasori Awards - TF_GC Certified"
+            >
                <div className="flex flex-col">
                  <span className="text-[14px] sm:text-[18px] font-black italic text-white uppercase leading-none font-retro">TF_GC</span>
                  <span className="text-[8px] sm:text-[10px] font-bold text-red-600 uppercase tracking-widest font-retro pt-1">Sasori Awards</span>
@@ -100,7 +106,7 @@ export const StoreFooter = () => {
                     placeholder="tu@email.com" 
                     className="flex-1 bg-zinc-900/50 border border-white/10 rounded-l-xl py-4 px-5 text-sm focus:outline-none focus:border-red-600 transition-all"
                   />
-                  <button className="bg-red-600 text-white px-6 rounded-r-xl hover:bg-white hover:text-black transition-all group">
+                  <button className="bg-red-600 text-white px-6 rounded-r-xl hover:bg-white hover:text-black transition-all group" title="Suscribirse">
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>

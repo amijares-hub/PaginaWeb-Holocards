@@ -145,6 +145,7 @@ export const StoreNavbar = () => {
             <button 
               onClick={() => setIsSearchOpen(true)} 
               className="p-2 text-zinc-400 hover:text-white transition-colors"
+              title="Buscar"
             >
               <Search className="w-6 h-6" />
             </button>
@@ -287,6 +288,7 @@ export const StoreNavbar = () => {
         <button 
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           className="relative group p-0 m-0 bg-transparent border-none outline-none focus:outline-none active:scale-95 transition-transform pointer-events-auto"
+          title="Menú Principal"
         >
           <PokeballIcon isOpen={isMenuOpen} size={14} />
         </button>
