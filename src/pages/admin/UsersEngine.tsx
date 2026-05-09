@@ -70,13 +70,31 @@ export default function UsersEngine() {
       .from('user_profiles')
       .select('*');
 
-    if (error) {
-      console.error('Error fetching profiles:', error);
-      // Fallback to mock data if table doesn't exist or error occurs
+    // Enhanced Mock Data for testing if DB is empty or errors
+    if (error || !profiles || profiles.length === 0) {
+      if (error) console.error('Error fetching profiles:', error);
+      
       const mockData: UserProfileWithStats[] = [
-        { id: 'usr-1', email: 'neo@matrix.com', level: 42, exp: 5000, battle_pass_points: 12000, pokeballs: 15, tier: 'Apex', total_spent: 1200, last_activity: new Date().toISOString() },
-        { id: 'usr-2', email: 'trinity@matrix.com', level: 15, exp: 200, battle_pass_points: 500, pokeballs: 5, tier: 'Entrenador', total_spent: 45, last_activity: new Date(Date.now() - 8*24*60*60*1000).toISOString() },
-        { id: 'usr-3', email: 'morpheus@matrix.com', level: 99, exp: 99999, battle_pass_points: 50000, pokeballs: 100, tier: 'Oracle', total_spent: 5500, last_activity: new Date().toISOString() },
+        { id: 'usr-1', email: 'neo@sasorilabs.io', level: 42, exp: 5000, battle_pass_points: 12000, pokeballs: 15, tier: 'Apex', total_spent: 1200, last_activity: new Date().toISOString(), captured_count: 85, archetype: 'Whale' },
+        { id: 'usr-2', email: 'trinity@matrix.net', level: 15, exp: 200, battle_pass_points: 500, pokeballs: 5, tier: 'Entrenador', total_spent: 45, last_activity: new Date(Date.now() - 12*24*60*60*1000).toISOString(), captured_count: 12, archetype: 'Newbie', is_at_risk: true },
+        { id: 'usr-3', email: 'morpheus@zion.com', level: 99, exp: 99999, battle_pass_points: 50000, pokeballs: 100, tier: 'Oracle', total_spent: 5500, last_activity: new Date().toISOString(), captured_count: 150, archetype: 'Whale' },
+        { id: 'usr-4', email: 'smith@agents.io', level: 30, exp: 4500, battle_pass_points: 8000, pokeballs: 0, tier: 'Legend', total_spent: 850, last_activity: new Date(Date.now() - 2*24*60*60*1000).toISOString(), captured_count: 5, archetype: 'Sniper' },
+        { id: 'usr-5', email: 'ash.k@pallet.town', level: 5, exp: 400, battle_pass_points: 100, pokeballs: 50, tier: 'Entrenador', total_spent: 20, last_activity: new Date().toISOString(), captured_count: 65, archetype: 'Collector' },
+        { id: 'usr-6', email: 'misty@cerulean.gym', level: 22, exp: 2200, battle_pass_points: 3000, pokeballs: 12, tier: 'Elite', total_spent: 150, last_activity: new Date(Date.now() - 5*24*60*60*1000).toISOString(), captured_count: 35, archetype: 'Hunter' },
+        { id: 'usr-7', email: 'brock@pewter.city', level: 18, exp: 1800, battle_pass_points: 2500, pokeballs: 8, tier: 'Entrenador', total_spent: 0, last_activity: new Date(Date.now() - 15*24*60*60*1000).toISOString(), captured_count: 42, archetype: 'Hunter', is_at_risk: true },
+        { id: 'usr-8', email: 'cypher@traitor.net', level: 12, exp: 1000, battle_pass_points: 800, pokeballs: 3, tier: 'Entrenador', total_spent: 600, last_activity: new Date().toISOString(), captured_count: 2, archetype: 'Whale' },
+        { id: 'usr-9', email: 'niobe@logos.com', level: 35, exp: 3500, battle_pass_points: 4000, pokeballs: 25, tier: 'Apex', total_spent: 450, last_activity: new Date().toISOString(), captured_count: 55, archetype: 'Collector' },
+        { id: 'usr-10', email: 'seraph@guardian.org', level: 80, exp: 8000, battle_pass_points: 12000, pokeballs: 40, tier: 'Oracle', total_spent: 0, last_activity: new Date(Date.now() - 1*24*60*60*1000).toISOString(), captured_count: 90, archetype: 'Collector' },
+        { id: 'usr-11', email: 'v.valet@cyber.com', level: 2, exp: 50, battle_pass_points: 0, pokeballs: 10, tier: 'Entrenador', total_spent: 5, last_activity: new Date(Date.now() - 20*24*60*60*1000).toISOString(), captured_count: 1, archetype: 'Newbie', is_at_risk: true },
+        { id: 'usr-12', email: 'ghost@nautilus.io', level: 28, exp: 2800, battle_pass_points: 3500, pokeballs: 14, tier: 'Legend', total_spent: 220, last_activity: new Date().toISOString(), captured_count: 28, archetype: 'Hunter' },
+        { id: 'usr-13', email: 'switch@white.room', level: 14, exp: 1400, battle_pass_points: 1200, pokeballs: 6, tier: 'Entrenador', total_spent: 95, last_activity: new Date(Date.now() - 8*24*60*60*1000).toISOString(), captured_count: 15, archetype: 'Sniper', is_at_risk: true },
+        { id: 'usr-14', email: 'dozer@zion.net', level: 25, exp: 2500, battle_pass_points: 3200, pokeballs: 20, tier: 'Elite', total_spent: 180, last_activity: new Date().toISOString(), captured_count: 31, archetype: 'Hunter' },
+        { id: 'usr-15', email: 'apoc@matrix.run', level: 19, exp: 1900, battle_pass_points: 2100, pokeballs: 9, tier: 'Entrenador', total_spent: 40, last_activity: new Date(Date.now() - 6*24*60*60*1000).toISOString(), captured_count: 18, archetype: 'Sniper' },
+        { id: 'usr-16', email: 'mouse@red-dress.com', level: 4, exp: 350, battle_pass_points: 200, pokeballs: 5, tier: 'Entrenador', total_spent: 0, last_activity: new Date().toISOString(), captured_count: 3, archetype: 'Newbie' },
+        { id: 'usr-17', email: 'tank@ Zion.net', level: 33, exp: 3300, battle_pass_points: 4200, pokeballs: 30, tier: 'Apex', total_spent: 310, last_activity: new Date(Date.now() - 3*24*60*60*1000).toISOString(), captured_count: 48, archetype: 'Hunter' },
+        { id: 'usr-18', email: 'persephone@chateau.net', level: 50, exp: 5000, battle_pass_points: 7000, pokeballs: 15, tier: 'Legend', total_spent: 2500, last_activity: new Date().toISOString(), captured_count: 12, archetype: 'Whale' },
+        { id: 'usr-19', email: 'merovingian@chateau.net', level: 88, exp: 8800, battle_pass_points: 15000, pokeballs: 60, tier: 'Oracle', total_spent: 4200, last_activity: new Date().toISOString(), captured_count: 22, archetype: 'Whale' },
+        { id: 'usr-20', email: 'keymaker@hallway.io', level: 10, exp: 1000, battle_pass_points: 500, pokeballs: 100, tier: 'Entrenador', total_spent: 15, last_activity: new Date(Date.now() - 11*24*60*60*1000).toISOString(), captured_count: 5, archetype: 'Newbie', is_at_risk: true },
       ];
       setUsers(mockData);
       return;
