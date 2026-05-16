@@ -54,13 +54,15 @@ export const StoreDrawer: React.FC<StoreDrawerProps> = ({ isOpen, onClose, tab: 
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 bottom-0 z-[130] w-full max-w-md bg-[#09090b] border-l border-white/10 flex flex-col shadow-2xl"
+            className="fixed top-0 right-0 bottom-0 z-[130] w-full max-w-md bg-background border-l border-border flex flex-col shadow-2xl transition-colors"
           >
             {/* Header */}
-            <div className="p-6 border-b border-white/5 flex items-center justify-between">
+            <div className="p-6 border-b border-border flex items-center justify-between transition-colors">
               <div className="flex gap-4">
                 <button 
                   onClick={() => setActiveTab('cart')}
+                  title="Ver productos en el carrito"
+                  aria-label="Pestaña de carrito"
                   className={cn(
                     "text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all",
                     activeTab === 'cart' ? "bg-white text-black" : "text-zinc-500 hover:text-white"
@@ -70,6 +72,8 @@ export const StoreDrawer: React.FC<StoreDrawerProps> = ({ isOpen, onClose, tab: 
                 </button>
                 <button 
                   onClick={() => setActiveTab('favorites')}
+                  title="Ver mis favoritos"
+                  aria-label="Pestaña de favoritos"
                   className={cn(
                     "text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all",
                     activeTab === 'favorites' ? "bg-white text-black" : "text-zinc-500 hover:text-white"
@@ -78,7 +82,12 @@ export const StoreDrawer: React.FC<StoreDrawerProps> = ({ isOpen, onClose, tab: 
                   Favoritos ({favorites.length})
                 </button>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors">
+              <button 
+                onClick={onClose} 
+                title="Cerrar panel"
+                aria-label="Cerrar panel lateral"
+                className="p-2 hover:bg-white/5 rounded-xl transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -89,10 +98,10 @@ export const StoreDrawer: React.FC<StoreDrawerProps> = ({ isOpen, onClose, tab: 
                 <div className="space-y-6">
                   {cart.length === 0 ? (
                     <div className="py-20 text-center space-y-4">
-                      <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mx-auto border border-white/5">
-                        <ShoppingCart className="w-8 h-8 text-zinc-600" />
+                      <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto border border-border">
+                        <ShoppingCart className="w-8 h-8 text-muted-foreground" />
                       </div>
-                      <p className="text-sm font-black uppercase italic tracking-widest text-zinc-500">Seu carrinho está vazio</p>
+                      <p className="text-sm font-black uppercase italic tracking-widest text-muted-foreground">Seu carrinho está vazio</p>
                       <button 
                         onClick={onClose}
                         className="text-xs font-black uppercase tracking-tighter text-red-500 hover:underline"
@@ -109,27 +118,36 @@ export const StoreDrawer: React.FC<StoreDrawerProps> = ({ isOpen, onClose, tab: 
                         <div className="flex-1 flex flex-col justify-between py-1">
                           <div className="flex justify-between gap-4">
                             <h4 className="text-sm font-black uppercase italic leading-tight">{item.name}</h4>
-                            <button onClick={() => removeFromCart(item.id)} className="text-zinc-600 hover:text-red-500 transition-colors">
+                            <button 
+                              onClick={() => removeFromCart(item.id)} 
+                              title={`Eliminar ${item.name} del carrito`}
+                              aria-label={`Eliminar ${item.name} del carrito`}
+                              className="text-zinc-600 hover:text-red-500 transition-colors"
+                            >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                           <div className="flex items-center justify-between mt-4">
-                             <div className="flex items-center gap-3 bg-zinc-900 border border-white/5 rounded-lg p-1">
+                             <div className="flex items-center gap-3 bg-muted border border-border rounded-lg p-1 transition-colors">
                                 <button 
                                   onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                  className="w-6 h-6 flex items-center justify-center hover:bg-white/5 rounded-md"
+                                  title="Reducir cantidad"
+                                  aria-label="Reducir cantidad en uno"
+                                  className="w-6 h-6 flex items-center justify-center hover:bg-background rounded-md text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                   <Minus className="w-3 h-3" />
                                 </button>
-                                <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
+                                <span className="text-xs font-bold w-4 text-center text-foreground transition-colors">{item.quantity}</span>
                                 <button 
                                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                  className="w-6 h-6 flex items-center justify-center hover:bg-white/5 rounded-md"
+                                  title="Aumentar cantidad"
+                                  aria-label="Aumentar cantidad en uno"
+                                  className="w-6 h-6 flex items-center justify-center hover:bg-background rounded-md text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                   <Plus className="w-3 h-3" />
                                 </button>
                              </div>
-                             <span className="text-sm font-black italic">{formatCurrency(item.price * item.quantity)}</span>
+                             <span className="text-sm font-black italic text-foreground transition-colors">{formatCurrency(item.price * item.quantity)}</span>
                           </div>
                         </div>
                       </div>
@@ -159,13 +177,13 @@ export const StoreDrawer: React.FC<StoreDrawerProps> = ({ isOpen, onClose, tab: 
                             </button>
                           </div>
                           <div className="flex items-center justify-between mt-4">
-                             <span className="text-sm font-black italic">{formatCurrency(item.price)}</span>
+                             <span className="text-sm font-black italic text-foreground transition-colors">{formatCurrency(item.price)}</span>
                              <button 
                               onClick={() => {
                                 const { quantity, ...card } = item as any;
                                 addToCart(card);
                               }}
-                              className="text-[10px] font-black uppercase bg-white text-black px-3 py-1.5 rounded-lg hover:bg-red-600 hover:text-white transition-all"
+                              className="text-[10px] font-black uppercase bg-foreground text-background px-3 py-1.5 rounded-lg hover:bg-primary hover:text-white transition-all"
                              >
                                Adicionar
                              </button>
@@ -180,14 +198,14 @@ export const StoreDrawer: React.FC<StoreDrawerProps> = ({ isOpen, onClose, tab: 
 
             {/* Footer */}
             {activeTab === 'cart' && cart.length > 0 && (
-              <div className="p-6 border-t border-white/5 bg-zinc-900/30 space-y-4">
+              <div className="p-6 border-t border-border bg-card/50 space-y-4 transition-colors">
                 <div className="flex justify-between items-end">
-                  <span className="text-xs font-black uppercase tracking-widest text-zinc-500">Subtotal</span>
-                  <span className="text-2xl font-black italic">{formatCurrency(cartTotal)}</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-muted-foreground transition-colors">Subtotal</span>
+                  <span className="text-2xl font-black italic text-foreground transition-colors">{formatCurrency(cartTotal)}</span>
                 </div>
                 <button 
                   onClick={handleCheckout}
-                  className="w-full bg-red-600 hover:bg-red-700 text-white font-black italic uppercase tracking-[0.2em] h-14 rounded-2xl shadow-xl shadow-red-600/20 flex items-center justify-center gap-3 transition-all active:scale-95"
+                  className="w-full bg-primary hover:bg-primary/90 text-white font-black italic uppercase tracking-[0.2em] h-14 rounded-2xl shadow-xl shadow-primary/20 flex items-center justify-center gap-3 transition-all active:scale-95"
                 >
                   Continuar Checkout
                   <ArrowRight className="w-5 h-5" />

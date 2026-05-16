@@ -29,7 +29,6 @@ import { Button } from '../components/ui/button';
 import { Card } from '../types';
 import { getInventory } from '../lib/inventory-db';
 import { StoreNavbar } from '../components/layout/StoreNavbar';
-import { StoreFooter } from '../components/layout/StoreFooter';
 import { useStore } from '../lib/StoreContext';
 import { Heart } from 'lucide-react';
 
@@ -134,7 +133,7 @@ const testimonials: Testimonial[] = [
 
 export default function Storefront() {
   const navigate = useNavigate();
-  const { addToCart, toggleFavorite, isFavorite, storageImages } = useStore();
+  const { addToCart, toggleFavorite, isFavorite, storageImages, heroContent, activeSuppliers } = useStore();
   const [cards, setCards] = useState<Card[]>([]);
   
   useEffect(() => {
@@ -159,7 +158,7 @@ export default function Storefront() {
     setCards([...dynamicCards, ...demoCards]);
   }, [storageImages]);
 
-  const featuredCards = cards;
+  const featuredCards = cards.filter(p => !p.supplier_id || activeSuppliers.includes(p.supplier_id));
 
   const scrollToExplore = () => {
     document.getElementById('explore')?.scrollIntoView({ behavior: 'smooth' });
@@ -170,8 +169,8 @@ export default function Storefront() {
       <StoreNavbar />
       <div className="pt-32 md:pt-40">
         <PulseFitHero 
-        title="EL SANTUARIO POKÉMON EN CANARIAS."
-        subtitle="DESCUBRE EL COLECCIONISMO DE ÉLITE. CARTAS GRADUADAS, SELLADAS Y RAREZAS EXCLUSIVAS CON ENVÍO ASEGURADO A TODAS LAS ISLAS CON EL SELLO DE SASORI LABS."
+        title={heroContent.title}
+        subtitle={heroContent.subtitle}
         primaryAction={{
           label: "EXPLORAR BÓVEDA",
           onClick: scrollToExplore
@@ -180,7 +179,7 @@ export default function Storefront() {
           label: "VER NOVEDADES",
           onClick: scrollToExplore
         }}
-        disclaimer="*AUTENTICIDAD GARANTIZADA // ENVÍOS 24/48H"
+        disclaimer={heroContent.disclaimer}
         socialProof={{
           avatars: [
             "/Imagenes/ME03_ES_19.png",
@@ -252,10 +251,10 @@ export default function Storefront() {
               <p className="text-zinc-500 font-mono tracking-widest text-xs">CURATED_VAULT_2026 // AUTHENTICATED_ASSETS</p>
             </div>
             <div className="flex gap-4">
-               <button className="px-6 py-2 bg-zinc-900 border border-zinc-800 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-colors">
+               <button title="Filtrar por Era" aria-label="Filtrar por Era" className="px-6 py-2 bg-zinc-900 border border-zinc-800 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-colors">
                 Filter_By_Era
                </button>
-               <button className="px-6 py-2 bg-red-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-colors">
+               <button title="Ver todos los activos" aria-label="Ver todos los activos" className="px-6 py-2 bg-red-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-colors">
                 View_All_Assets
                </button>
             </div>
@@ -297,6 +296,8 @@ export default function Storefront() {
                       e.stopPropagation();
                       toggleFavorite(card);
                     }}
+                    title={isFavorite(card.id) ? "Eliminar de favoritos" : "Añadir a favoritos"}
+                    aria-label={isFavorite(card.id) ? "Eliminar de favoritos" : "Añadir a favoritos"}
                     className={cn(
                       "absolute top-6 left-6 z-30 w-10 h-10 rounded-full flex items-center justify-center transition-all backdrop-blur-md border border-white/10",
                       isFavorite(card.id) ? "bg-red-600 text-white" : "bg-black/60 text-white/60 hover:text-white"
@@ -340,6 +341,8 @@ export default function Storefront() {
                     </div>
                     <button 
                       onClick={() => addToCart(card)}
+                      title={`Añadir ${card.name} al carrito`}
+                      aria-label={`Añadir ${card.name} al carrito`}
                       className="w-12 h-12 bg-white text-black rounded-xl flex items-center justify-center hover:bg-red-600 hover:text-white transition-all transform group-hover:scale-110 shadow-xl"
                     >
                       <Plus className="w-6 h-6" />
@@ -392,7 +395,6 @@ export default function Storefront() {
         />
       </section>
 
-      <StoreFooter />
       </div>
     </div>
   );

@@ -91,7 +91,7 @@ export default function UserProfile() {
 
   const fetchUserProfile = async (userId: string) => {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('points, level, pokeballs')
       .eq('id', userId)
       .single();
@@ -156,11 +156,11 @@ export default function UserProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center font-sans">
+      <div className="min-h-screen bg-background flex items-center justify-center font-sans">
         <div className="relative w-24 h-24 flex items-center justify-center">
-          <div className="absolute inset-0 border-[1px] border-cyan-500/20 rounded-full animate-[spin_4s_linear_infinite]"></div>
+          <div className="absolute inset-0 border-[1px] border-primary/20 rounded-full animate-[spin_4s_linear_infinite]"></div>
           <div className="absolute inset-2 border-[1px] border-red-500/30 rounded-full animate-[spin_3s_linear_infinite_reverse]"></div>
-          <Hexagon className="w-8 h-8 text-white animate-pulse" />
+          <Hexagon className="w-8 h-8 text-foreground animate-pulse" />
         </div>
       </div>
     );
@@ -168,7 +168,7 @@ export default function UserProfile() {
 
   return (
     <div 
-      className="min-h-screen bg-[#030303] text-zinc-100 overflow-x-hidden pb-24 selection:bg-cyan-500/30 font-sans"
+      className="min-h-screen bg-background text-foreground overflow-x-hidden pb-24 selection:bg-primary/30 font-sans transition-colors duration-500"
     >
       {/* Dynamic Background */}
       <div className="fixed inset-0 z-0 pointer-events-none opacity-40">
@@ -178,10 +178,10 @@ export default function UserProfile() {
       </div>
 
       {/* Top Navigation Bar */}
-      <nav className="sticky top-0 z-50 border-b border-white/5 bg-[#030303]/60 backdrop-blur-2xl">
+      <nav className="sticky top-0 z-50 border-b border-border bg-background/60 backdrop-blur-2xl">
         <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-4 text-zinc-400 hover:text-white transition-all group">
-            <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center bg-white/5 group-hover:bg-white/10 group-hover:border-white/20 transition-all">
+          <Link to="/" className="flex items-center gap-4 text-muted-foreground hover:text-foreground transition-all group">
+            <div className="w-8 h-8 rounded-full border border-border flex items-center justify-center bg-muted group-hover:bg-accent group-hover:border-foreground/20 transition-all">
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
             </div>
             <span className="font-bold text-xs uppercase tracking-[0.2em]">Nexus Hub</span>
@@ -214,9 +214,9 @@ export default function UserProfile() {
             animate={{ opacity: 1, scale: 1 }}
             className="group relative h-[220px] perspective-1000 mb-8"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/30 via-purple-500/20 to-red-500/30 rounded-[2rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-purple-500/20 to-red-500/30 rounded-[2rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
             
-            <div className="relative h-full bg-gradient-to-br from-zinc-900 to-black border border-white/10 rounded-[2rem] p-6 overflow-hidden shadow-2xl transition-all duration-500 group-hover:shadow-cyan-500/10">
+            <div className="relative h-full bg-card border border-border rounded-[2rem] p-6 overflow-hidden shadow-2xl transition-all duration-500 group-hover:shadow-primary/10">
               <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(circle_at_50%_50%,rgba(34,211,238,0.2)_0%,transparent_50%)] animate-pulse"></div>
               
               <div className="relative z-10 flex h-full gap-6">
@@ -233,16 +233,16 @@ export default function UserProfile() {
 
                 <div className="flex-1 flex flex-col justify-between py-1">
                   <div>
-                    <h3 className="text-[9px] font-black text-cyan-400 uppercase tracking-[0.3em] mb-1">Trainer Registry</h3>
-                    <p className="text-xl font-black text-white uppercase tracking-tighter italic">
+                    <h3 className="text-[9px] font-black text-primary uppercase tracking-[0.3em] mb-1">Trainer Registry</h3>
+                    <p className="text-xl font-black text-foreground uppercase tracking-tighter italic">
                       {profileData.email.split('@')[0]}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <span className="text-[7px] font-mono text-zinc-500 uppercase">Tier</span>
-                      <p className="text-[10px] font-bold text-white uppercase tracking-widest">Apex Legend</p>
+                      <span className="text-[7px] font-mono text-muted-foreground uppercase">Tier</span>
+                      <p className="text-[10px] font-bold text-foreground uppercase tracking-widest">Apex Legend</p>
                     </div>
                     <div>
                       <span className="text-[7px] font-mono text-zinc-500 uppercase">Vault Size</span>
@@ -268,9 +268,9 @@ export default function UserProfile() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="group relative p-[1px] rounded-[2rem] overflow-hidden bg-gradient-to-b from-white/10 to-transparent"
+            className="group relative p-[1px] rounded-[2rem] overflow-hidden bg-gradient-to-b from-border to-transparent"
           >
-            <div className="relative bg-[#080808]/90 backdrop-blur-xl rounded-[calc(2rem-1px)] p-8">
+            <div className="relative bg-card backdrop-blur-xl rounded-[calc(2rem-1px)] p-8">
               <div className="flex justify-between items-start mb-8">
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-white/10 flex items-center justify-center relative shadow-2xl">
                   <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full"></div>
@@ -300,9 +300,9 @@ export default function UserProfile() {
 
               <div className="space-y-3">
                 <div className="flex justify-between items-end">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Experience Points</span>
-                  <span className="text-xs font-mono text-zinc-300">
-                    <span className="text-white font-bold">{profileData.points % MAX_POINTS_PER_LEVEL}</span> / {MAX_POINTS_PER_LEVEL}
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Experience Points</span>
+                  <span className="text-xs font-mono text-muted-foreground">
+                    <span className="text-foreground font-bold">{profileData.points % MAX_POINTS_PER_LEVEL}</span> / {MAX_POINTS_PER_LEVEL}
                   </span>
                 </div>
                 <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden relative">
@@ -322,9 +322,9 @@ export default function UserProfile() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="relative p-[1px] rounded-[2rem] overflow-hidden bg-gradient-to-b from-white/5 to-transparent"
+            className="relative p-[1px] rounded-[2rem] overflow-hidden bg-gradient-to-b from-border to-transparent"
           >
-            <div className="relative bg-[#080808]/90 backdrop-blur-xl rounded-[calc(2rem-1px)] p-8">
+            <div className="relative bg-card backdrop-blur-xl rounded-[calc(2rem-1px)] p-8">
               <div className="flex items-center gap-3 mb-10">
                 <div className="p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-500">
                   <Trophy className="w-5 h-5" />
@@ -363,7 +363,7 @@ export default function UserProfile() {
                         <div>
                           <p className={cn(
                             "text-sm font-bold tracking-widest uppercase mb-1 transition-colors",
-                            isActive ? "text-white" : "text-zinc-500"
+                            isActive ? "text-foreground" : "text-muted-foreground"
                           )}>{milestone.label}</p>
                           <p className="text-[10px] font-mono text-zinc-500">{milestone.tier} PTS</p>
                         </div>
@@ -503,18 +503,18 @@ export default function UserProfile() {
           </div>
 
           {/* ORDER HISTORY & TRACKING */}
-          <motion.div
+          <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="relative p-[1px] rounded-[2rem] overflow-hidden bg-gradient-to-b from-white/10 to-transparent"
+            className="relative p-[1px] rounded-[2rem] overflow-hidden bg-gradient-to-b from-border to-transparent"
           >
-            <div className="relative bg-[#080808]/90 backdrop-blur-xl rounded-[calc(2rem-1px)] p-8">
+            <div className="relative bg-card backdrop-blur-xl rounded-[calc(2rem-1px)] p-8">
               <div className="flex items-center gap-3 mb-8">
-                <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
+                <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 text-primary">
                   <History className="w-5 h-5" />
                 </div>
-                <h2 className="text-lg font-bold tracking-widest uppercase text-white">Logistics & Requisitions</h2>
+                <h2 className="text-lg font-bold tracking-widest uppercase text-foreground">Logistics & Requisitions</h2>
               </div>
 
               {orders.length === 0 ? (
@@ -567,8 +567,8 @@ export default function UserProfile() {
                           </div>
                           
                           <div className="text-right">
-                            <p className="text-lg font-black text-white">${order.total_amount.toFixed(2)}</p>
-                            <p className="text-[10px] font-mono text-zinc-500">ORDER: {order.id.split('-')[0]}</p>
+                            <p className="text-lg font-black text-foreground">${order.total_amount.toFixed(2)}</p>
+                            <p className="text-[10px] font-mono text-muted-foreground">ORDER: {order.id.split('-')[0]}</p>
                           </div>
                         </div>
 
@@ -620,7 +620,7 @@ export default function UserProfile() {
                 </div>
               )}
             </div>
-          </motion.div>
+          </motion.section>
 
         </div>
       </main>

@@ -425,7 +425,11 @@ export default function UsersEngine() {
               <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">Battle Pass Global</p>
               <p className="text-xl font-black text-white">Season 4: Cyber Dawn</p>
             </div>
-            <button className="px-4 py-2 bg-red-600/20 text-red-500 border border-red-500/30 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-2">
+            <button 
+              title="Reiniciar Temporada de Battle Pass"
+              aria-label="Reiniciar Temporada"
+              className="px-4 py-2 bg-red-600/20 text-red-500 border border-red-500/30 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-2"
+            >
               <RefreshCw className="w-4 h-4" />
               Reset Season
             </button>
@@ -456,6 +460,8 @@ export default function UsersEngine() {
             
             <button 
               onClick={exportAudiences}
+              title="Exportar audiencia a CSV"
+              aria-label="Exportar audiencia"
               className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-white/10 transition-all text-[10px] font-black uppercase tracking-widest"
             >
               <Database className="w-4 h-4" />
@@ -463,9 +469,12 @@ export default function UsersEngine() {
             </button>
           </div>
             <div className="relative">
+              <label htmlFor="user-search" className="sr-only">Search Users</label>
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
               <input 
+                id="user-search"
                 type="text" 
+                title="Buscar usuarios por Email o ID"
                 placeholder="Search Email / ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -535,6 +544,7 @@ export default function UsersEngine() {
                           onClick={() => quickAirdrop(user)}
                           className="p-2 rounded-lg bg-zinc-800 hover:bg-cyan-600/20 text-zinc-500 hover:text-cyan-400 transition-all border border-white/5"
                           title="Quick Re-engage Airdrop"
+                          aria-label="Quick Airdrop"
                         >
                           <Zap className="w-4 h-4" />
                         </button>
@@ -542,6 +552,7 @@ export default function UsersEngine() {
                           onClick={() => openGodConsole(user)}
                           className="p-2 rounded-lg bg-white/5 hover:bg-red-600/20 hover:text-red-500 text-zinc-400 transition-colors inline-flex items-center justify-center border border-white/5"
                           title="Open God Console"
+                          aria-label="Open God Console"
                         >
                           <Crosshair className="w-5 h-5" />
                         </button>
@@ -732,6 +743,7 @@ export default function UsersEngine() {
                   <label className="text-[8px] font-mono text-zinc-600 uppercase">Custom Broadcast Message</label>
                   <textarea 
                     value={giftMessage}
+                    title="Mensaje de difusión"
                     onChange={e => setGiftMessage(e.target.value)}
                     placeholder="Subject: A gift from Sasori Labs..."
                     className="w-full bg-black border border-white/10 rounded-xl p-3 text-[10px] text-zinc-300 outline-none focus:border-yellow-500 h-16 resize-none"
@@ -788,7 +800,7 @@ export default function UsersEngine() {
                     <p className="text-[10px] font-mono text-zinc-500">Target: {selectedUser.email}</p>
                   </div>
                 </div>
-                <button onClick={() => setSelectedUser(null)} className="p-2 text-zinc-500 hover:text-white bg-white/5 rounded-full" title="Close">
+                <button onClick={() => setSelectedUser(null)} className="p-2 text-zinc-500 hover:text-white bg-white/5 rounded-full" title="Close" aria-label="Cerrar consola">
                   <X className="w-4 h-4" />
                 </button>
               </div>

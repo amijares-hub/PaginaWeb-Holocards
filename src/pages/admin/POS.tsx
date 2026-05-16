@@ -99,8 +99,10 @@ export default function POS() {
         <div className="glass p-4 rounded-xl border border-white/5 flex flex-col gap-4">
           <div className="flex gap-4">
             <div className="relative flex-1">
+              <label htmlFor="search-inventory" className="sr-only">Search inventory</label>
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
               <input 
+                id="search-inventory"
                 type="text" 
                 placeholder="Search inventory..."
                 value={searchTerm}
@@ -108,20 +110,24 @@ export default function POS() {
                 className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none"
               />
             </div>
-            <button className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg">
+            <button title="Quick Action" aria-label="Quick Action" className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg">
                <Zap className="w-4 h-4 text-red-500" />
             </button>
           </div>
           
           <div className="flex gap-4">
+            <label htmlFor="rarity-filter" className="sr-only">Rarity Filter</label>
             <select 
+              id="rarity-filter"
               value={rarityFilter}
               onChange={(e) => setRarityFilter(e.target.value)}
               className="bg-zinc-900 border border-zinc-800 rounded-lg py-2 px-3 text-xs focus:outline-none appearance-none cursor-pointer"
             >
               {RARITIES.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
+            <label htmlFor="set-filter" className="sr-only">Set Filter</label>
             <select 
+              id="set-filter"
               value={setFilter}
               onChange={(e) => setSetFilter(e.target.value)}
               className="bg-zinc-900 border border-zinc-800 rounded-lg py-2 px-3 text-xs focus:outline-none appearance-none cursor-pointer"
@@ -129,9 +135,11 @@ export default function POS() {
               {SETS.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-lg py-1 px-3">
-               <span className="text-[10px] font-mono text-zinc-500 uppercase">Max $</span>
+               <label htmlFor="max-price" className="text-[10px] font-mono text-zinc-500 uppercase">Max $</label>
                <input 
+                 id="max-price"
                  type="number"
+                 title="Precio Máximo"
                  placeholder="Price"
                  className="bg-transparent border-none p-0 w-20 text-xs focus:ring-0 font-mono text-white"
                  onChange={(e) => {
@@ -177,14 +185,23 @@ export default function POS() {
             <ShoppingCart className="w-5 h-5 text-red-500" />
             Current Session
           </h2>
-          <button onClick={() => setCart([])} className="text-xs text-zinc-500 hover:text-white uppercase font-bold">Clear</button>
+          <button 
+            onClick={() => setCart([])} 
+            title="Vaciar carrito"
+            aria-label="Vaciar carrito"
+            className="text-xs text-zinc-500 hover:text-white uppercase font-bold"
+          >
+            Clear
+          </button>
         </div>
 
         {/* Trainer Scanner Section */}
         <div className="px-6 py-4 border-b border-white/5 bg-black/20">
           {!scannedUser ? (
             <div className="flex gap-2">
+              <label htmlFor="trainer-scan" className="sr-only">Scan Trainer ID or Email</label>
               <input 
+                id="trainer-scan"
                 type="text" 
                 placeholder="Scan ID or Enter Email..."
                 value={searchUserQuery}
@@ -195,6 +212,8 @@ export default function POS() {
               <button 
                 onClick={scanTrainerID}
                 disabled={isScanning}
+                title="Scan Trainer QR Code"
+                aria-label="Scan Trainer QR Code"
                 className="p-2 bg-cyan-500/10 border border-cyan-500/20 rounded-lg text-cyan-400 hover:bg-cyan-500/20 transition-all"
               >
                 <QrCode className={cn("w-4 h-4", isScanning && "animate-pulse")} />
@@ -214,6 +233,8 @@ export default function POS() {
               </div>
               <button 
                 onClick={() => setScannedUser(null)}
+                title="Resetear entrenador escaneado"
+                aria-label="Resetear entrenador"
                 className="text-[10px] font-bold text-zinc-500 hover:text-white uppercase tracking-tighter"
               >
                 Reset
@@ -237,11 +258,11 @@ export default function POS() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2 bg-zinc-950 rounded-lg p-1 px-2 border border-white/5">
-                    <button onClick={() => updateQty(item.id, -1)}><Minus className="w-3 h-3" /></button>
+                    <button onClick={() => updateQty(item.id, -1)} title="Decrease quantity" aria-label="Decrease quantity"><Minus className="w-3 h-3" /></button>
                     <span className="text-xs font-mono w-4 text-center">{item.qty}</span>
-                    <button onClick={() => updateQty(item.id, 1)}><Plus className="w-3 h-3" /></button>
+                    <button onClick={() => updateQty(item.id, 1)} title="Increase quantity" aria-label="Increase quantity"><Plus className="w-3 h-3" /></button>
                   </div>
-                  <button onClick={() => removeFromCart(item.id)} className="text-zinc-600 hover:text-red-500 transition-colors">
+                  <button onClick={() => removeFromCart(item.id)} title="Remove from cart" aria-label="Remove from cart" className="text-zinc-600 hover:text-red-500 transition-colors">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -266,13 +287,15 @@ export default function POS() {
             </div>
           </div>
           
-          <button 
-            disabled={cart.length === 0}
-            className="w-full py-4 bg-red-600 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-red-700 transition-all shadow-xl shadow-red-600/20 disabled:opacity-50 disabled:grayscale"
-          >
-            <CreditCard className="w-5 h-5" />
-            Complete Transaction
-          </button>
+           <button 
+             disabled={cart.length === 0}
+             title="Finalizar transacción de venta"
+             aria-label="Finalizar transacción"
+             className="w-full py-4 bg-red-600 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-red-700 transition-all shadow-xl shadow-red-600/20 disabled:opacity-50 disabled:grayscale"
+           >
+             <CreditCard className="w-5 h-5" />
+             Complete Transaction
+           </button>
           
           <p className="text-[10px] text-center text-zinc-600 font-mono uppercase tracking-widest">
             TX_GATEWAY: SASORI_PAY_V2 • SESSION_ID: {Math.random().toString(36).substring(7).toUpperCase()}

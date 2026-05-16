@@ -9,4 +9,6 @@ export interface Card {
   images?: string[];
   threshold?: number;
   isFeatured?: boolean;
+  supplier_id?: string;
+  game_type?: 'pokemon' | 'mtg';
 }

@@ -12,18 +12,26 @@ import {
   CreditCard,
   Menu,
   X,
-  Crosshair
+  Crosshair,
+  Palette,
+  Layers,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
+import { useThemeStore } from '../../lib/useThemeStore';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
+  { icon: Palette, label: 'Home Editor', path: '/admin/home' },
   { icon: Package, label: 'Inventory', path: '/admin/inventory' },
+  { icon: Layers, label: 'Collections', path: '/admin/collections' },
   { icon: ShoppingCart, label: 'Orders', path: '/admin/orders' },
   { icon: CreditCard, label: 'POS Terminal', path: '/admin/pos' },
   { icon: Crosshair, label: 'Users Engine', path: '/admin/users' },
+  { icon: Settings, label: 'System Settings', path: '/admin/system' },
 ];
 
 export default function AdminLayout() {
@@ -38,9 +46,9 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-[#09090b] text-white">
+    <div className="flex h-screen bg-background text-foreground transition-colors duration-300">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-[#27272a] bg-[#09090b] hidden lg:flex flex-col flex-shrink-0">
+      <aside className="w-64 border-r border-border bg-sidebar hidden lg:flex flex-col flex-shrink-0 transition-colors">
         <div className="p-6">
           <div className="flex items-center mb-8">
             <img src="https://dopieoflkqfalnuvpwch.supabase.co/storage/v1/object/public/Imagen%20De%20Logo%20de%20Empresa/logo%20Holocard.jpg" alt="HoloCards" className="h-8 w-auto object-contain" />
@@ -55,12 +63,12 @@ export default function AdminLayout() {
                   "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group",
                   location.pathname === item.path 
                     ? "bg-red-600/10 text-red-500" 
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                 )}
               >
                 <item.icon className={cn(
                   "w-5 h-5",
-                  location.pathname === item.path ? "text-red-500" : "text-zinc-500 group-hover:text-zinc-300"
+                  location.pathname === item.path ? "text-red-500" : "text-muted-foreground group-hover:text-foreground"
                 )} />
                 <span className="font-medium">{item.label}</span>
                 {location.pathname === item.path && (
@@ -74,10 +82,10 @@ export default function AdminLayout() {
           </nav>
         </div>
 
-        <div className="mt-auto p-6 border-t border-[#27272a]">
+        <div className="mt-auto p-6 border-t border-border">
           <button 
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full text-zinc-400 hover:text-white transition-colors"
+            className="flex items-center gap-3 px-4 py-3 w-full text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-all"
             title="Logout"
           >
             <LogOut className="w-5 h-5" />
@@ -87,14 +95,16 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden relative">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-red-600/5 blur-[120px] rounded-full pointer-events-none" />
+        
         {/* Top Header */}
-        <header className="sticky top-0 h-16 border-b border-[#27272a] bg-[#09090b]/80 backdrop-blur-xl flex items-center justify-between px-4 sm:px-8 z-50">
+        <header className="sticky top-0 h-16 border-b border-border bg-header backdrop-blur-2xl flex items-center justify-between px-4 sm:px-8 z-50 transition-colors">
           <div className="flex items-center gap-4 sm:gap-6">
             {/* Mobile Menu Toggle */}
             <button 
               onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2 lg:hidden text-zinc-400 hover:text-white"
+              className="p-2 lg:hidden text-muted-foreground hover:text-foreground"
               title="Open Mobile Menu"
             >
               <Menu className="w-6 h-6" />
@@ -102,40 +112,54 @@ export default function AdminLayout() {
 
             <Link 
               to="/" 
-              className="hidden xs:flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-xs font-bold uppercase tracking-widest transition-all group"
+              className="hidden xs:flex items-center gap-2 px-3 py-1.5 bg-accent/50 hover:bg-accent border border-border rounded-lg text-xs font-bold uppercase tracking-widest transition-all group"
             >
               <LogOut className="w-3.5 h-3.5 rotate-180 group-hover:-translate-x-1 transition-transform" />
               <span className="hidden sm:inline">Sair para Home</span>
             </Link>
             
             <div className="relative w-40 sm:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input 
                 type="text" 
                 placeholder="Search..."
-                className="w-full bg-zinc-900/50 border border-[#27272a] rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-red-500 transition-all font-mono"
+                className="w-full bg-background border border-border rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-red-500 transition-all font-mono text-foreground placeholder:text-muted-foreground/50"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg relative" title="Notifications">
+            <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg relative transition-all" title="Notifications">
               <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-[#09090b]"></span>
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-background"></span>
             </button>
-            <div className="h-8 w-[1px] bg-zinc-800 mx-2"></div>
+            <div className="h-8 w-[1px] bg-border mx-2"></div>
+            
+            <button 
+              onClick={() => useThemeStore.getState().toggleTheme()}
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-all"
+              title="Toggle Theme"
+            >
+              {useThemeStore((state) => state.theme) === 'dark' ? (
+                <Sun className="w-5 h-5 text-yellow-500" />
+              ) : (
+                <Moon className="w-5 h-5 text-indigo-400" />
+              )}
+            </button>
+
+            <div className="h-8 w-[1px] bg-border mx-2"></div>
             
             <div className="relative">
               <button 
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center gap-3 hover:bg-zinc-800/50 p-1 rounded-xl transition-colors group"
+                className="flex items-center gap-3 hover:bg-accent p-1 rounded-xl transition-colors group"
                 title="Toggle Profile Menu"
               >
                 <div className="text-right hidden sm:block">
                   <p className="text-sm font-bold group-hover:text-red-500 transition-colors">Admin User</p>
-                  <p className="text-xs text-zinc-500 uppercase tracking-widest font-black">Owner</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-black">Owner</p>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 p-1 group-hover:border-red-500/50 transition-colors">
+                <div className="w-10 h-10 rounded-full bg-accent border border-border p-1 group-hover:border-red-500/50 transition-colors">
                   <div className="w-full h-full rounded-full bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center">
                     <User className="w-5 h-5 text-white" />
                   </div>
@@ -144,9 +168,9 @@ export default function AdminLayout() {
 
               {/* Profile Dropdown */}
               {isProfileOpen && (
-                <div className="absolute top-full right-0 mt-2 w-72 glass border border-white/5 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="p-4 border-b border-white/5 bg-zinc-900/50">
-                    <p className="text-xs font-black text-zinc-500 uppercase tracking-[0.2em] mb-3">Notification Preferences</p>
+                <div className="absolute top-full right-0 mt-2 w-72 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="p-4 border-b border-border bg-muted/30">
+                    <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mb-3">Notification Preferences</p>
                     <div className="space-y-4">
                       <div 
                         onClick={() => setEmailAlerts(!emailAlerts)}
@@ -154,12 +178,12 @@ export default function AdminLayout() {
                         title="Toggle Email Alerts"
                       >
                         <div className="flex flex-col">
-                          <span className="text-xs font-bold text-zinc-200">Email Alerts</span>
-                          <span className="text-[10px] text-zinc-500 uppercase">Critical stock updates</span>
+                          <span className="text-xs font-bold text-foreground">Email Alerts</span>
+                          <span className="text-[10px] text-muted-foreground uppercase">Critical stock updates</span>
                         </div>
                         <div className={cn(
                           "w-8 h-4 rounded-full relative transition-colors duration-200",
-                          emailAlerts ? "bg-red-600" : "bg-zinc-700"
+                          emailAlerts ? "bg-red-600" : "bg-muted"
                         )}>
                           <div className={cn(
                             "absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all duration-200",
@@ -173,12 +197,12 @@ export default function AdminLayout() {
                         title="Toggle Push Notifications"
                       >
                         <div className="flex flex-col">
-                          <span className="text-xs font-bold text-zinc-200">Push Notifications</span>
-                          <span className="text-[10px] text-zinc-500 uppercase">New order alerts</span>
+                          <span className="text-xs font-bold text-foreground">Push Notifications</span>
+                          <span className="text-[10px] text-muted-foreground uppercase">New order alerts</span>
                         </div>
                         <div className={cn(
                           "w-8 h-4 rounded-full relative transition-colors duration-200",
-                          pushNotifications ? "bg-red-600" : "bg-zinc-700"
+                          pushNotifications ? "bg-red-600" : "bg-muted"
                         )}>
                           <div className={cn(
                             "absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all duration-200",
@@ -187,14 +211,14 @@ export default function AdminLayout() {
                         </div>
                       </div>
                       <div className="group cursor-pointer pt-2">
-                        <Link to="/admin/settings" className="text-[10px] font-black text-red-500 uppercase tracking-widest hover:underline">Manage All Alerts</Link>
+                        <Link to="/admin/system" className="text-[10px] font-black text-red-500 uppercase tracking-widest hover:underline">Manage All Alerts</Link>
                       </div>
                     </div>
                   </div>
                   <div className="p-2">
                     <button 
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:text-white hover:bg-red-600/10 transition-all text-xs font-black uppercase tracking-widest"
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:text-foreground hover:bg-red-600/10 transition-all text-xs font-black uppercase tracking-widest"
                       title="Sign Out Protocol"
                     >
                       <LogOut className="w-4 h-4" />
@@ -230,14 +254,14 @@ export default function AdminLayout() {
                 animate={{ x: 0 }}
                 exit={{ x: '-100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed top-0 left-0 bottom-0 w-72 bg-[#09090b] border-r border-[#27272a] z-[70] lg:hidden flex flex-col"
+                className="fixed top-0 left-0 bottom-0 w-72 bg-sidebar border-r border-border z-[70] lg:hidden flex flex-col"
               >
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center">
                       <img src="https://dopieoflkqfalnuvpwch.supabase.co/storage/v1/object/public/Imagen%20De%20Logo%20de%20Empresa/logo%20Holocard.jpg" alt="HoloCards" className="h-8 w-auto object-contain" />
                     </div>
-                    <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-zinc-400 hover:text-white" title="Close Menu">
+                    <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-muted-foreground hover:text-foreground" title="Close Menu">
                       <X className="w-6 h-6" />
                     </button>
                   </div>
@@ -252,12 +276,12 @@ export default function AdminLayout() {
                           "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group",
                           location.pathname === item.path 
                             ? "bg-red-600/10 text-red-500" 
-                            : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+                            : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
                         )}
                       >
                         <item.icon className={cn(
                           "w-5 h-5",
-                          location.pathname === item.path ? "text-red-500" : "text-zinc-500 group-hover:text-zinc-300"
+                          location.pathname === item.path ? "text-red-500" : "text-muted-foreground group-hover:text-foreground"
                         )} />
                         <span className="font-medium">{item.label}</span>
                       </Link>
@@ -265,10 +289,10 @@ export default function AdminLayout() {
                   </nav>
                 </div>
 
-                <div className="mt-auto p-6 border-t border-[#27272a]">
+                <div className="mt-auto p-6 border-t border-border">
                   <button 
                     onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-3 w-full text-zinc-400 hover:text-white transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 w-full text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-all"
                     title="Logout"
                   >
                     <LogOut className="w-5 h-5" />

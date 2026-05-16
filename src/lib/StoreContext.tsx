@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Card } from '../types';
 import { fetchStorageImages } from '../services/imageSync';
+import { supabase } from './supabase';
 
 interface CartItem extends Card {
   quantity: number;
@@ -16,6 +17,14 @@ interface StoreContextType {
   toggleFavorite: (card: Card) => void;
   isFavorite: (cardId: string) => boolean;
   clearCart: () => void;
+  systemSettings: Record<string, any>;
+  calculatePrice: (costPrice: number) => number;
+  getLootProbability: (rarity: string) => number;
+  freeShippingThreshold: number;
+  announcement: { active: boolean, message: string, color: string };
+  heroContent: { title: string, subtitle: string, disclaimer: string };
+  activeSuppliers: string[];
+  homepageDesign: Record<string, any>;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -24,6 +33,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [cart, setCart] = useState<CartItem[]>([]);
   const [favorites, setFavorites] = useState<Card[]>([]);
   const [storageImages, setStorageImages] = useState<string[]>([]);
+  const [systemSettings, setSystemSettings] = useState<Record<string, any>>({});
+  const [homepageDesign, setHomepageDesign] = useState<Record<string, any>>({});
 
   // Load from localStorage and fetch remote images
   useEffect(() => {
@@ -48,6 +59,49 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         })));
       }
     });
+
+    // Fetch System Settings
+    const fetchSettings = async () => {
+      const { data, error } = await supabase.from('system_settings').select('*');
+      if (!error && data) {
+        const settingsMap = data.reduce((acc: any, item: any) => {
+          acc[item.id] = item.value.value;
+          return acc;
+        }, {});
+        setSystemSettings(settingsMap);
+      }
+    };
+    fetchSettings();
+
+    // Fetch Homepage Design
+    const fetchDesign = async () => {
+      const { data, error } = await supabase.from('homepage_clon_design').select('*');
+      if (!error && data) {
+        const designMap = data.reduce((acc: any, item: any) => {
+          acc[item.component_id] = item.ui_data;
+          return acc;
+        }, {});
+        setHomepageDesign(designMap);
+      }
+    };
+    fetchDesign();
+
+    // Subscribe to settings changes
+    const settingsSub = supabase
+      .channel('system_settings_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, fetchSettings)
+      .subscribe();
+
+    // Subscribe to design changes
+    const designSub = supabase
+      .channel('homepage_design_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'homepage_clon_design' }, fetchDesign)
+      .subscribe();
+
+    return () => {
+      settingsSub.unsubscribe();
+      designSub.unsubscribe();
+    };
   }, []);
 
   // Sync to localStorage
@@ -101,6 +155,62 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const clearCart = () => setCart([]);
 
+  const calculatePrice = (costPrice: number) => {
+    const margin = systemSettings['financial_margin'] || 1.15;
+    return costPrice * margin;
+  };
+
+  const getLootProbability = (rarity: string) => {
+    const tables = systemSettings['economy_loot_tables'] || {
+      'Common': 70,
+      'Uncommon': 40,
+      'Rare': 20,
+      'Ultra Rare': 10,
+      'Secret Rare': 5
+    };
+    return tables[rarity] || 50;
+  };
+
+  const freeShippingThreshold = systemSettings['logistics_shipping']?.free_shipping_threshold || 50;
+  const announcement = systemSettings['content_announcement'] || {
+    active: true,
+    message: "¡BIENVENIDO A SASORI LABS! ENVÍOS GRATIS EN PEDIDOS SUPERIORES A 50€",
+    color: "bg-red-600",
+    scroll_speed: 5000
+  };
+
+  const heroContent = systemSettings['content_hero'] || {
+    title: "EL SANTUARIO POKÉMON EN CANARIAS.",
+    subtitle: "DESCUBRE EL COLECCIONISMO DE ÉLITE. CARTAS GRADUADAS, SELLADAS Y RAREZAS EXCLUSIVAS CON ENVÍO ASEGURADO A TODAS LAS ISLAS CON EL SELLO DE SASORI LABS.",
+    disclaimer: "*AUTENTICIDAD GARANTIZADA // ENVÍOS 24/48H"
+  };
+
+  const marketing = homepageDesign['ui_marketing'] || {
+    countdown: { isActive: false, endDate: '', message: '', color: '#EF4444' },
+    gamification: { popupEnabled: true, captureChance: 0.05, currentEntity: 'Charizard', popupMessage: '' }
+  };
+
+  const [activeSuppliers, setActiveSuppliers] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      const { data, error } = await supabase.from('suppliers').select('id').eq('active', true);
+      if (!error && data) {
+        setActiveSuppliers(data.map(s => s.id));
+      }
+    };
+    fetchSuppliers();
+
+    const sub = supabase
+      .channel('suppliers_sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'suppliers' }, () => {
+        fetchSuppliers();
+      })
+      .subscribe();
+    
+    return () => { supabase.removeChannel(sub); };
+  }, []);
+
   return (
     <StoreContext.Provider value={{ 
       cart, 
@@ -111,7 +221,16 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       updateQuantity, 
       toggleFavorite, 
       isFavorite,
-      clearCart
+      clearCart,
+      systemSettings,
+      calculatePrice,
+      getLootProbability,
+      freeShippingThreshold,
+      announcement,
+      heroContent,
+      activeSuppliers,
+      homepageDesign,
+      marketing
     }}>
       {children}
     </StoreContext.Provider>

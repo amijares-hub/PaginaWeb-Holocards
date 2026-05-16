@@ -82,6 +82,12 @@ export default function ProfileSettings() {
       alert('UPDATE FAILED: Protocol breach detected or network unstable.');
     } else {
       if (isFirstCompletion) {
+        await supabase.from('user_notifications').insert({
+          user_id: session.user.id,
+          message: 'PROTOCOL SYNC: +250 EXP & 5 Pokéballs awarded for Identity Matrix completion.',
+          type: 'gift',
+          read: false
+        });
         alert('MISSION COMPLETE: +250 EXP & 5 Pokéballs awarded for Identity Synchronization!');
       }
       setTimeout(() => navigate('/perfil'), 500);
@@ -107,7 +113,11 @@ export default function ProfileSettings() {
 
       <nav className="sticky top-0 z-50 border-b border-white/5 bg-[#030303]/60 backdrop-blur-2xl">
         <div className="max-w-[800px] mx-auto px-6 h-16 flex items-center justify-between">
-          <Link to="/perfil" className="flex items-center gap-3 text-zinc-400 hover:text-white transition-all group">
+          <Link 
+            to="/perfil" 
+            title="Volver al Nexus (Perfil)"
+            className="flex items-center gap-3 text-zinc-400 hover:text-white transition-all group"
+          >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             <span className="font-bold text-[10px] uppercase tracking-[0.2em]">Return to Nexus</span>
           </Link>
@@ -140,12 +150,14 @@ export default function ProfileSettings() {
               
               <div className="space-y-4">
                 <div className="group space-y-2">
-                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                  <label htmlFor="profile-email" className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
                     <Mail className="w-3 h-3" /> Electronic Mail
                   </label>
                   <div className="relative">
                     <input 
+                      id="profile-email"
                       type="text" 
+                      title="Correo electrónico (No editable)"
                       value={session?.user?.email} 
                       readOnly 
                       className="w-full bg-zinc-900/50 border border-white/5 rounded-2xl px-5 py-4 text-sm font-mono text-zinc-500 cursor-not-allowed outline-none"
@@ -166,11 +178,13 @@ export default function ProfileSettings() {
               </div>
 
               <div className="group space-y-2">
-                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                <label htmlFor="profile-phone" className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
                   <Smartphone className="w-3 h-3" /> Phone Number
                 </label>
                 <input 
+                  id="profile-phone"
                   type="text" 
+                  title="Número de teléfono"
                   value={formData.phone}
                   onChange={e => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="+1 (555) 000-0000"
@@ -188,9 +202,11 @@ export default function ProfileSettings() {
 
               <div className="space-y-6">
                 <div className="group space-y-2">
-                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Physical Address / Street</label>
+                  <label htmlFor="profile-street" className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Physical Address / Street</label>
                   <input 
+                    id="profile-street"
                     type="text" 
+                    title="Calle / Dirección"
                     value={formData.address_street}
                     onChange={e => setFormData({ ...formData, address_street: e.target.value })}
                     placeholder="Enter full address details..."
@@ -200,9 +216,11 @@ export default function ProfileSettings() {
 
                 <div className="grid grid-cols-2 gap-6">
                   <div className="group space-y-2">
-                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">City / Sector</label>
+                    <label htmlFor="profile-city" className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">City / Sector</label>
                     <input 
+                      id="profile-city"
                       type="text" 
+                      title="Ciudad / Sector"
                       value={formData.address_city}
                       onChange={e => setFormData({ ...formData, address_city: e.target.value })}
                       placeholder="Neo-Tokyo"
@@ -210,9 +228,11 @@ export default function ProfileSettings() {
                     />
                   </div>
                   <div className="group space-y-2">
-                    <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Postal Code</label>
+                    <label htmlFor="profile-zip" className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Postal Code</label>
                     <input 
+                      id="profile-zip"
                       type="text" 
+                      title="Código Postal"
                       value={formData.address_zip}
                       onChange={e => setFormData({ ...formData, address_zip: e.target.value })}
                       placeholder="00000"
@@ -222,11 +242,13 @@ export default function ProfileSettings() {
                 </div>
 
                 <div className="group space-y-2">
-                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                  <label htmlFor="profile-country" className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
                     <Globe className="w-3 h-3" /> Sovereign Territory (Country)
                   </label>
                   <input 
+                    id="profile-country"
                     type="text" 
+                    title="País"
                     value={formData.address_country}
                     onChange={e => setFormData({ ...formData, address_country: e.target.value })}
                     placeholder="United Earth"
@@ -246,6 +268,8 @@ export default function ProfileSettings() {
               <button
                 type="submit"
                 disabled={saving}
+                title="Guardar cambios de identidad"
+                aria-label="Guardar cambios"
                 className={cn(
                   "flex items-center gap-3 px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all",
                   saving 

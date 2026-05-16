@@ -35,7 +35,6 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { cn } from '../lib/utils';
 import { StoreNavbar } from '../components/layout/StoreNavbar';
-import { StoreFooter } from '../components/layout/StoreFooter';
 import { useStore } from '../lib/StoreContext';
 import { Card } from '../types';
 
@@ -78,7 +77,7 @@ const getProduct = (id: string): Product => {
 export default function CheckoutFunnel() {
   const { productId } = useParams();
   const navigate = useNavigate();
-  const { addToCart, toggleFavorite, isFavorite, storageImages } = useStore();
+  const { addToCart, toggleFavorite, isFavorite, storageImages, calculatePrice } = useStore();
   
   const product = React.useMemo(() => {
     const raw = getProduct(productId || '1');
@@ -122,7 +121,7 @@ export default function CheckoutFunnel() {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'apple' | 'google'>('card');
 
   // Calculations
-  const subtotal = product.price * quantity;
+  const subtotal = calculatePrice(product.price) * quantity;
   const shippingCost = selectedShipping.price;
   const discountAmount = appliedDiscount?.amount || 0;
   const total = subtotal + shippingCost - discountAmount;
@@ -180,7 +179,11 @@ export default function CheckoutFunnel() {
                       className="relative max-w-5xl w-full aspect-square rounded-[3rem] overflow-hidden border border-white/10"
                     >
                       <img src={mainImage} className="w-full h-full object-contain" alt="" />
-                      <button className="absolute top-8 right-8 p-4 bg-white/10 hover:bg-red-600 rounded-full transition-colors">
+                      <button 
+                        title="Cerrar Zoom"
+                        aria-label="Cerrar Zoom"
+                        className="absolute top-8 right-8 p-4 bg-white/10 hover:bg-red-600 rounded-full transition-colors"
+                      >
                         <X className="w-6 h-6 text-white" />
                       </button>
                     </motion.div>
@@ -199,6 +202,8 @@ export default function CheckoutFunnel() {
                   <div className="absolute top-8 right-8 flex flex-col gap-2">
                     <button 
                       onClick={(e) => { e.stopPropagation(); toggleFavorite(card); }}
+                      title={isFavorite(card.id) ? "Quitar de favoritos" : "Añadir a favoritos"}
+                      aria-label={isFavorite(card.id) ? "Quitar de favoritos" : "Añadir a favoritos"}
                       className={cn(
                         "p-4 backdrop-blur-xl rounded-2xl border transition-all group/heart",
                         isFavorite(card.id) ? "bg-red-600 border-red-600 text-white" : "bg-black/40 border-white/10 text-zinc-400 hover:bg-red-600/20 hover:border-red-600/40"
@@ -216,6 +221,7 @@ export default function CheckoutFunnel() {
                     <button 
                       key={i}
                       onClick={() => setMainImage(img)}
+                      title={`Ver imagen ${i + 1}`}
                       className={cn(
                         "w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0 relative group",
                         mainImage === img ? "border-red-600 shadow-[0_0_15px_rgba(220,38,38,0.3)]" : "border-white/5 opacity-40 hover:opacity-100"
@@ -255,11 +261,11 @@ export default function CheckoutFunnel() {
                   {/* Precio */}
                   <div className="flex items-end gap-6 pt-2">
                      <div className="flex items-baseline gap-1">
-                        <span className="text-7xl font-black text-white tracking-tighter italic">79</span>
-                        <span className="text-3xl font-black text-red-600 tracking-tighter italic">/90€</span>
+                        <span className="text-7xl font-black text-white tracking-tighter italic">{Math.floor(calculatePrice(product.price))}</span>
+                        <span className="text-3xl font-black text-red-600 tracking-tighter italic">/{((calculatePrice(product.price) % 1) * 100).toFixed(0).padStart(2, '0')}€</span>
                      </div>
                      {product.oldPrice && (
-                       <span className="text-2xl text-zinc-600 line-through font-black italic mb-2">85,00€</span>
+                       <span className="text-2xl text-zinc-600 line-through font-black italic mb-2">{calculatePrice(product.oldPrice).toFixed(2)}€</span>
                      )}
                   </div>
 
@@ -276,6 +282,7 @@ export default function CheckoutFunnel() {
                     <div className="flex items-center gap-4 bg-white/5 border border-white/10 p-2 rounded-2xl">
                       <button 
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        title="Reducir cantidad"
                         className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors text-zinc-400 hover:text-white"
                       >
                         <Minus className="w-4 h-4" />
@@ -283,6 +290,7 @@ export default function CheckoutFunnel() {
                       <span className="w-8 text-center text-lg font-black italic text-white">{quantity}</span>
                       <button 
                         onClick={() => setQuantity(quantity + 1)}
+                        title="Aumentar cantidad"
                         className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors text-zinc-400 hover:text-white"
                       >
                         <Plus className="w-4 h-4" />
@@ -310,6 +318,7 @@ export default function CheckoutFunnel() {
                       <div className="grid grid-cols-2 gap-3">
                          <button 
                            onClick={() => setNotifMode('email')}
+                           title="Recibir notificaciones por Email"
                            className={cn(
                              "flex items-center justify-center gap-3 py-4 rounded-xl border font-black uppercase text-[10px] tracking-widest transition-all",
                              notifMode === 'email' ? "bg-red-600 border-red-600 text-white shadow-lg" : "bg-white/5 border-white/5 text-zinc-500 hover:border-white/20"
@@ -320,6 +329,7 @@ export default function CheckoutFunnel() {
                          </button>
                          <button 
                            onClick={() => setNotifMode('sms')}
+                           title="Recibir notificaciones por SMS"
                            className={cn(
                              "flex items-center justify-center gap-3 py-4 rounded-xl border font-black uppercase text-[10px] tracking-widest transition-all",
                              notifMode === 'sms' ? "bg-red-600 border-red-600 text-white shadow-lg" : "bg-white/5 border-white/5 text-zinc-500 hover:border-white/20"
@@ -334,6 +344,7 @@ export default function CheckoutFunnel() {
                         <div className="relative">
                           <Input 
                             value={notifContact}
+                            title="Datos de contacto para alerta"
                             onChange={(e) => setNotifContact(e.target.value)}
                             placeholder={notifMode === 'email' ? 'Introduce tu correo cifrado' : 'Introduce tu terminal (+34...)'}
                             className="h-16 px-6 bg-white/5 border-white/10 rounded-2xl font-bold placeholder:text-zinc-600 focus:border-red-600/50 transition-all focus:ring-0" 
@@ -401,7 +412,11 @@ export default function CheckoutFunnel() {
               {/* LEFT: Checkout Forms */}
               <div className="lg:col-span-8 space-y-8">
                 <div className="flex items-center gap-4 mb-8">
-                   <button onClick={() => setCurrentStep(0)} className="p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-red-600/20 transition-all">
+                    <button 
+                      onClick={() => setCurrentStep(0)} 
+                      title="Volver a la vista de producto"
+                      className="p-3 bg-white/5 rounded-xl border border-white/10 hover:bg-red-600/20 transition-all"
+                    >
                      <X className="w-5 h-5 text-zinc-400" />
                    </button>
                    <h2 className="text-4xl font-black italic uppercase tracking-tighter">Bóveda de Pago_</h2>
@@ -466,6 +481,7 @@ export default function CheckoutFunnel() {
                         <button 
                           key={pm.id}
                           onClick={() => setPaymentMethod(pm.id)}
+                          title={`Pagar con ${pm.name}`}
                           className={cn(
                             "p-6 rounded-2xl border-2 flex flex-col items-center justify-center gap-4 transition-all overflow-hidden relative",
                             paymentMethod === pm.id ? "bg-red-600/10 border-red-600 shadow-[0_0_20px_rgba(220,38,38,0.2)]" : "bg-white/2 border-white/5 hover:border-white/20"
@@ -484,12 +500,12 @@ export default function CheckoutFunnel() {
 
                     <div className="pt-6 space-y-6">
                       <div className="grid md:grid-cols-2 gap-4">
-                        <Input placeholder="Nombre del Titular" className="h-16 bg-white/5 border-white/10 rounded-xl focus:ring-0 focus:border-red-600/50" />
-                        <Input placeholder="Número de Enlace Cifrado" className="h-16 bg-white/5 border-white/10 rounded-xl focus:ring-0 focus:border-red-600/50" />
+                        <Input title="Nombre del Titular" placeholder="Nombre del Titular" className="h-16 bg-white/5 border-white/10 rounded-xl focus:ring-0 focus:border-red-600/50" />
+                        <Input title="Número de Tarjeta" placeholder="Número de Enlace Cifrado" className="h-16 bg-white/5 border-white/10 rounded-xl focus:ring-0 focus:border-red-600/50" />
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <Input placeholder="MM/YY" className="h-16 bg-white/5 border-white/10 rounded-xl focus:ring-0 focus:border-red-600/50" />
-                        <Input placeholder="CVC" className="h-16 bg-white/5 border-white/10 rounded-xl focus:ring-0 focus:border-red-600/50" />
+                        <Input title="Fecha de Expiración" placeholder="MM/YY" className="h-16 bg-white/5 border-white/10 rounded-xl focus:ring-0 focus:border-red-600/50" />
+                        <Input title="Código CVC" placeholder="CVC" className="h-16 bg-white/5 border-white/10 rounded-xl focus:ring-0 focus:border-red-600/50" />
                         <div className="hidden md:flex items-center justify-center px-4 bg-white/5 rounded-xl border border-white/5 grayscale opacity-30">
                            <ShieldCheck className="w-6 h-6" />
                         </div>
@@ -516,7 +532,7 @@ export default function CheckoutFunnel() {
                          <div className="flex-1 space-y-1">
                             <p className="text-[11px] font-black uppercase text-white leading-tight italic">{product.name}</p>
                             <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{selectedLanguage === 'ES' ? 'Edición Español' : 'Global Edition'}</p>
-                            <p className="text-sm font-black text-red-600 italic mt-2">{(product.price * quantity).toFixed(2)}€</p>
+                            <p className="text-sm font-black text-red-600 italic mt-2">{(calculatePrice(product.price) * quantity).toFixed(2)}€</p>
                          </div>
                       </div>
 
@@ -529,8 +545,9 @@ export default function CheckoutFunnel() {
                              <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                              <Input 
                                value={discountCode}
+                               title="Código de Descuento"
                                onChange={(e) => setDiscountCode(e.target.value)}
-                               placeholder="Código de Descuento" 
+                               placeholder="CÓDIGO_SASORI" 
                                className="h-14 pl-12 bg-white/5 border-white/10 rounded-xl font-bold uppercase tracking-widest placeholder:text-zinc-600 focus:ring-0" 
                              />
                            </div>
@@ -547,7 +564,11 @@ export default function CheckoutFunnel() {
                                </span>
                                <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest italic">Ahorro Aplicado: -{appliedDiscount.amount.toFixed(2)}€</span>
                              </div>
-                             <button onClick={() => setAppliedDiscount(null)} className="p-2 bg-white/5 rounded-lg text-zinc-500 hover:text-white transition-colors">
+                             <button 
+                               onClick={() => setAppliedDiscount(null)} 
+                               title="Eliminar descuento"
+                               className="p-2 bg-white/5 rounded-lg text-zinc-500 hover:text-white transition-colors"
+                             >
                                <X className="w-3 h-3" />
                              </button>
                            </div>
@@ -636,7 +657,6 @@ export default function CheckoutFunnel() {
          </div>
          <p className="text-[10px] font-mono uppercase tracking-[0.8em] text-zinc-500 italic text-center">Sasori Labs // Authentic Distribution Protocol // 2026</p>
       </footer>
-      <StoreFooter />
       </div>
     </div>
   );
