@@ -117,7 +117,7 @@ export default function HomeV2() {
         
         {/* POKÉMON PANEL */}
         <div 
-          className="relative flex-1 min-h-[60vh] lg:min-h-0 overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500"
+          className="relative flex-1 min-h-[70vh] lg:min-h-0 overflow-hidden flex flex-col p-4 lg:p-6 transition-all duration-500"
           style={{ backgroundColor: heroData.pokemon.bgColor }}
         >
           {/* Character image — full visible, right-aligned */}
@@ -195,27 +195,21 @@ export default function HomeV2() {
               </button>
               </div>
 
-              <div className="hidden lg:flex w-[220px] xl:w-[280px] h-[160px] xl:h-[200px] mr-24 xl:mr-32 items-center justify-center relative pointer-events-none">
-                {heroData.pokemon.featuredImage ? (
-                  <img 
-                    src={heroData.pokemon.featuredImage} 
-                    alt="Destacado" 
-                    className="absolute inset-0 w-full h-full object-contain z-0 drop-shadow-2xl transition-transform" 
-                    style={{
-                      transform: `translate(${heroData.pokemon.featuredImageConfig?.x || 0}px, ${heroData.pokemon.featuredImageConfig?.y || 0}px) scale(${heroData.pokemon.featuredImageConfig?.scale || 1}) rotate(${heroData.pokemon.featuredImageConfig?.rotate || 0}deg)`,
-                      opacity: heroData.pokemon.featuredImageConfig?.opacity ?? 1
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full border-2 border-dashed border-black/20 rounded-2xl flex items-center justify-center">
-                    <span className="text-black/30 text-[10px] font-black uppercase tracking-[0.15em]">Imagen Destacada</span>
-                  </div>
-                )}
+              <div className="flex w-[130px] sm:w-[170px] lg:w-[220px] xl:w-[280px] h-[110px] sm:h-[140px] lg:h-[160px] xl:h-[200px] lg:mr-24 xl:mr-32 items-center justify-center relative pointer-events-none shrink-0">
+                <img
+                  src={heroData.pokemon.featuredImage || '/Imagenes/pikachu_hero.png'}
+                  alt="Pikachu"
+                  className="w-full h-full object-contain drop-shadow-2xl"
+                  style={heroData.pokemon.featuredImageConfig ? {
+                    transform: `translate(${heroData.pokemon.featuredImageConfig.x || 0}px, ${heroData.pokemon.featuredImageConfig.y || 0}px) scale(${heroData.pokemon.featuredImageConfig.scale || 1}) rotate(${heroData.pokemon.featuredImageConfig.rotate || 0}deg)`,
+                    opacity: heroData.pokemon.featuredImageConfig.opacity ?? 1
+                  } : undefined}
+                />
               </div>
             </div>
 
             <div 
-              className="mt-1 translate-y-[10%] rounded-[1.5rem] p-3 lg:p-4 shadow-2xl border border-white flex flex-col overflow-hidden transition-colors duration-500"
+              className="mt-2 lg:translate-y-[10%] rounded-[1.5rem] p-3 lg:p-4 shadow-2xl border border-white flex flex-col overflow-hidden transition-colors duration-500"
               style={{ backgroundColor: shelvesData.pokemonBg || '#FFFFFF' }}
             >
               <div className="flex items-center justify-between mb-2">
@@ -282,7 +276,7 @@ export default function HomeV2() {
 
         {/* MAGIC PANEL */}
         <div 
-          className="relative flex-1 min-h-[60vh] lg:min-h-0 overflow-hidden flex flex-col p-4 lg:p-6 border-t lg:border-t-0 lg:border-l border-white/10 transition-all duration-500"
+          className="relative flex-1 min-h-[70vh] lg:min-h-0 overflow-hidden flex flex-col p-4 lg:p-6 border-t lg:border-t-0 lg:border-l border-white/10 transition-all duration-500"
           style={{ backgroundColor: heroData.magic.bgColor }}
         >
           {/* Character image — full visible, right-aligned */}
@@ -361,27 +355,21 @@ export default function HomeV2() {
               </button>
               </div>
 
-              <div className="hidden lg:flex w-[220px] xl:w-[280px] h-[160px] xl:h-[200px] mr-24 xl:mr-32 items-center justify-center relative pointer-events-none">
-                {heroData.magic.featuredImage ? (
-                  <img 
-                    src={heroData.magic.featuredImage} 
-                    alt="Destacado" 
-                    className="absolute inset-0 w-full h-full object-contain z-0 drop-shadow-2xl transition-transform" 
-                    style={{
-                      transform: `translate(${heroData.magic.featuredImageConfig?.x || 0}px, ${heroData.magic.featuredImageConfig?.y || 0}px) scale(${heroData.magic.featuredImageConfig?.scale || 1}) rotate(${heroData.magic.featuredImageConfig?.rotate || 0}deg)`,
-                      opacity: heroData.magic.featuredImageConfig?.opacity ?? 1
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full border-2 border-dashed border-white/20 rounded-2xl flex items-center justify-center">
-                    <span className="text-white/30 text-[10px] font-black uppercase tracking-[0.15em]">Imagen Destacada</span>
-                  </div>
-                )}
+              <div className="flex w-[130px] sm:w-[170px] lg:w-[220px] xl:w-[280px] h-[110px] sm:h-[140px] lg:h-[160px] xl:h-[200px] lg:mr-24 xl:mr-32 items-center justify-center relative pointer-events-none shrink-0">
+                <img
+                  src={heroData.magic.featuredImage || '/Imagenes/magic_planeswalker_white.png'}
+                  alt="Planeswalker"
+                  className="w-full h-full object-contain drop-shadow-2xl"
+                  style={heroData.magic.featuredImageConfig ? {
+                    transform: `translate(${heroData.magic.featuredImageConfig.x || 0}px, ${heroData.magic.featuredImageConfig.y || 0}px) scale(${heroData.magic.featuredImageConfig.scale || 1}) rotate(${heroData.magic.featuredImageConfig.rotate || 0}deg)`,
+                    opacity: heroData.magic.featuredImageConfig.opacity ?? 1
+                  } : undefined}
+                />
               </div>
             </div>
 
             <div 
-              className="mt-1 translate-y-[10%] backdrop-blur-3xl border border-white/10 rounded-[1.5rem] p-3 lg:p-4 shadow-2xl flex flex-col overflow-hidden transition-colors duration-500"
+              className="mt-2 lg:translate-y-[10%] backdrop-blur-3xl border border-white/10 rounded-[1.5rem] p-3 lg:p-4 shadow-2xl flex flex-col overflow-hidden transition-colors duration-500"
               style={{ backgroundColor: shelvesData.magicBg ? `${shelvesData.magicBg}F2` : '#0A0A1FF2' }}
             >
               <div className="flex items-center justify-between mb-2">
