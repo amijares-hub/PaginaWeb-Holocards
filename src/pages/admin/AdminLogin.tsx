@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { ShieldCheck, Lock, Mail, Loader2, ArrowRight, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, Loader2, ArrowRight, AlertCircle, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const AdminLogin = () => {
@@ -10,6 +10,10 @@ export const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  const handleDevBypass = () => {
+    navigate('/admin');
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,6 +117,15 @@ export const AdminLogin = () => {
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
+            </button>
+
+            <button 
+              type="button"
+              onClick={handleDevBypass}
+              className="w-full py-4 bg-zinc-900 border border-zinc-800 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-zinc-800 transition-all mt-4 text-zinc-400 group"
+            >
+              <Zap className="w-4 h-4 text-red-500 group-hover:scale-125 transition-transform" />
+              Dev Mode: Skip Authorization
             </button>
           </form>
 

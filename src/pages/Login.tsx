@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
-import { User, Lock, ArrowRight, Github, Zap, UserPlus } from 'lucide-react';
+import { User, Lock, ArrowRight, Github, Zap, UserPlus, Layers } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Link, useNavigate } from 'react-router-dom';
 
