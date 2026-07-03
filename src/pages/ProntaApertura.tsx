@@ -11,7 +11,7 @@ export default function ProntaApertura() {
         se adapta a móviles y a monitores grandes. 
       */}
       <img
-        src="/landing.png"
+        src="/Imagenes/landing.png"
         alt="HoloCards - Próximamente"
         className="w-full h-full max-h-screen object-contain p-4"
       />
