@@ -36,6 +36,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import SuccessPage from './pages/SuccessPage';
 import ProductPage from './pages/ProductPage';
 import LegalPage from './pages/LegalPage';
+import ProntaApertura from './pages/ProntaApertura';
 
 function AppInner({ session }: { session: any }) {
   const { systemSettings } = useStore();
@@ -72,30 +73,37 @@ function AppInner({ session }: { session: any }) {
     <Router>
       <AnimatePresence mode="wait">
         <Routes>
-          {/* Public Storefront */}
-          <Route path="/" element={<HomeV2 />} />
-          <Route path="/catalogo" element={<Catalog />} />
-          <Route path="/producto/:id" element={<ProductPage />} />
-          <Route path="/carrito" element={<CartPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/gracias/:orderId" element={<SuccessPage />} />
 
-          {/* Legacy / alternate paths */}
-          <Route path="/storefront" element={<Storefront />} />
-          <Route path="/catalog" element={<Catalog />} />
-          <Route path="/product/:id" element={<ProductPage />} />
+          {/* ══════════════════════════════════════════════
+               🚧 MODO PRÓXIMAMENTE — RUTAS PÚBLICAS
+               La tienda real está en /dev-store (secreto)
+          ══════════════════════════════════════════════ */}
+          <Route path="/" element={<ProntaApertura />} />
 
-          {/* Auth */}
-          <Route path="/login" element={session ? <Navigate to="/perfil" /> : <Login />} />
+          {/* ══════════════════════════════════════════════
+               🔒 RUTA SECRETA DE DESARROLLO
+               Solo tú conoces este link — no indexado
+          ══════════════════════════════════════════════ */}
+          <Route path="/dev-store" element={<HomeV2 />} />
+          <Route path="/dev-store/catalogo" element={<Catalog />} />
+          <Route path="/dev-store/producto/:id" element={<ProductPage />} />
+          <Route path="/dev-store/carrito" element={<CartPage />} />
+          <Route path="/dev-store/checkout" element={<CheckoutPage />} />
+          <Route path="/dev-store/gracias/:orderId" element={<SuccessPage />} />
+          <Route path="/dev-store/perfil" element={session ? <UserProfile /> : <Navigate to="/dev-store" />} />
+          <Route path="/dev-store/profile/settings" element={session ? <ProfileSettings /> : <Navigate to="/dev-store" />} />
+          <Route path="/dev-store/login" element={session ? <Navigate to="/dev-store/perfil" /> : <Login />} />
 
-          {/* User Profile */}
-          <Route path="/perfil" element={session ? <UserProfile /> : <Navigate to="/login" />} />
-          <Route path="/profile/settings" element={session ? <ProfileSettings /> : <Navigate to="/login" />} />
+          {/* Legacy paths (mantenidos por si acaso) */}
+          <Route path="/dev-store/storefront" element={<Storefront />} />
+          <Route path="/dev-store/catalog" element={<Catalog />} />
+          <Route path="/dev-store/product/:id" element={<ProductPage />} />
 
-          {/* Admin Auth */}
+          {/* ══════════════════════════════════════════════
+               👑 ADMIN — SIEMPRE ACCESIBLE
+          ══════════════════════════════════════════════ */}
           <Route path="/admin/login" element={<AdminLogin />} />
 
-          {/* Protected Admin Routes */}
           <Route path="/admin" element={
             <ProtectedRoute>
               <AdminLayout />
@@ -112,14 +120,12 @@ function AppInner({ session }: { session: any }) {
             <Route path="system" element={<SystemSettings />} />
           </Route>
 
-          {/* Legal pages — must be last specific route */}
-          <Route path="/:slug" element={<LegalPage />} />
-
-          {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/" />} />
+          {/* Catch-all → Próximamente */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>
-      <FloatingChatBot />
+      {/* ChatBot solo en dev-store, no en la landing */}
+      {window.location.pathname.startsWith('/dev-store') && <FloatingChatBot />}
     </Router>
   );
 }

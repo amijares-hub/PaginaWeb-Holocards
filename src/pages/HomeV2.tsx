@@ -224,7 +224,7 @@ export default function HomeV2() {
             </div>
 
             <div 
-              className="mt-2 lg:translate-y-[10%] rounded-[1.5rem] p-3 lg:p-4 shadow-2xl border border-white flex flex-col overflow-hidden transition-colors duration-500"
+              className="mt-2 rounded-[1.5rem] p-3 lg:p-4 shadow-2xl border border-white flex flex-col overflow-visible transition-colors duration-500"
               style={{ backgroundColor: shelvesData.pokemonBg || '#FFFFFF' }}
             >
               <div className="flex items-center justify-between mb-2">
@@ -399,7 +399,7 @@ export default function HomeV2() {
             </div>
 
             <div 
-              className="mt-2 lg:translate-y-[10%] backdrop-blur-3xl border border-white/10 rounded-[1.5rem] p-3 lg:p-4 shadow-2xl flex flex-col overflow-hidden transition-colors duration-500"
+              className="mt-2 backdrop-blur-3xl border border-white/10 rounded-[1.5rem] p-3 lg:p-4 shadow-2xl flex flex-col overflow-visible transition-colors duration-500"
               style={{ backgroundColor: shelvesData.magicBg ? `${shelvesData.magicBg}F2` : '#0A0A1FF2' }}
             >
               <div className="flex items-center justify-between mb-2">
