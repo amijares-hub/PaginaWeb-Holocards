@@ -35,12 +35,12 @@ interface Product {
 }
 
 const LANGUAGE_OPTIONS = [
-  { id: 'Chino', label: 'CN', flag: '🇨🇳' },
-  { id: 'Español', label: 'ES', flag: '🇪🇸' },
-  { id: 'Inglés', label: 'GB', flag: '🇬🇧' },
-  { id: 'Japonés', label: 'JP', flag: '🇯🇵' },
-  { id: 'Coreano', label: 'KR', flag: '🇰🇷' },
-  { id: 'Multilenguaje', label: 'MULTI', flag: '🌍' }
+  { id: 'Chino', label: 'CN', url: 'https://flagcdn.com/w20/cn.png' },
+  { id: 'Español', label: 'ES', url: 'https://flagcdn.com/w20/es.png' },
+  { id: 'Inglés', label: 'GB', url: 'https://flagcdn.com/w20/gb.png' },
+  { id: 'Japonés', label: 'JP', url: 'https://flagcdn.com/w20/jp.png' },
+  { id: 'Coreano', label: 'KR', url: 'https://flagcdn.com/w20/kr.png' },
+  { id: 'Multilenguaje', label: 'MULTI', emoji: '🌍' }
 ];
 
 // Filter Section Component (Accordion)
@@ -129,7 +129,9 @@ const FiltersPanel = ({
               >
                 {selectedLanguages.includes(lang.id) && <Check className="w-2.5 h-2.5 text-white" strokeWidth={5} />}
               </div>
-              <span className="text-sm mr-2">{lang.flag}</span>
+              <span className="text-sm mr-2 flex items-center justify-center w-5">
+                {lang.url ? <img src={lang.url} alt={lang.label} className="w-4 h-3 object-cover rounded-sm shadow-sm" /> : lang.emoji}
+              </span>
               <span className={cn(
                 "text-[11px] font-bold uppercase tracking-widest transition-colors flex gap-1",
                 selectedLanguages.includes(lang.id) ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
