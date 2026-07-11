@@ -31,7 +31,17 @@ interface Product {
   rarity?: string;
   set?: string;
   rating?: number;
+  language?: string;
 }
+
+const LANGUAGE_OPTIONS = [
+  { id: 'Chino', label: 'CN', flag: '🇨🇳' },
+  { id: 'Español', label: 'ES', flag: '🇪🇸' },
+  { id: 'Inglés', label: 'GB', flag: '🇬🇧' },
+  { id: 'Japonés', label: 'JP', flag: '🇯🇵' },
+  { id: 'Coreano', label: 'KR', flag: '🇰🇷' },
+  { id: 'Multilenguaje', label: 'MULTI', flag: '🌍' }
+];
 
 // Filter Section Component (Accordion)
 const FilterSection = ({ title, children, defaultOpen = true }: { title: string, children: React.ReactNode, defaultOpen?: boolean }) => {
@@ -80,6 +90,7 @@ const FiltersPanel = ({
   selectedLanguages,
   priceRange,
   searchTerm,
+  languageCounts,
   onToggleCategory,
   onToggleLanguage,
   onPriceChange,
@@ -90,6 +101,7 @@ const FiltersPanel = ({
   selectedLanguages: string[];
   priceRange: [number, number];
   searchTerm: string;
+  languageCounts: Record<string, number>;
   onToggleCategory: (id: string) => void;
   onToggleLanguage: (lang: string) => void;
   onPriceChange: (val: number) => void;
@@ -102,27 +114,31 @@ const FiltersPanel = ({
 
     <FilterSection title="Idioma">
       <div className="space-y-3">
-        {['Español', 'Japonés', 'Inglés'].map((lang) => (
-          <label key={lang} className="flex items-center group cursor-pointer">
-            <div 
-              onClick={() => onToggleLanguage(lang)}
-              className={cn(
-                "w-4 h-4 rounded-sm border transition-all flex items-center justify-center mr-3 shrink-0",
-                selectedLanguages.includes(lang) 
-                  ? "bg-primary border-primary" 
-                  : "bg-background border-border group-hover:border-primary/50"
-              )}
-            >
-              {selectedLanguages.includes(lang) && <Check className="w-2.5 h-2.5 text-white" strokeWidth={5} />}
-            </div>
-            <span className={cn(
-              "text-[11px] font-bold uppercase tracking-widest transition-colors",
-              selectedLanguages.includes(lang) ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
-            )}>
-              {lang}
-            </span>
-          </label>
-        ))}
+        {LANGUAGE_OPTIONS.map((lang) => {
+          const count = languageCounts[lang.id] || 0;
+          return (
+            <label key={lang.id} className="flex items-center group cursor-pointer">
+              <div 
+                onClick={() => onToggleLanguage(lang.id)}
+                className={cn(
+                  "w-4 h-4 rounded-sm border transition-all flex items-center justify-center mr-3 shrink-0",
+                  selectedLanguages.includes(lang.id) 
+                    ? "bg-primary border-primary" 
+                    : "bg-background border-border group-hover:border-primary/50"
+                )}
+              >
+                {selectedLanguages.includes(lang.id) && <Check className="w-2.5 h-2.5 text-white" strokeWidth={5} />}
+              </div>
+              <span className="text-sm mr-2">{lang.flag}</span>
+              <span className={cn(
+                "text-[11px] font-bold uppercase tracking-widest transition-colors flex gap-1",
+                selectedLanguages.includes(lang.id) ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+              )}>
+                {lang.label} <span className="opacity-50 font-normal">({count})</span>
+              </span>
+            </label>
+          );
+        })}
       </div>
     </FilterSection>
 
@@ -226,12 +242,22 @@ export default function Catalog() {
     setLoading(false);
   };
 
+  const languageCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    products.forEach(p => {
+      if (p.language) {
+        counts[p.language] = (counts[p.language] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [products]);
+
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(product.category_id);
       const matchesPrice = product.base_price >= priceRange[0] && product.base_price <= priceRange[1];
-      const matchesLanguage = selectedLanguages.length === 0 || selectedLanguages.some(lang => product.name.toLowerCase().includes(lang.toLowerCase()));
+      const matchesLanguage = selectedLanguages.length === 0 || selectedLanguages.includes(product.language || '');
       return matchesSearch && matchesCategory && matchesPrice && matchesLanguage;
     });
   }, [products, searchTerm, selectedCategories, selectedLanguages, priceRange]);
@@ -349,6 +375,7 @@ export default function Catalog() {
                 selectedLanguages={selectedLanguages}
                 priceRange={priceRange}
                 searchTerm={searchTerm}
+                languageCounts={languageCounts}
                 onToggleCategory={toggleCategory}
                 onToggleLanguage={toggleLanguage}
                 onPriceChange={(val) => setPriceRange([priceRange[0], val])}
@@ -517,6 +544,7 @@ export default function Catalog() {
                   selectedLanguages={selectedLanguages}
                   priceRange={priceRange}
                   searchTerm={searchTerm}
+                  languageCounts={languageCounts}
                   onToggleCategory={toggleCategory}
                   onToggleLanguage={toggleLanguage}
                   onPriceChange={(val) => setPriceRange([priceRange[0], val])}

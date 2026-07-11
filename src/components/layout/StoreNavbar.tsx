@@ -52,12 +52,12 @@ export const StoreNavbar = () => {
   const headerData = homepageDesign['ui_header'] || {
     logo_url: '',
     menu_items: [
-      { label: 'INICIO', path: '/' },
-      { label: 'CATÁLOGO', path: '/catalogo' },
-      { label: 'NOVEDADES', path: '/catalogo?filter=new' },
-      { label: 'OFERTAS', path: '/catalogo?filter=deals' },
-      { label: 'HOW TO PLAY', path: '/how-to-play' },
-      { label: 'SOBRE NOSOTROS', path: '/about' }
+      { label: 'INICIO', path: '/dev-store' },
+      { label: 'CATÁLOGO', path: '/dev-store/catalogo' },
+      { label: 'NOVEDADES', path: '/dev-store/catalogo?filter=new' },
+      { label: 'OFERTAS', path: '/dev-store/catalogo?filter=deals' },
+      { label: 'HOW TO PLAY', path: '/dev-store/how-to-play' },
+      { label: 'SOBRE NOSOTROS', path: '/dev-store/about' }
     ],
     announcement_bar: {
       text: '',
@@ -117,7 +117,7 @@ export const StoreNavbar = () => {
         </button>
 
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 shrink-0 group">
+        <Link to="/dev-store" className="flex items-center gap-3 shrink-0 group">
           {headerData.logo_url ? (
             <img 
               src={headerData.logo_url} 
@@ -142,7 +142,7 @@ export const StoreNavbar = () => {
           {headerData.menu_items.map((item: any) => (
             <Link 
               key={item.label} 
-              to={item.path}
+              to={item.path.startsWith('/dev-store') ? item.path : (item.path === '/' ? '/dev-store' : `/dev-store${item.path}`)}
               className="text-[12px] font-black uppercase tracking-widest hover:text-primary transition-colors flex items-center gap-1"
             >
               {item.label}
@@ -163,7 +163,7 @@ export const StoreNavbar = () => {
           </button>
           
           <Link 
-            to="/login" 
+            to="/dev-store/login" 
             title="Ir a mi cuenta"
             aria-label="Acceder a mi cuenta de usuario"
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
@@ -186,7 +186,7 @@ export const StoreNavbar = () => {
           </button>
 
           <button 
-            onClick={() => navigate('/carrito')}
+            onClick={() => navigate('/dev-store/carrito')}
             title="Ir al carrito"
             aria-label={`Ver carrito con ${cartCount} productos`}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors relative group"
@@ -225,7 +225,7 @@ export const StoreNavbar = () => {
                 {headerData.menu_items.map((item: any) => (
                   <Link 
                     key={item.label} 
-                    to={item.path}
+                    to={item.path.startsWith('/dev-store') ? item.path : (item.path === '/' ? '/dev-store' : `/dev-store${item.path}`)}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="text-lg font-black uppercase tracking-tighter italic border-b border-border pb-4 hover:text-primary transition-colors"
                   >
@@ -236,7 +236,7 @@ export const StoreNavbar = () => {
               
               <div className="mt-auto pt-8 border-t border-border space-y-4">
                 <Link 
-                  to="/login"
+                  to="/dev-store/login"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors"
                 >

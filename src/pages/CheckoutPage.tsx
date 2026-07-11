@@ -11,6 +11,7 @@ import { useCartStore } from '../lib/cartStore';
 import { supabase } from '../lib/supabase';
 import { cn } from '../lib/utils';
 import { simulateOrderEmails } from '../lib/emailService';
+import CheckoutForm from '../components/ui/CheckoutForm';
 
 type Step = 'contact' | 'shipping' | 'payment';
 
@@ -51,7 +52,7 @@ export default function CheckoutPage() {
     else if (currentStep === 'shipping') setCurrentStep('payment');
   };
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = async (stripeOrderId?: string) => {
     setIsProcessing(true);
     try {
       // 1. Create Order
@@ -121,7 +122,7 @@ export default function CheckoutPage() {
       {/* LEFT: Checkout Form */}
       <div className="flex-1 px-6 lg:px-20 py-12 lg:py-20 max-w-4xl mx-auto w-full">
         <div className="mb-12 flex items-center justify-between">
-          <Link to="/carrito" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-xs font-black uppercase tracking-widest group">
+          <Link to="/dev-store/carrito" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-xs font-black uppercase tracking-widest group">
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Regresar al carrito
           </Link>
@@ -249,37 +250,11 @@ export default function CheckoutPage() {
             </div>
 
             {currentStep === 'payment' && (
-              <div className="space-y-6">
-                <div className="bg-card border border-primary/30 rounded-2xl p-6 flex items-center gap-4 transition-colors">
-                  <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/20">
-                    <CreditCard className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-black uppercase tracking-widest text-foreground">Transferencia Bancaria</h4>
-                    <p className="text-[10px] text-muted-foreground uppercase">Recibirás los datos del IBAN tras confirmar.</p>
-                  </div>
-                  <div className="w-6 h-6 rounded-full border-4 border-primary bg-background" />
-                </div>
-
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex gap-3">
-                   <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-                   <p className="text-[10px] text-emerald-200/70 font-medium uppercase tracking-wider">
-                     Tus datos están protegidos por encriptación de grado militar.
-                   </p>
-                </div>
-
-                <button 
-                  onClick={handlePlaceOrder}
-                  disabled={isProcessing}
-                  className="w-full py-6 bg-red-600 text-white rounded-2xl font-black uppercase tracking-[0.3em] text-xs hover:bg-red-700 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-red-900/40 disabled:opacity-50"
-                >
-                  {isProcessing ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>CONFIRMAR PEDIDO €{totalWithShipping.toFixed(2)}</>
-                  )}
-                </button>
-              </div>
+              <CheckoutForm 
+                totalAmount={totalWithShipping}
+                onSuccess={(stripeOrderId) => handlePlaceOrder(stripeOrderId)}
+                onError={(msg) => alert(msg)}
+              />
             )}
           </section>
         </div>

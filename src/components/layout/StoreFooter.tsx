@@ -18,7 +18,7 @@ export const StoreFooter = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
           {/* Brand Column */}
           <div className="space-y-6">
-            <Link to="/" className="flex items-center gap-3 group">
+            <Link to="/dev-store" className="flex items-center gap-3 group">
               <div className="relative">
                  <Layers className="w-8 h-8 text-foreground transform -rotate-12 group-hover:rotate-0 transition-transform" />
                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary/20 rounded-sm" />
@@ -47,10 +47,10 @@ export const StoreFooter = () => {
           <div className="space-y-6">
             <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground">Navegación</h3>
             <ul className="space-y-4">
-              <li><Link to="/" className="text-muted-foreground hover:text-primary transition-colors text-[10px] font-black uppercase tracking-widest flex items-center gap-2">Inicio <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100" /></Link></li>
-              <li><Link to="/catalogo" className="text-muted-foreground hover:text-primary transition-colors text-[10px] font-black uppercase tracking-widest flex items-center gap-2">Catálogo Completo</Link></li>
-              <li><Link to="/perfil" className="text-muted-foreground hover:text-primary transition-colors text-[10px] font-black uppercase tracking-widest flex items-center gap-2">Mi Cuenta</Link></li>
-              <li><Link to="/carrito" className="text-muted-foreground hover:text-primary transition-colors text-[10px] font-black uppercase tracking-widest flex items-center gap-2">Carrito</Link></li>
+              <li><Link to="/dev-store" className="text-muted-foreground hover:text-primary transition-colors text-[10px] font-black uppercase tracking-widest flex items-center gap-2">Inicio <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100" /></Link></li>
+              <li><Link to="/dev-store/catalogo" className="text-muted-foreground hover:text-primary transition-colors text-[10px] font-black uppercase tracking-widest flex items-center gap-2">Catálogo Completo</Link></li>
+              <li><Link to="/dev-store/perfil" className="text-muted-foreground hover:text-primary transition-colors text-[10px] font-black uppercase tracking-widest flex items-center gap-2">Mi Cuenta</Link></li>
+              <li><Link to="/dev-store/carrito" className="text-muted-foreground hover:text-primary transition-colors text-[10px] font-black uppercase tracking-widest flex items-center gap-2">Carrito</Link></li>
             </ul>
           </div>
 

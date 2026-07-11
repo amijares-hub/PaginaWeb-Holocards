@@ -60,7 +60,7 @@ export default function CartPage() {
               </p>
             </div>
             <Link 
-              to="/catalog"
+              to="/dev-store/catalogo"
               className="px-10 py-4 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-[0.2em] text-xs rounded-2xl transition-all shadow-2xl shadow-red-600/20 active:scale-95"
             >
               Explorar Catálogo
@@ -173,7 +173,7 @@ export default function CartPage() {
 
                 <div className="space-y-4">
                   <button 
-                    onClick={() => navigate('/checkout')}
+                    onClick={() => navigate('/dev-store/checkout')}
                     className="w-full bg-red-600 hover:bg-red-700 text-white py-6 rounded-2xl font-black uppercase tracking-[0.3em] text-xs flex items-center justify-center gap-3 shadow-2xl shadow-red-900/40 transition-all active:scale-[0.98] group"
                   >
                     <CreditCard className="w-4 h-4 group-hover:rotate-12 transition-transform" />

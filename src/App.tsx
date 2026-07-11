@@ -20,6 +20,7 @@ import POS from './pages/admin/POS';
 import Catalog from './pages/Catalog';
 import Storefront from './pages/Storefront';
 import HomeV2 from './pages/HomeV2';
+import LandingPageV2 from './pages/LandingPageV2';
 import Login from './pages/Login';
 import AdminLayout from './components/layout/AdminLayout';
 import UserProfile from './pages/UserProfile';
@@ -78,12 +79,17 @@ function AppInner({ session }: { session: any }) {
                🚧 MODO PRÓXIMAMENTE — RUTAS PÚBLICAS
                La tienda real está en /dev-store (secreto)
           ══════════════════════════════════════════════ */}
-          <Route path="/" element={<ProntaApertura />} />
+          <Route path="/" element={
+            window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+              ? <Navigate to="/dev-store" replace /> 
+              : <ProntaApertura />
+          } />
 
           {/* ══════════════════════════════════════════════
                🔒 RUTA SECRETA DE DESARROLLO
                Solo tú conoces este link — no indexado
           ══════════════════════════════════════════════ */}
+          <Route path="/v2-landing" element={<LandingPageV2 />} />
           <Route path="/dev-store" element={<HomeV2 />} />
           <Route path="/dev-store/catalogo" element={<Catalog />} />
           <Route path="/dev-store/producto/:id" element={<ProductPage />} />

@@ -22,6 +22,8 @@
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
+    "@stripe/react-stripe-js": "^6.7.0",
+    "@stripe/stripe-js": "^9.9.0",
     "@supabase/supabase-js": "^2.105.1",
     "@tailwindcss/vite": "^4.1.14",
     "@types/papaparse": "^5.5.2",
