@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
-import { motion, AnimatePresence } from "motion/react"
+import { motion, AnimatePresence } from "framer-motion"
 import { 
   ShoppingCart, 
   ArrowRight, 
@@ -478,22 +478,22 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       const isOnePiece = tab === "One Piece TCG";
 
       return (
-        <div key={tab} className="relative flex flex-col items-center group pt-5">
+        <div key={tab} className="relative flex flex-col items-center group pt-3 sm:pt-5">
           {isOnePiece && (
-            <span className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none z-30 bg-yellow-400/90 backdrop-blur-sm text-black text-[9px] sm:text-[10px] font-black uppercase tracking-tight py-0.5 px-2.5 rounded-full shadow-[0_4px_15px_rgba(250,204,21,0.5)] whitespace-nowrap flex items-center gap-1">
-              <Lock className="w-2.5 h-2.5"/> PROXIMAMENTE
+            <span className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none z-30 bg-yellow-400/90 backdrop-blur-sm text-black text-[8px] sm:text-[10px] font-black uppercase tracking-tight py-0.5 px-2 rounded-full shadow-[0_4px_15px_rgba(250,204,21,0.5)] whitespace-nowrap flex items-center gap-1">
+              <Lock className="w-2 h-2 sm:w-2.5 sm:h-2.5"/> PROXIMAMENTE
             </span>
           )}
 
           <button
             onClick={() => handleTabClick(tab)}
             disabled={isOnePiece}
-            className={`relative px-4 sm:px-6 md:px-7 h-[38px] sm:h-[46px] md:h-[52px] rounded-full text-xs sm:text-sm font-bold tracking-wide transition-all duration-200 flex items-center justify-center ${
+            className={`relative px-3 sm:px-6 md:px-7 h-[34px] sm:h-[46px] md:h-[52px] rounded-full text-xs sm:text-sm font-bold tracking-wide transition-all duration-200 flex items-center justify-center ${
               isOnePiece
                 ? "opacity-75 cursor-not-allowed bg-black/50 border border-white/10"
                 : isSelected 
-                ? "text-black translate-y-[4px]" 
-                : "bg-gradient-to-b from-[#1c2e4a] to-[#0a1222] border border-[#2c446b] shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_4px_0_#02040a,0_6px_10px_rgba(0,0,0,0.6)] text-gray-300 hover:text-white hover:brightness-110 active:translate-y-[4px]"
+                ? "text-black translate-y-[2px] sm:translate-y-[4px]" 
+                : "bg-gradient-to-b from-[#1c2e4a] to-[#0a1222] border border-[#2c446b] shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_4px_0_#02040a,0_6px_10px_rgba(0,0,0,0.6)] text-gray-300 hover:text-white hover:brightness-110 active:translate-y-[2px]"
             }`}
           >
             {isSelected && (
@@ -510,9 +510,9 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                   src={TAB_LOGOS[tab]} 
                   alt={tab} 
                   className={`w-auto object-contain transition-all duration-300 ${
-                    tab === "Pokémon TCG" ? "h-[29px] sm:h-[34px] md:h-[38px]" : 
-                    tab === "Magic The Gathering" ? "h-[16px] sm:h-[20px] md:h-[23px]" : 
-                    tab === "One Piece TCG" ? "h-[34px] sm:h-[41px] md:h-[46px] max-w-[140px] sm:max-w-[190px] scale-135 brightness-125" : "h-6" 
+                    tab === "Pokémon TCG" ? "h-[22px] sm:h-[34px] md:h-[38px]" : 
+                    tab === "Magic The Gathering" ? "h-[13px] sm:h-[20px] md:h-[23px]" : 
+                    tab === "One Piece TCG" ? "h-[26px] sm:h-[41px] md:h-[46px] max-w-[110px] sm:max-w-[190px] scale-125 sm:scale-135 brightness-125" : "h-5 sm:h-6" 
                   } ${
                     isSelected 
                       ? "brightness-100 filter-none drop-shadow-md" 
@@ -520,7 +520,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                   }`}
                 />
               ) : (
-                <span className={`text-[11px] sm:text-sm md:text-base font-black tracking-tight whitespace-nowrap ${
+                <span className={`text-[10px] sm:text-sm md:text-base font-black tracking-tight whitespace-nowrap ${
                   isSelected ? "" : "drop-shadow-[0_2px_3px_rgba(0,0,0,0.8)]"
                 }`}>
                   {tab}
@@ -534,7 +534,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
   };
 
   return (
-    <div className={`w-full flex flex-col relative overflow-hidden ${isInicioQuirurgico ? 'py-1 gap-1 flex-1' : 'h-[calc(100vh-80px)] min-h-[550px] py-1'}`}>
+    <div className={`w-full flex flex-col relative overflow-hidden ${isInicioQuirurgico ? 'py-1 gap-1 flex-1' : 'min-h-[500px] sm:h-[calc(100vh-80px)] sm:min-h-[550px] py-1'}`}>
       <style>{`
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -547,7 +547,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       />
 
       {isInicioQuirurgico ? (
-        <div className="relative z-20 w-full px-4 sm:px-12 mt-3 lg:mt-4 flex flex-col gap-1 transition-all">
+        <div className="relative z-20 w-full px-4 sm:px-12 mt-2 sm:mt-3 lg:mt-4 flex flex-col gap-1 transition-all">
           <div className="flex flex-col xl:flex-row items-center justify-between gap-2 w-full">
             <div className="flex items-center justify-center xl:justify-start w-full xl:w-auto xl:flex-1 min-w-0 z-40">
               <div className="relative">
@@ -555,11 +555,11 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                   onClick={() => setIsHighlightDropdownOpen(!isHighlightDropdownOpen)}
                   className="flex items-center gap-2 text-white hover:text-yellow-400 transition-colors group"
                 >
-                  <Sparkles className="w-5 h-5 text-yellow-400"/>
-                  <h2 className="text-base sm:text-lg lg:text-xl font-black uppercase tracking-tight m-0 leading-none whitespace-nowrap">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400"/>
+                  <h2 className="text-sm sm:text-lg lg:text-xl font-black uppercase tracking-tight m-0 leading-none whitespace-nowrap">
                     {highlightType || "SELECCIONAR COLECCIÓN"}
                   </h2>
-                  <ChevronDown className={`w-4 h-4 text-gray-400 group-hover:text-yellow-400 transition-transform ${isHighlightDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 group-hover:text-yellow-400 transition-transform ${isHighlightDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 
                 <AnimatePresence>
@@ -592,8 +592,8 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
               </div>
             </div>
 
-            <div className="flex justify-center shrink-0 z-30 w-full xl:w-auto mt-2 xl:mt-0">
-              <div className="flex flex-wrap sm:flex-nowrap justify-center items-center gap-3 sm:gap-4 p-2 relative">
+            <div className="flex justify-center shrink-0 z-30 w-full xl:w-auto mt-1 sm:mt-2 xl:mt-0">
+              <div className="flex flex-wrap sm:flex-nowrap justify-center items-center gap-2 sm:gap-4 p-1 sm:p-2 relative">
                 {renderTabs()}
               </div>
             </div>
@@ -610,31 +610,24 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
           </div>
         </div>
       ) : (
-        <div className="relative z-20 w-full px-4 sm:px-12 mt-4 lg:mt-6 flex flex-col gap-4 lg:gap-6 transition-all">
+        /* VISTA DE PESTAÑAS DE FRANQUICIAS (Pokémon, Magic, Accesorios, etc.) */
+        <div className="relative z-20 w-full px-4 sm:px-12 mt-2 sm:mt-4 lg:mt-6 flex flex-col gap-3 lg:gap-5 transition-all">
 
-          {/* Botonera de Franquicias: order-1 en móvil (aparece arriba), order-2 en desktop */}
-          <div className="order-1 sm:order-2 flex justify-center shrink-0 z-30 w-full">
-            <div className="flex flex-wrap sm:flex-nowrap justify-center items-end gap-3 sm:gap-4 px-2 pt-2 pb-2 relative overflow-visible">
+          {/* Botonera de Franquicias */}
+          <div className="flex justify-center shrink-0 z-30 w-full">
+            <div className="flex flex-wrap sm:flex-nowrap justify-center items-end gap-2 sm:gap-4 px-2 pt-1 pb-1 relative overflow-visible">
               {renderTabs()}
             </div>
           </div>
 
-          {/* Título DESTACADOS: order-2 en móvil (aparece debajo de franquicias), order-1 en desktop */}
-          <div className="order-2 sm:order-1 flex items-center justify-center gap-2">
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
-            <h2 className="text-sm sm:text-xl font-black uppercase tracking-wider text-yellow-400 italic m-0 leading-none">
-              DESTACADOS
-            </h2>
-          </div>
-
-          {/* Categorías: siempre al final */}
-          <div className="order-3 flex justify-center w-full z-30 relative">
-            <div className="flex items-center justify-start lg:justify-center gap-2 overflow-x-auto hide-scrollbar w-full px-4 sm:px-10 py-1 scroll-smooth">
+          {/* Categorías de Colección / Tipos */}
+          <div className="flex justify-center w-full z-30 relative">
+            <div className="flex items-center justify-start lg:justify-center gap-1.5 sm:gap-2 overflow-x-auto hide-scrollbar w-full px-2 sm:px-10 py-1 scroll-smooth">
               {dynamicCategories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 border ${
+                  className={`whitespace-nowrap px-3.5 sm:px-4 py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-300 border ${
                     selectedCategory === cat
                       ? "bg-white/10 text-white border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.1)]"
                       : "bg-transparent text-gray-400 hover:text-white border-white/5 hover:border-white/20"
@@ -662,14 +655,14 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
         className="absolute right-2 xl:right-6 top-1/2 -translate-y-1/2 z-0 hidden xl:block w-auto max-h-[198px] xl:max-h-[242px] 2xl:max-h-[286px] object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.6)] opacity-50 pointer-events-none select-none transition-all duration-300"
       />
 
-      <div className="relative w-full max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto px-12 xl:px-16 z-20 my-1 flex items-center justify-center flex-1 overflow-x-hidden">
+      <div className="relative w-full max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto px-8 sm:px-12 xl:px-16 z-20 my-1 flex items-center justify-center flex-1 overflow-x-hidden">
         <button
           type="button"
           onClick={handlePrevPage}
-          className="absolute -left-2 md:left-2 top-1/2 -translate-y-1/2 p-2 transition-transform hover:scale-110 drop-shadow-[0_0_12px_rgba(243,185,28,0.6)] focus:outline-none shrink-0 z-40 active:scale-95 group"
+          className="absolute -left-1 sm:-left-2 md:left-2 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 transition-transform hover:scale-110 drop-shadow-[0_0_12px_rgba(243,185,28,0.6)] focus:outline-none shrink-0 z-40 active:scale-95 group"
           title="Anterior"
         >
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg width="40" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 sm:w-12 sm:h-12">
             <path 
               d="M15 19L8 12L15 5" 
               stroke="#F3B91C" 
@@ -688,7 +681,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.3 }}
-              className="flex items-center justify-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 w-full"
+              className="flex items-center justify-center gap-2 sm:gap-4 md:gap-5 lg:gap-6 w-full"
             >
               {visibleCards.length > 0 ? (
                 visibleCards.map((card, index) => {
@@ -698,7 +691,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                   return (
                     <div 
                       key={uniqueId} 
-                      className="flex flex-col w-[157px] sm:w-[178px] md:w-[194px] xl:w-[231px] shrink-0 bg-[#0a1628]/85 backdrop-blur-md rounded-2xl border border-white/10 p-2 hover:border-yellow-400/60 hover:bg-[#0a1628]/95 transition-all duration-300 group shadow-2xl"
+                      className="flex flex-col w-[138px] sm:w-[178px] md:w-[194px] xl:w-[231px] shrink-0 bg-[#0a1628]/85 backdrop-blur-md rounded-2xl border border-white/10 p-2 hover:border-yellow-400/60 hover:bg-[#0a1628]/95 transition-all duration-300 group shadow-2xl"
                     >
                       <motion.div 
                         layoutId={`hero-product-image-${uniqueId}`}
@@ -706,7 +699,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                           setIsModalFlipped(false);
                           setActiveProduct({ ...card, uniqueId });
                         }}
-                        className="w-full h-24 sm:h-28 md:h-32 xl:h-36 bg-transparent relative shrink-0 cursor-zoom-in p-1 flex items-center justify-center border-[1.5px] border-[#F3B91C]/40 rounded-xl overflow-hidden"
+                        className="w-full h-20 sm:h-28 md:h-32 xl:h-36 bg-transparent relative shrink-0 cursor-zoom-in p-1 flex items-center justify-center border-[1.5px] border-[#F3B91C]/40 rounded-xl overflow-hidden"
                       >
                         {card.imgUrl ? (
                           <img 
@@ -716,30 +709,30 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-transparent rounded-xl border border-white/5">
-                            <span className="text-gray-600 font-black text-[10px] uppercase text-center px-2">Sin Imagen</span>
+                            <span className="text-gray-600 font-black text-[9px] sm:text-[10px] uppercase text-center px-1">Sin Imagen</span>
                           </div>
                         )}
                       </motion.div>
 
                       <div className="mt-2 flex-grow flex flex-col justify-start">
-                        <h3 className="text-white font-bold text-xs sm:text-sm leading-tight group-hover:text-yellow-400 transition-colors line-clamp-1">
+                        <h3 className="text-white font-bold text-[11px] sm:text-sm leading-tight group-hover:text-yellow-400 transition-colors line-clamp-1">
                           {card.name}
                         </h3>
                         
-                        <p className="text-yellow-400 font-black text-sm sm:text-base mt-1.5 leading-none">
+                        <p className="text-yellow-400 font-black text-xs sm:text-base mt-1 sm:mt-1.5 leading-none">
                           {cardPrice > 0 ? `${cardPrice.toFixed(2)}€` : "Consultar precio"}
                         </p>
                       </div>
 
-                      <div className="mt-3 w-full flex flex-col gap-1.5 shrink-0">
+                      <div className="mt-2 sm:mt-3 w-full flex flex-col gap-1 sm:gap-1.5 shrink-0">
                         <button 
                           onClick={(e) => { 
                             e.stopPropagation(); 
                             handleAddToCart(card); 
                           }}
-                          className="w-full bg-yellow-400 hover:bg-blue-600 text-black hover:text-white font-bold py-1.5 rounded-lg text-[10px] sm:text-[11px] flex items-center justify-center gap-1.5 transition-colors duration-300 active:scale-95 shadow-[0_0_10px_rgba(250,204,21,0.2)] uppercase tracking-wider"
+                          className="w-full bg-yellow-400 hover:bg-blue-600 text-black hover:text-white font-bold py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-[11px] flex items-center justify-center gap-1 sm:gap-1.5 transition-colors duration-300 active:scale-95 shadow-[0_0_10px_rgba(250,204,21,0.2)] uppercase tracking-wider"
                         >
-                          <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4"/> 
+                          <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4"/> 
                           AGREGAR
                         </button>
 
@@ -748,7 +741,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                             e.stopPropagation(); 
                             navigate('/catalogo');
                           }}
-                          className="w-full bg-[#1c2e4a] hover:bg-white text-white hover:text-black border border-[#2c446b] font-bold py-1.5 rounded-lg text-[10px] sm:text-[11px] flex items-center justify-center transition-colors duration-300 active:scale-95 uppercase tracking-wider shadow-inner"
+                          className="w-full bg-[#1c2e4a] hover:bg-white text-white hover:text-black border border-[#2c446b] font-bold py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-[11px] flex items-center justify-center transition-colors duration-300 active:scale-95 uppercase tracking-wider shadow-inner"
                         >
                           VER CATÁLOGO
                         </button>
@@ -769,10 +762,10 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
         <button
           type="button"
           onClick={handleNextPage}
-          className="absolute -right-2 md:right-2 top-1/2 -translate-y-1/2 p-2 transition-transform hover:scale-110 drop-shadow-[0_0_12px_rgba(243,185,28,0.6)] focus:outline-none shrink-0 z-40 active:scale-95 group"
+          className="absolute -right-1 sm:-right-2 md:right-2 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 transition-transform hover:scale-110 drop-shadow-[0_0_12px_rgba(243,185,28,0.6)] focus:outline-none shrink-0 z-40 active:scale-95 group"
           title="Siguiente"
         >
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg width="40" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 sm:w-12 sm:h-12">
             <path 
               d="M9 5L16 12L9 19" 
               stroke="#F3B91C" 
@@ -790,9 +783,9 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="relative z-10 text-center mt-3 mb-4 px-4 shrink-0"
+          className="relative z-10 text-center mt-2 sm:mt-3 mb-3 sm:mb-4 px-4 shrink-0"
         >
-          <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold tracking-tight leading-tight uppercase relative">
+          <h1 className="text-lg md:text-2xl lg:text-3xl font-extrabold tracking-tight leading-tight uppercase relative">
             <span className="bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-500 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(250,204,21,0.3)] block">
               {currentSlogan.main}
             </span>
