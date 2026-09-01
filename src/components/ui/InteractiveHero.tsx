@@ -478,17 +478,17 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       const isOnePiece = tab === "One Piece TCG";
 
       return (
-        <div key={tab} className="relative flex flex-col items-center group pt-3 sm:pt-5">
+        <div key={tab} className="relative flex flex-col items-center group pt-3.5 sm:pt-5">
           {isOnePiece && (
-            <span className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none z-30 bg-yellow-400/90 backdrop-blur-sm text-black text-[8px] sm:text-[10px] font-black uppercase tracking-tight py-0.5 px-2 rounded-full shadow-[0_4px_15px_rgba(250,204,21,0.5)] whitespace-nowrap flex items-center gap-1">
-              <Lock className="w-2 h-2 sm:w-2.5 sm:h-2.5"/> PROXIMAMENTE
+            <span className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none z-30 bg-yellow-400/90 backdrop-blur-sm text-black text-[8.5px] sm:text-[10px] font-black uppercase tracking-tight py-0.5 px-2.5 rounded-full shadow-[0_4px_15px_rgba(250,204,21,0.5)] whitespace-nowrap flex items-center gap-1">
+              <Lock className="w-2.5 h-2.5"/> PROXIMAMENTE
             </span>
           )}
 
           <button
             onClick={() => handleTabClick(tab)}
             disabled={isOnePiece}
-            className={`relative px-3 sm:px-6 md:px-7 h-[34px] sm:h-[46px] md:h-[52px] rounded-full text-xs sm:text-sm font-bold tracking-wide transition-all duration-200 flex items-center justify-center ${
+            className={`relative px-4 sm:px-6 md:px-7 h-[40px] sm:h-[46px] md:h-[52px] rounded-full text-xs sm:text-sm font-bold tracking-wide transition-all duration-200 flex items-center justify-center ${
               isOnePiece
                 ? "opacity-75 cursor-not-allowed bg-black/50 border border-white/10"
                 : isSelected 
@@ -510,9 +510,9 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                   src={TAB_LOGOS[tab]} 
                   alt={tab} 
                   className={`w-auto object-contain transition-all duration-300 ${
-                    tab === "Pokémon TCG" ? "h-[22px] sm:h-[34px] md:h-[38px]" : 
-                    tab === "Magic The Gathering" ? "h-[13px] sm:h-[20px] md:h-[23px]" : 
-                    tab === "One Piece TCG" ? "h-[26px] sm:h-[41px] md:h-[46px] max-w-[110px] sm:max-w-[190px] scale-125 sm:scale-135 brightness-125" : "h-5 sm:h-6" 
+                    tab === "Pokémon TCG" ? "h-[26px] sm:h-[34px] md:h-[38px]" : 
+                    tab === "Magic The Gathering" ? "h-[16px] sm:h-[20px] md:h-[23px]" : 
+                    tab === "One Piece TCG" ? "h-[30px] sm:h-[41px] md:h-[46px] max-w-[130px] sm:max-w-[190px] scale-125 sm:scale-135 brightness-125" : "h-6" 
                   } ${
                     isSelected 
                       ? "brightness-100 filter-none drop-shadow-md" 
@@ -520,7 +520,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                   }`}
                 />
               ) : (
-                <span className={`text-[10px] sm:text-sm md:text-base font-black tracking-tight whitespace-nowrap ${
+                <span className={`text-[11px] sm:text-sm md:text-base font-black tracking-tight whitespace-nowrap ${
                   isSelected ? "" : "drop-shadow-[0_2px_3px_rgba(0,0,0,0.8)]"
                 }`}>
                   {tab}
@@ -593,7 +593,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
             </div>
 
             <div className="flex justify-center shrink-0 z-30 w-full xl:w-auto mt-1 sm:mt-2 xl:mt-0">
-              <div className="flex flex-wrap sm:flex-nowrap justify-center items-center gap-2 sm:gap-4 p-1 sm:p-2 relative">
+              <div className="flex flex-wrap sm:flex-nowrap justify-center items-center gap-2.5 sm:gap-4 p-1 sm:p-2 relative">
                 {renderTabs()}
               </div>
             </div>
@@ -615,7 +615,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
 
           {/* Botonera de Franquicias */}
           <div className="flex justify-center shrink-0 z-30 w-full">
-            <div className="flex flex-wrap sm:flex-nowrap justify-center items-end gap-2 sm:gap-4 px-2 pt-1 pb-1 relative overflow-visible">
+            <div className="flex flex-wrap sm:flex-nowrap justify-center items-end gap-2.5 sm:gap-4 px-2 pt-1 pb-1 relative overflow-visible">
               {renderTabs()}
             </div>
           </div>
