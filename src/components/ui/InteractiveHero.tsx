@@ -613,13 +613,24 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
         </div>
       ) : (
         <div className="relative z-20 w-full px-4 sm:px-12 mt-4 lg:mt-6 flex flex-col gap-4 lg:gap-6 transition-all">
-          <div className="flex justify-center shrink-0 z-30 w-full">
+
+          {/* Botonera de Franquicias: order-1 en móvil (aparece arriba), order-2 en desktop */}
+          <div className="order-1 sm:order-2 flex justify-center shrink-0 z-30 w-full">
             <div className="flex flex-wrap sm:flex-nowrap justify-center items-center gap-3 sm:gap-4 p-2 relative">
               {renderTabs()}
             </div>
           </div>
-          
-          <div className="flex justify-center w-full z-30 relative">
+
+          {/* Título DESTACADOS: order-2 en móvil (aparece debajo de franquicias), order-1 en desktop */}
+          <div className="order-2 sm:order-1 flex items-center justify-center gap-2">
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
+            <h2 className="text-sm sm:text-xl font-black uppercase tracking-wider text-yellow-400 italic m-0 leading-none">
+              DESTACADOS
+            </h2>
+          </div>
+
+          {/* Categorías: siempre al final */}
+          <div className="order-3 flex justify-center w-full z-30 relative">
             <div className="flex items-center justify-start lg:justify-center gap-2 overflow-x-auto hide-scrollbar w-full px-4 sm:px-10 py-1 scroll-smooth">
               {dynamicCategories.map((cat) => (
                 <button
