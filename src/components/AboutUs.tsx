@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { useSearchParams } from "react-router-dom"
-import { motion, AnimatePresence } from "motion/react"
+import { motion, AnimatePresence } from "framer-motion"
 import { 
   ShieldCheck, 
   Award, 
@@ -163,7 +163,7 @@ const SECTIONS: SectionData[] = [
         </p>
         <h4 className="text-white font-bold text-base">2. Recepción e Incidencias</h4>
         <p>
-          Si el paquete presenta daños visibles por el transporte, indícalo al transportista y escríbenos cuanto antes a <strong>soporte@holocardscanarias.com</strong>.
+          Se debe tomar una <strong>fotografía de la caja si está dañada antes de abrir el producto</strong>. Una vez abierto, si hay daños y no hay fotografía del antes, <strong>no nos hacemos cargo</strong>. Si el paquete presenta daños visibles por el transporte, indícalo al transportista y escríbenos cuanto antes a <strong>soporte@holocardscanarias.com</strong>.
         </p>
         <h4 className="text-white font-bold text-base">3. Devoluciones y Desistimiento</h4>
         <p>
@@ -210,7 +210,7 @@ export function AboutUs() {
         <div className="absolute -top-20 -left-20 w-96 h-96 bg-yellow-500/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
 
-        {/* BOTONES EXTENDIDOS A LO ANCHO SIN FLECHAS */}
+        {/* BOTONES NAVEGACIÓN */}
         <div className="relative z-20 w-full px-4 sm:px-8 mt-2 sm:mt-4 flex flex-col items-center">
           <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 max-w-6xl w-full">
             {SECTIONS.map((section) => {
@@ -242,11 +242,11 @@ export function AboutUs() {
           </div>
         </div>
 
-        {/* BLOQUES BAJADOS Y CENTRADOS */}
+        {/* CONTENIDO PRINCIPAL */}
         <main className="relative z-10 w-full max-w-7xl mx-auto flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 mt-6 lg:mt-10 mb-4">
           <div className="w-full flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8">
             
-            {/* BLOQUE 1 (IZQUIERDA) - LOGO OFICIAL DE LA EMPRESA (SIN FRAME) */}
+            {/* LOGO ISO */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -262,7 +262,7 @@ export function AboutUs() {
               />
             </motion.div>
 
-            {/* BLOQUE 2 (CENTRO) */}
+            {/* TARJETA CENTRAL */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -302,7 +302,7 @@ export function AboutUs() {
                 </AnimatePresence>
               </div>
 
-              {/* CARACTERÍSTICAS BASE */}
+              {/* CARACTERÍSTICAS */}
               <div className="grid grid-cols-2 gap-3 pt-4 mt-4 border-t border-white/10">
                 {activeSection.features.map((feat, idx) => (
                   <div key={idx} className="flex items-center gap-2.5">
@@ -322,7 +322,7 @@ export function AboutUs() {
               </div>
             </motion.div>
 
-            {/* BLOQUE 3 (DERECHA) - VUELVE A LA IMAGEN ENMARCADA ORIGINAL */}
+            {/* MARCO DERECHO */}
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -346,7 +346,7 @@ export function AboutUs() {
           </div>
         </main>
 
-        {/* POP-UP MODAL */}
+        {/* MODAL DETALLADO */}
         <AnimatePresence>
           {isModalOpen && (
             <motion.div
