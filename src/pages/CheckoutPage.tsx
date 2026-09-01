@@ -9,6 +9,8 @@ import {
   ChevronLeft, 
   ChevronRight, 
   Plus, 
+  Minus,
+  Trash2,
   Check, 
   HelpCircle,
   Tag,
@@ -141,7 +143,7 @@ const CheckoutForm = ({
 }
 
 export default function CheckoutPage() {
-  const { items, addItem, getTotalPrice, clearCart } = useCartStore()
+  const { items, addItem, removeItem, updateQuantity, getTotalPrice, clearCart } = useCartStore()
   
   const [step, setStep] = useState<"verification" | "contact" | "shipping" | "payment">("verification")
   const [userProfile, setUserProfile] = useState<any>(null)
@@ -622,12 +624,16 @@ export default function CheckoutPage() {
 
           <div className="flex flex-col gap-3 max-h-60 overflow-y-auto pr-1">
             {items.map((item) => {
-              const itemPrice = Number(item.price) || 0;
-              const itemTotal = itemPrice * (item.quantity || 1);
+              const price = Number(item.price) || 0;
+              const itemTotal = price * (item.quantity || 1);
 
               return (
-                <div key={item.id} className="flex items-center gap-3 bg-[#030c1a] p-2.5 rounded-2xl border border-white/5">
-                  <div className="w-12 h-12 bg-[#0a1628] rounded-xl border border-white/10 overflow-hidden shrink-0 flex items-center justify-center p-1">
+                <div
+                  key={item.id}
+                  className="flex items-center gap-3 bg-[#0a1628]/80 rounded-2xl p-3 border border-white/10 shadow-lg"
+                >
+                  {/* Imagen */}
+                  <div className="w-14 h-14 bg-[#050914] rounded-xl overflow-hidden shrink-0 flex items-center justify-center p-1 border border-white/5">
                     {item.image_url ? (
                       <img src={item.image_url} alt={item.name} className="w-full h-full object-contain" />
                     ) : (
@@ -635,14 +641,54 @@ export default function CheckoutPage() {
                     )}
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-xs font-bold text-white truncate uppercase">{item.name}</h4>
-                    <span className="text-[10px] text-gray-400 font-medium">CANT: {item.quantity}</span>
+                  {/* Info + Controles */}
+                  <div className="flex-1 min-w-0 pr-1">
+                    <p className="text-white text-xs font-bold uppercase truncate leading-tight tracking-wide">
+                      {item.name}
+                    </p>
+
+                    {/* Selector de cantidad */}
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5">
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.id, Math.max(1, (item.quantity || 1) - 1))}
+                          className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 rounded transition-colors active:scale-90"
+                          title="Reducir cantidad"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="text-white font-black text-xs w-6 text-center select-none">
+                          {item.quantity || 1}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.id, (item.quantity || 1) + 1)}
+                          className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-yellow-400 hover:bg-yellow-400/10 rounded transition-colors active:scale-90"
+                          title="Aumentar cantidad"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
+
+                      {/* Botón eliminar */}
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.id)}
+                        className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                        title="Eliminar producto"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
-                  <span className="text-xs font-black text-white shrink-0">
-                    {itemTotal.toFixed(2)}€
-                  </span>
+                  {/* Precio total del ítem */}
+                  <div className="text-right shrink-0">
+                    <span className="text-white font-black text-sm tracking-tight">
+                      {itemTotal.toFixed(2)}€
+                    </span>
+                  </div>
                 </div>
               );
             })}
