@@ -478,13 +478,11 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       const isOnePiece = tab === "One Piece TCG";
 
       return (
-        <div key={tab} className="relative flex flex-col items-center group">
+        <div key={tab} className="relative flex flex-col items-center group pt-5">
           {isOnePiece && (
-            <div className="absolute bottom-[100%] mb-1.5 left-1/2 -translate-x-1/2 pointer-events-none z-30 flex justify-center w-full min-w-max">
-              <span className="bg-yellow-400/90 backdrop-blur-sm text-black text-[9px] sm:text-[10px] font-black uppercase tracking-tight py-0.5 px-2.5 rounded-full text-center shadow-[0_4px_15px_rgba(250,204,21,0.5)] whitespace-nowrap flex items-center gap-1">
-                <Lock className="w-2.5 h-2.5"/> PROXIMAMENTE
-              </span>
-            </div>
+            <span className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none z-30 bg-yellow-400/90 backdrop-blur-sm text-black text-[9px] sm:text-[10px] font-black uppercase tracking-tight py-0.5 px-2.5 rounded-full shadow-[0_4px_15px_rgba(250,204,21,0.5)] whitespace-nowrap flex items-center gap-1">
+              <Lock className="w-2.5 h-2.5"/> PROXIMAMENTE
+            </span>
           )}
 
           <button
@@ -616,7 +614,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
 
           {/* Botonera de Franquicias: order-1 en móvil (aparece arriba), order-2 en desktop */}
           <div className="order-1 sm:order-2 flex justify-center shrink-0 z-30 w-full">
-            <div className="flex flex-wrap sm:flex-nowrap justify-center items-center gap-3 sm:gap-4 p-2 relative">
+            <div className="flex flex-wrap sm:flex-nowrap justify-center items-end gap-3 sm:gap-4 px-2 pt-2 pb-2 relative overflow-visible">
               {renderTabs()}
             </div>
           </div>
