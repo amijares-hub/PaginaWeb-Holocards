@@ -135,7 +135,6 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
     try {
       if (!supabase) return;
 
-      // 1. Obtener colecciones reales del Backoffice (tablas 'tags' y 'collections')
       const [tagsRes, colsRes] = await Promise.all([
         supabase.from('tags').select('*').then(r => r.error ? { data: [] } : r),
         supabase.from('collections').select('*').then(r => r.error ? { data: [] } : r)
@@ -143,14 +142,12 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
 
       const rawCols = [...(tagsRes.data || []), ...(colsRes.data || [])];
       const collectionsMap = new Map<string, string>();
-      const nameToIdMap = new Map<string, string>();
 
       rawCols.forEach((c: any) => {
         const id = String(c.id);
         const name = String(c.name || c.nombre || c.title || "").trim().toUpperCase();
         if (id && name) {
           collectionsMap.set(id, name);
-          nameToIdMap.set(name, id);
         }
       });
 
@@ -158,16 +155,14 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       setDbCollections(collectionsList);
 
       if (collectionsList.length > 0) {
-        const exists = collectionsList.some(c => c.id === selectedCollectionId);
-        if (!selectedCollectionId || !exists) {
+        if (!selectedCollectionId || !collectionsList.some(c => c.id === selectedCollectionId)) {
           setSelectedCollectionId(collectionsList[0].id);
           setHighlightType(collectionsList[0].name);
         }
       }
 
-      // 2. Obtener productos y relaciones pivote exactas (product_tags / product_collections)
       const [prodsRes, catRes, gamesRes, prodTagsRes, prodColsRes] = await Promise.all([
-        supabase.from('products').select('*, product_tags(*), product_collections(*)'),
+        supabase.from('products').select('*'),
         supabase.from('categories').select('*, games(name)'),
         supabase.from('games').select('*'),
         supabase.from('product_tags').select('*').then(r => r.error ? { data: [] } : r),
@@ -177,23 +172,25 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       const prods = prodsRes.data || [];
       const dbCategories = catRes.data || [];
       const gamesList = gamesRes.data || [];
+      const prodPivot = [...(prodTagsRes.data || []), ...(prodColsRes.data || [])];
       setDbGames(gamesList);
 
       const prodToColIdsMap = new Map<string, Set<string>>();
+      const prodToColNamesMap = new Map<string, Set<string>>();
 
-      const addPivot = (pId: string, cId: string) => {
-        if (!pId || !cId) return;
-        const cleanPId = String(pId);
-        const cleanCId = String(cId);
-        if (!prodToColIdsMap.has(cleanPId)) prodToColIdsMap.set(cleanPId, new Set());
-        prodToColIdsMap.get(cleanPId)!.add(cleanCId);
-      };
+      prodPivot.forEach((pc: any) => {
+        const pId = String(pc.product_id || pc.productId);
+        const cId = String(pc.tag_id || pc.tagId || pc.collection_id || pc.collectionId);
 
-      const allPivots = [...(prodTagsRes.data || []), ...(prodColsRes.data || [])];
-      allPivots.forEach((pc: any) => {
-        const pId = pc.product_id || pc.productId;
-        const cId = pc.tag_id || pc.tagId || pc.collection_id || pc.collectionId;
-        addPivot(pId, cId);
+        if (pId && cId) {
+          if (!prodToColIdsMap.has(pId)) prodToColIdsMap.set(pId, new Set());
+          prodToColIdsMap.get(pId)!.add(cId);
+
+          if (collectionsMap.has(cId)) {
+            if (!prodToColNamesMap.has(pId)) prodToColNamesMap.set(pId, new Set());
+            prodToColNamesMap.get(pId)!.add(collectionsMap.get(cId)!);
+          }
+        }
       });
 
       const categoryIdToName = new Map<string, string>();
@@ -202,22 +199,6 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       });
 
       let formattedProducts = prods.map((p: any) => {
-        const pIdStr = String(p.id);
-
-        if (Array.isArray(p.product_tags)) {
-          p.product_tags.forEach((pt: any) => addPivot(pIdStr, pt.tag_id || pt.collection_id));
-        }
-        if (Array.isArray(p.product_collections)) {
-          p.product_collections.forEach((pc: any) => addPivot(pIdStr, pc.collection_id || pc.tag_id));
-        }
-        if (p.collection_id) addPivot(pIdStr, p.collection_id);
-        if (p.tag_id) addPivot(pIdStr, p.tag_id);
-
-        const associatedColIds = Array.from(prodToColIdsMap.get(pIdStr) || new Set<string>());
-        const associatedColNames = associatedColIds
-          .map(id => collectionsMap.get(id))
-          .filter(Boolean) as string[];
-
         let rawImg = findValueByKeywords(p, ["imag", "img", "portad", "thumb", "foto", "pic", "image_url"]);
         let finalImg = rawImg || "";
         if (Array.isArray(finalImg)) finalImg = finalImg[0];
@@ -232,6 +213,21 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
         }
 
         const catArray = Array.from(extractedCategories);
+        const extractedColIds = prodToColIdsMap.get(String(p.id)) || new Set<string>();
+        const extractedColNames = prodToColNamesMap.get(String(p.id)) || new Set<string>();
+
+        if (p.collection_id) {
+          const cId = String(p.collection_id);
+          extractedColIds.add(cId);
+          if (collectionsMap.has(cId)) extractedColNames.add(collectionsMap.get(cId)!);
+        }
+        if (p.tag_id) {
+          const tId = String(p.tag_id);
+          extractedColIds.add(tId);
+          if (collectionsMap.has(tId)) extractedColNames.add(collectionsMap.get(tId)!);
+        }
+
+        const colArray = Array.from(extractedColNames);
         let rawSet = findValueByKeywords(p, ["franchis", "franquici", "brand", "marca", "juego", "linea", "set"]) || "";
 
         const extraImgs: string[] = [];
@@ -242,7 +238,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
         else if (Array.isArray(p.images)) p.images.forEach(addIfNew);
 
         return {
-          id: pIdStr,
+          id: String(p.id),
           imgUrl: finalImg,
           extraImages: extraImgs,
           name: p.name || p.title || p.producto || "Producto TCG",
@@ -254,16 +250,16 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
           category: catArray[0] || "",
           categoriesList: catArray,
           rawCategory: catArray[0] || null,
-          collection: associatedColNames[0] || "",
-          collectionIds: associatedColIds,
-          collectionsList: associatedColNames,
+          collection: colArray[0] || "",
+          collectionIds: Array.from(extractedColIds),
+          collectionsList: colArray,
           sku: p.sku || ""
         };
       });
 
       setDbProducts(formattedProducts);
     } catch (error) {
-      console.error("Error cargando productos de la base de datos:", error);
+      console.error("Error cargando colecciones:", error);
       setDbProducts([]);
     }
   };
@@ -321,24 +317,27 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
     return ["Todos", ...Array.from(catSet).sort()];
   }, [isHomePage, activeTab, dbGames, dbProducts]);
 
-  // FILTRADO DE PRODUCTOS POR ID O NOMBRE EXACTO DE LA COLECCIÓN
   const currentCards = useMemo(() => {
     let cards = dbProducts;
 
     if (isHomePage) {
-      if (dbCollections.length === 0) return [];
+      if (dbCollections.length === 0) return cards;
 
       const activeCol = dbCollections.find(c => c.id === selectedCollectionId) || dbCollections[0];
       const activeId = activeCol?.id || selectedCollectionId;
-      const activeName = (activeCol?.name || highlightType || "").trim().toUpperCase();
+      const activeNameNorm = normalizeText(activeCol?.name || highlightType);
 
       return cards.filter(p => {
         if (activeId && p.collectionIds.includes(activeId)) {
           return true;
         }
 
-        if (activeName) {
-          return p.collectionsList.some(colName => colName.trim().toUpperCase() === activeName);
+        if (activeNameNorm) {
+          const matchesName = p.collectionsList.some(colName => {
+            const colNorm = normalizeText(colName);
+            return colNorm === activeNameNorm || colNorm.includes(activeNameNorm) || activeNameNorm.includes(colNorm);
+          });
+          if (matchesName) return true;
         }
 
         return false;
@@ -443,7 +442,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       const isOnePiece = tab === "One Piece TCG";
 
       return (
-        <div key={tab} className="relative flex flex-col items-center group pt-3.5 sm:pt-5">
+        <div key={tab} className="relative flex flex-col items-center group pt-3.5 sm:pt-5 shrink-0">
           {isOnePiece && (
             <span className="absolute top-0 left-1/2 -translate-x-1/2 pointer-events-none z-30 bg-yellow-400/90 backdrop-blur-sm text-black text-[8.5px] sm:text-[10px] font-black uppercase tracking-tight py-0.5 px-2.5 rounded-full shadow-[0_4px_15px_rgba(250,204,21,0.5)] whitespace-nowrap flex items-center gap-1">
               <Lock className="w-2.5 h-2.5"/> PROXIMAMENTE
@@ -512,7 +511,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
         className="absolute inset-0 w-full h-full object-cover opacity-40 z-0 pointer-events-none mix-blend-screen"
       />
 
-      {/* IMÁGENES LATERALES DECORATIVAS (VISIBLES EN PORTÁTIL Y DESKTOP) */}
+      {/* IMÁGENES LATERALES DECORATIVAS */}
       <img
         src="https://dopieoflkqfalnuvpwch.supabase.co/storage/v1/object/public/Recursos%20Visuales%20Disenador/Iconos%20Pagina%20Web/Carta%20y%20Pikachu.png"
         alt="Pikachu HoloCards"
@@ -530,7 +529,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
         <div className="relative z-20 w-full px-4 sm:px-12 mt-2 sm:mt-3 lg:mt-4 flex flex-col gap-1 transition-all">
           <div className="flex flex-col xl:flex-row items-center justify-between gap-2 w-full">
             
-            {/* DESPLEGABLE DE COLECCIONES DE LA BASE DE DATOS */}
+            {/* DESPLEGABLE DE COLECCIONES */}
             <div className="flex items-center justify-center xl:justify-start w-full xl:w-auto xl:flex-1 min-w-0 z-40">
               <div className="relative">
                 <button 
@@ -619,12 +618,89 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
         </div>
       )}
 
-      {/* CARRUSEL DE PRODUCTOS FILTRADOS */}
-      <div className="relative w-full max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto px-8 sm:px-12 xl:px-16 z-20 my-1 flex items-center justify-center flex-1 overflow-x-hidden">
+      {/* CARRUSEL PRINCIPAL: DUAL MOBILE (SIDE-SCROLL/SWIPE) Y DESKTOP (PAGINADO CON FLECHAS) */}
+      <div className="relative w-full max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto px-2 sm:px-12 xl:px-16 z-20 my-1 flex items-center justify-center flex-1 overflow-x-hidden">
+        
+        {/* VISTA MÓVIL: DESLIZAMIENTO HORIZONTAL NATIVO (SIDE-SCROLL / SWIPE) */}
+        <div className="flex md:hidden w-full overflow-x-auto snap-x snap-mandatory hide-scrollbar px-3 py-2 gap-3 scroll-smooth">
+          {currentCards.length > 0 ? (
+            currentCards.map((card, index) => {
+              const uniqueId = `mob-${card.id}-${index}`;
+              const cardPrice = Number(card.price) || 0;
+
+              return (
+                <div 
+                  key={uniqueId} 
+                  className="snap-center flex flex-col w-[150px] shrink-0 bg-[#0a1628]/85 backdrop-blur-md rounded-2xl border border-white/10 p-2 hover:border-yellow-400/60 transition-all duration-300 shadow-2xl"
+                >
+                  <div 
+                    onClick={() => {
+                      setIsModalFlipped(false);
+                      setActiveProduct({ ...card, uniqueId });
+                    }}
+                    className="w-full h-24 bg-transparent relative shrink-0 cursor-zoom-in p-1 flex items-center justify-center border-[1.5px] border-[#F3B91C]/40 rounded-xl overflow-hidden"
+                  >
+                    {card.imgUrl ? (
+                      <img 
+                        src={card.imgUrl} 
+                        alt={card.name} 
+                        className="w-full h-full object-contain filter drop-shadow-md"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-transparent rounded-xl border border-white/5">
+                        <span className="text-gray-600 font-black text-[9px] uppercase text-center px-1">Sin Imagen</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-2 flex-grow flex flex-col justify-start">
+                    <h3 className="text-white font-bold text-xs leading-tight line-clamp-1">
+                      {card.name}
+                    </h3>
+                    
+                    <p className="text-yellow-400 font-black text-xs mt-1 leading-none">
+                      {cardPrice > 0 ? `${cardPrice.toFixed(2)}€` : "Consultar precio"}
+                    </p>
+                  </div>
+
+                  <div className="mt-2 w-full flex flex-col gap-1 shrink-0">
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        handleAddToCart(card); 
+                      }}
+                      className="w-full bg-yellow-400 hover:bg-blue-600 text-black hover:text-white font-bold py-1.5 rounded-lg text-[9px] flex items-center justify-center gap-1 transition-colors active:scale-95 uppercase tracking-wider"
+                    >
+                      <ShoppingCart className="w-3 h-3"/> 
+                      AGREGAR
+                    </button>
+
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        navigate('/catalogo');
+                      }}
+                      className="w-full bg-[#1c2e4a] hover:bg-white text-white hover:text-black border border-[#2c446b] font-bold py-1 rounded-lg text-[9px] flex items-center justify-center transition-colors active:scale-95 uppercase tracking-wider shadow-inner"
+                    >
+                      VER CATÁLOGO
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="w-full py-12 flex flex-col items-center justify-center text-gray-500">
+              <LayoutGrid className="w-10 h-10 mb-2 opacity-30"/>
+              <p className="font-bold tracking-widest uppercase text-xs text-center">No hay productos disponibles</p>
+            </div>
+          )}
+        </div>
+
+        {/* VISTA DESKTOP Y TABLET: PAGINADO CON FLECHAS */}
         <button
           type="button"
           onClick={handlePrevPage}
-          className="absolute -left-1 sm:-left-2 md:left-2 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 transition-transform hover:scale-110 drop-shadow-[0_0_12px_rgba(243,185,28,0.6)] focus:outline-none shrink-0 z-40 active:scale-95 group"
+          className="hidden md:block absolute -left-1 sm:-left-2 md:left-2 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 transition-transform hover:scale-110 drop-shadow-[0_0_12px_rgba(243,185,28,0.6)] focus:outline-none shrink-0 z-40 active:scale-95 group"
           title="Anterior"
         >
           <svg width="40" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 sm:w-12 sm:h-12">
@@ -638,7 +714,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
           </svg>
         </button>
 
-        <div className="w-full flex justify-center items-center py-2">
+        <div className="hidden md:flex w-full justify-center items-center py-2">
           <AnimatePresence mode="wait">
             <motion.div 
               key={`${activeTab}-${selectedCategory}-${carouselPage}-${highlightType}-${selectedCollectionId}`}
@@ -727,7 +803,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
         <button
           type="button"
           onClick={handleNextPage}
-          className="absolute -right-1 sm:-right-2 md:right-2 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 transition-transform hover:scale-110 drop-shadow-[0_0_12px_rgba(243,185,28,0.6)] focus:outline-none shrink-0 z-40 active:scale-95 group"
+          className="hidden md:block absolute -right-1 sm:-right-2 md:right-2 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 transition-transform hover:scale-110 drop-shadow-[0_0_12px_rgba(243,185,28,0.6)] focus:outline-none shrink-0 z-40 active:scale-95 group"
           title="Siguiente"
         >
           <svg width="40" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 sm:w-12 sm:h-12">
