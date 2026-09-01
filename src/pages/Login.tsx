@@ -1,18 +1,28 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import { User, Lock, ArrowRight, Github, Zap, UserPlus, Layers } from 'lucide-react';
+import { User, Lock, ArrowRight, UserPlus, Calendar } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+
+function getMinBirthDate(): string {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 16);
+  return d.toISOString().split('T')[0];
+}
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,91 +30,140 @@ export default function Login() {
     setError(null);
     setSuccess(null);
 
-    if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    try {
+      if (isLogin) {
+        const { data, error: authError } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password: password.trim(),
+        });
 
-      if (error) {
-        setError(error.message);
-        setLoading(false);
-      } else {
-        // Redirigir al perfil o admin dependiendo del rol. Por defecto al perfil/admin
-        navigate('/perfil');
-      }
-    } else {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+        if (authError) throw authError;
 
-      if (error) {
-        setError(error.message);
+        if (data?.user) {
+          const rawRedirect = searchParams.get('redirect') || '/';
+          const safeRedirect = (rawRedirect.startsWith('/') && !rawRedirect.startsWith('//'))
+            ? rawRedirect
+            : '/';
+          navigate(safeRedirect, { replace: true });
+          return;
+        }
       } else {
-        setSuccess('Account created successfully. You can now establish connection.');
+        // Validación 1: Coincidencia de contraseñas
+        if (password !== confirmPassword) {
+          setError('Las contraseñas no coinciden. Por favor, verifícalas.');
+          setLoading(false);
+          return;
+        }
+
+        // Validación 2: Longitud mínima
+        if (password.length < 6) {
+          setError('La contraseña debe tener al menos 6 caracteres.');
+          setLoading(false);
+          return;
+        }
+
+        // Validación 3: Fecha de nacimiento
+        if (!birthDate) {
+          setError('Debes indicar tu fecha de nacimiento para registrarte.');
+          setLoading(false);
+          return;
+        }
+        const maxDate = new Date(getMinBirthDate());
+        const inputDate = new Date(birthDate);
+        if (inputDate > maxDate) {
+          setError('Debes tener al menos 16 años para crear una cuenta.');
+          setLoading(false);
+          return;
+        }
+
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: email.trim(),
+          password: password.trim(),
+          options: {
+            data: {
+              full_name: fullName.trim(),
+              birth_date: birthDate,
+            }
+          }
+        });
+
+        if (signUpError) throw signUpError;
+
+        if (signUpData?.user) {
+          await supabase.from('user_profiles').upsert({
+            id: signUpData.user.id,
+            full_name: fullName.trim(),
+            birth_date: birthDate,
+          }, { onConflict: 'id' });
+        }
+
+        setSuccess('Cuenta creada exitosamente. Ya puedes acceder.');
         setIsLogin(true);
+        setFullName('');
+        setBirthDate('');
+        setPassword('');
+        setConfirmPassword('');
       }
+    } catch (err: any) {
+      setError(err.message || 'Error inesperado de autenticación.');
+    } finally {
       setLoading(false);
     }
   };
 
-  const handleDevBypass = () => {
-    navigate('/admin');
-  };
+  const inputClass = "w-full bg-[#09090b] border border-[#27272a] rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-[#F3B91C]/50 focus:ring-1 focus:ring-[#F3B91C]/50 font-mono transition-all text-white placeholder:text-zinc-600";
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-500">
-      {/* Background Decor */}
-      <div className="absolute top-0 left-1/4 w-[1000px] h-[600px] bg-primary/10 blur-[150px] rounded-full"></div>
-      <div className="absolute bottom-0 right-1/4 w-[800px] h-[500px] bg-red-900/5 blur-[150px] rounded-full"></div>
+    <div className="min-h-screen bg-[#09090b] flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-500">
+      <div className="absolute top-0 left-1/4 w-[1000px] h-[600px] bg-red-900/10 blur-[150px] rounded-full pointer-events-none"></div>
+      <div className="absolute bottom-0 right-1/4 w-[800px] h-[500px] bg-red-900/5 blur-[150px] rounded-full pointer-events-none"></div>
       
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 w-full max-w-md"
       >
-        <div className="bg-card backdrop-blur-3xl border border-border rounded-[2.5rem] p-10 shadow-2xl">
-          {/* Logo & Header */}
-          <div className="text-center mb-10">
-            <Link to="/" className="inline-flex items-center gap-3 mb-6 group">
-              <div className="relative">
-                <Layers className="w-10 h-10 text-foreground transform -rotate-12 group-hover:rotate-0 transition-transform" />
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-sm shadow-lg shadow-primary/20" />
-              </div>
-              <span className="text-2xl font-black tracking-tighter uppercase italic text-foreground">TCG <span className="text-muted-foreground">STORE</span></span>
+        <div className="bg-[#18181b] backdrop-blur-3xl border border-[#27272a] rounded-[2.5rem] p-10 shadow-2xl">
+          <div className="text-center mb-10 flex flex-col items-center">
+            <Link to="/" className="inline-flex items-center gap-3 mb-6 group transition-transform hover:scale-105">
+              <img
+                src="https://dopieoflkqfalnuvpwch.supabase.co/storage/v1/object/public/Recursos%20Visuales%20Disenador/Logotipos/Isologo%20Transparente.png"
+                alt="Holocards"
+                className="h-14 object-contain"
+              />
             </Link>
-            <h1 className="text-3xl font-black uppercase tracking-tighter text-foreground mb-2 italic">
-              Acceso a la Bóveda
+            <h1 className="text-3xl font-black uppercase tracking-tighter text-white mb-2 italic">
+              Acceso a Perfil
             </h1>
-            <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-[0.2em]">
-              Autenticación Biométrica Requerida
+            <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.2em]">
+              Autenticación Requerida
             </p>
           </div>
 
-          {/* Toggle Login / Register */}
-          <div className="flex bg-black/50 p-1 rounded-xl mb-8 border border-white/5">
+          <div className="flex bg-[#09090b]/50 p-1 rounded-xl mb-8 border border-white/5">
             <button 
-              onClick={() => setIsLogin(true)}
+              type="button"
+              onClick={() => { setIsLogin(true); setError(null); setSuccess(null); }}
               className={cn(
                 "flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                isLogin ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:text-foreground"
+                isLogin ? "bg-[#F3B91C] text-black shadow-lg shadow-yellow-500/20" : "text-zinc-500 hover:text-white"
               )}
             >
               LOGIN
             </button>
             <button 
-              onClick={() => setIsLogin(false)}
+              type="button"
+              onClick={() => { setIsLogin(false); setError(null); setSuccess(null); }}
               className={cn(
                 "flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
-                !isLogin ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "text-muted-foreground hover:text-foreground"
+                !isLogin ? "bg-[#F3B91C] text-black shadow-lg shadow-yellow-500/20" : "text-zinc-500 hover:text-white"
               )}
             >
               REGISTRO
             </button>
           </div>
 
-          <form onSubmit={handleAuth} className="space-y-6">
+          <form onSubmit={handleAuth} className="space-y-5">
             <AnimatePresence mode="wait">
               {error && (
                 <motion.div 
@@ -128,81 +187,151 @@ export default function Login() {
               )}
             </AnimatePresence>
 
+            {/* Nombre completo — solo en registro */}
+            <AnimatePresence>
+              {!isLogin && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-2 overflow-hidden"
+                >
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 ml-1">
+                    Nombre y Apellidos
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <User className="w-4 h-4 text-zinc-500" />
+                    </div>
+                    <input
+                      type="text"
+                      required={!isLogin}
+                      placeholder="Tu nombre completo"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Email */}
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 ml-1">Identity</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 ml-1">
+                Correo Electrónico
+              </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <User className="w-4 h-4 text-muted-foreground" />
+                  <User className="w-4 h-4 text-zinc-500" />
                 </div>
                 <input
                   type="email"
                   required
-                  placeholder="EMAIL ENTITY..."
+                  placeholder="ejemplo@correo.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-muted border border-border rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 font-mono transition-all text-foreground placeholder:text-muted-foreground/30"
+                  className={inputClass}
                 />
               </div>
             </div>
 
+            {/* Contraseña */}
             <div className="space-y-2">
               <div className="flex justify-between ml-1">
-                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">Secret Key</label>
+                <label className="text-xs font-bold uppercase tracking-widest text-zinc-500">
+                  Contraseña
+                </label>
                 {isLogin && (
-                  <a href="#" className="text-[10px] text-red-500 uppercase tracking-widest font-bold hover:underline">Forgot Key?</a>
+                  <span className="text-[10px] text-zinc-400 uppercase tracking-widest font-bold">
+                    ¿Olvidaste tu contraseña?
+                  </span>
                 )}
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="w-4 h-4 text-muted-foreground" />
+                  <Lock className="w-4 h-4 text-zinc-500" />
                 </div>
                 <input
                   type="password"
                   required
-                  placeholder="ACCESS CODE..."
+                  placeholder="Tu contraseña..."
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-muted border border-border rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 font-mono transition-all text-foreground placeholder:text-muted-foreground/30"
+                  className={inputClass}
                 />
               </div>
             </div>
 
+            {/* Confirmar contraseña — solo en registro */}
+            <AnimatePresence>
+              {!isLogin && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-2 overflow-hidden"
+                >
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 ml-1">
+                    Confirmar Contraseña
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Lock className="w-4 h-4 text-zinc-500" />
+                    </div>
+                    <input
+                      type="password"
+                      required={!isLogin}
+                      placeholder="Repite tu contraseña..."
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Fecha de nacimiento — solo en registro */}
+            <AnimatePresence>
+              {!isLogin && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-2 overflow-hidden"
+                >
+                  <label className="text-xs font-bold uppercase tracking-widest text-zinc-500 ml-1">
+                    Fecha de Nacimiento
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Calendar className="w-4 h-4 text-zinc-500" />
+                    </div>
+                    <input
+                      type="date"
+                      required={!isLogin}
+                      max={getMinBirthDate()}
+                      value={birthDate}
+                      onChange={(e) => setBirthDate(e.target.value)}
+                      className={cn(inputClass, "pl-10 text-white [color-scheme:dark]")}
+                    />
+                  </div>
+                  <p className="text-[10px] text-zinc-500 ml-1">Requerido por ley. Debes tener al menos 16 años.</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full py-4 bg-primary text-primary-foreground rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 disabled:opacity-50 group"
+              className="w-full py-4 bg-[#F3B91C] text-black rounded-xl font-black flex items-center justify-center gap-2 hover:bg-[#F3B91C]/90 transition-all shadow-[0_0_20px_rgba(243,185,28,0.2)] disabled:opacity-50 group"
             >
-              {loading ? (isLogin ? 'Verifying...' : 'Initializing...') : (isLogin ? 'Establish Connection' : 'Initialize Entity')}
+              {loading ? (isLogin ? 'Accediendo...' : 'Registrando...') : (isLogin ? 'Accede' : 'Registrarse')}
               {isLogin ? <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /> : <UserPlus className="w-5 h-5 group-hover:scale-110 transition-transform" />}
-            </button>
-
-            <button 
-              type="button"
-              onClick={handleDevBypass}
-              className="w-full py-4 bg-zinc-900 border border-zinc-800 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-zinc-800 transition-all mt-4 text-zinc-400 group"
-            >
-              <Zap className="w-4 h-4 text-red-500 group-hover:scale-125 transition-transform" />
-              Dev Mode: Skip Authorization
             </button>
           </form>
 
-          <div className="mt-8 flex flex-col items-center gap-6">
-            <div className="relative py-6">
-              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border"></div></div>
-              <div className="relative flex justify-center text-[8px] font-black uppercase tracking-widest">
-                <span className="bg-card px-4 text-muted-foreground">O accede con</span>
-              </div>
-            </div>
-
-            <button className="flex items-center gap-3 px-6 py-3 bg-muted border border-border rounded-xl text-sm font-medium hover:bg-accent transition-all w-full justify-center text-foreground">
-              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
-              <span>Identity Protocol: Google</span>
-            </button>
-          </div>
-
-          <p className="mt-8 text-center text-[10px] text-zinc-600 font-mono tracking-widest">
-            ENCRYPTED VIA AES-256-GCM. UNAUTHORIZED ACCESS ATTEMPTS ARE LOGGED.
-          </p>
         </div>
       </motion.div>
     </div>

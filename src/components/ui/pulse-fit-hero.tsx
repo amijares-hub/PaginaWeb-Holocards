@@ -1,13 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
-import NavMenu from "./menu-hover-effects";
-
-interface NavigationItem {
-  label: string;
-  hasDropdown?: boolean;
-  onClick?: () => void;
-}
 
 interface ProgramCard {
   image: string;
@@ -17,12 +10,6 @@ interface ProgramCard {
 }
 
 interface PulseFitHeroProps {
-  logo?: string;
-  navigation?: NavigationItem[];
-  ctaButton?: {
-    label: string;
-    onClick: () => void;
-  };
   title: string;
   subtitle: string;
   primaryAction?: {
@@ -44,9 +31,6 @@ interface PulseFitHeroProps {
 }
 
 export function PulseFitHero({
-  logo = "Sasori Labs",
-  navigation = [],
-  ctaButton,
   title,
   subtitle,
   primaryAction,
@@ -57,6 +41,8 @@ export function PulseFitHero({
   className,
   children,
 }: PulseFitHeroProps) {
+  const duration = Math.max(programs.length, 1) * 5;
+
   return (
     <section
       className={cn(
@@ -66,9 +52,6 @@ export function PulseFitHero({
       role="banner"
       aria-label="Hero section"
     >
-      {/* Header removed as it was redundant with main navbar */}
-
-      {/* Main Content */}
       {children ? (
         <div className="relative z-10 flex-1 flex items-center justify-center w-full">
           {children}
@@ -81,21 +64,14 @@ export function PulseFitHero({
             transition={{ duration: 0.8, delay: 0.2 }}
             className="flex flex-col items-center text-center max-w-4xl gap-8"
           >
-            {/* Title */}
-            <h1
-              className="font-sans font-black italic uppercase tracking-tighter text-[#E1E0CC] text-[clamp(36px,6vw,72px)] leading-[1.1] tracking-[-0.04em]"
-            >
+            <h1 className="font-sans font-black italic uppercase tracking-tighter text-[#E1E0CC] text-[clamp(36px,6vw,72px)] leading-[1.1]">
               {title}
             </h1>
 
-            {/* Subtitle */}
-            <p
-              className="font-sans font-medium uppercase tracking-widest text-[#E1E0CC] text-[clamp(14px,1.5vw,16px)] leading-[1.6] max-w-[700px]"
-            >
+            <p className="font-sans font-medium uppercase tracking-widest text-[#E1E0CC] text-[clamp(14px,1.5vw,16px)] leading-[1.6] max-w-[700px]">
               {subtitle}
             </p>
 
-            {/* Action Buttons */}
             {(primaryAction || secondaryAction) && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -106,7 +82,7 @@ export function PulseFitHero({
                 {primaryAction && (
                   <button
                     onClick={primaryAction.onClick}
-                    className="flex flex-row items-center gap-2 px-8 py-4 rounded-full transition-all hover:scale-105 bg-red-600 shadow-2xl shadow-red-600/30 font-black italic uppercase tracking-widest text-xs"
+                    className="flex flex-row items-center gap-2 px-8 py-4 rounded-full transition-all hover:scale-105 bg-red-600 shadow-2xl shadow-red-600/30 font-black italic uppercase tracking-widest text-xs text-white"
                   >
                     {primaryAction.label}
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -132,7 +108,6 @@ export function PulseFitHero({
               </motion.div>
             )}
 
-            {/* Disclaimer */}
             {disclaimer && (
               <motion.p
                 initial={{ opacity: 0 }}
@@ -144,7 +119,6 @@ export function PulseFitHero({
               </motion.p>
             )}
 
-            {/* Social Proof */}
             {socialProof && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -162,9 +136,7 @@ export function PulseFitHero({
                     />
                   ))}
                 </div>
-                <span
-                  className="font-sans font-bold uppercase tracking-wider text-white/40 text-[10px]"
-                >
+                <span className="font-sans font-bold uppercase tracking-wider text-white/40 text-[10px]">
                   {socialProof.text}
                 </span>
               </motion.div>
@@ -173,7 +145,6 @@ export function PulseFitHero({
         </div>
       )}
 
-      {/* Program Cards Carousel */}
       {programs.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 100 }}
@@ -181,62 +152,40 @@ export function PulseFitHero({
           transition={{ duration: 1, delay: 0.8 }}
           className="relative z-10 w-full overflow-hidden py-10"
         >
-          {/* Gradient Overlays - reduced width on mobile */}
-          <div
-            className="absolute left-0 top-0 bottom-0 z-10 pointer-events-none w-[clamp(50px,10vw,150px)] bg-gradient-to-r from-[#09090b] to-transparent"
-          />
-          <div
-            className="absolute right-0 top-0 bottom-0 z-10 pointer-events-none w-[clamp(50px,10vw,150px)] bg-gradient-to-l from-[#09090b] to-transparent"
-          />
+          <div className="absolute left-0 top-0 bottom-0 z-10 pointer-events-none w-[clamp(50px,10vw,150px)] bg-gradient-to-r from-[#09090b] to-transparent" />
+          <div className="absolute right-0 top-0 bottom-0 z-10 pointer-events-none w-[clamp(50px,10vw,150px)] bg-gradient-to-l from-[#09090b] to-transparent" />
 
-          {/* Scrolling Container */}
           <motion.div
             className="flex items-center gap-4 pl-4"
-            animate={{
-              x: [0, -((programs.length * 380) / 2)],
-            }}
+            animate={{ x: ['0%', '-50%'] }}
             transition={{
               x: {
                 repeat: Infinity,
                 repeatType: "loop",
-                duration: programs.length * 5,
+                duration: duration,
                 ease: "linear",
               },
             }}
           >
-            {/* Duplicate programs for seamless loop */}
             {[...programs, ...programs].map((program, index) => (
               <motion.div
-                key={index}
+                key={`${program.title}-${index}`}
                 whileHover={{ scale: 1.02, y: -5 }}
                 transition={{ duration: 0.3 }}
                 onClick={program.onClick}
                 className="flex-shrink-0 cursor-pointer relative overflow-hidden group w-[clamp(280px,80vw,356px)] h-[clamp(380px,60vh,480px)] rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.4)] border border-white/5"
               >
-                {/* Image */}
                 <img
                   src={program.image}
                   alt={program.title}
                   className="transition-transform duration-700 group-hover:scale-110 w-full h-full object-cover"
                 />
-
-                {/* Gradient Overlay */}
-                <div
-                  className="absolute inset-0 z-10 bg-gradient-to-b from-transparent to-black/80"
-                />
-
-                {/* Text Content */}
-                <div
-                  className="absolute bottom-0 left-0 right-0 p-8 z-20 flex flex-col gap-3"
-                >
-                  <span
-                    className="font-mono font-black italic text-red-500 uppercase tracking-[0.3em] text-[10px]"
-                  >
+                <div className="absolute inset-0 z-10 bg-gradient-to-b from-transparent to-black/80" />
+                <div className="absolute bottom-0 left-0 right-0 p-8 z-20 flex flex-col gap-3">
+                  <span className="font-mono font-black italic text-red-500 uppercase tracking-[0.3em] text-[10px]">
                     {program.category}
                   </span>
-                  <h3
-                    className="font-sans font-black italic uppercase tracking-tighter text-white text-[26px] leading-[1.1]"
-                  >
+                  <h3 className="font-sans font-black italic uppercase tracking-tighter text-white text-[26px] leading-[1.1]">
                     {program.title}
                   </h3>
                 </div>

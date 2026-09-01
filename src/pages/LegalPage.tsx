@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { ChevronLeft, ShieldCheck, Scale, FileText, Truck } from 'lucide-react';
 import { StoreNavbar } from '../components/layout/StoreNavbar';
 
@@ -58,7 +58,7 @@ export default function LegalPage() {
               {content.title}
             </h1>
             <p className="text-zinc-500 font-mono text-xs uppercase tracking-[0.3em]">
-              Última actualización: Mayo 2026 // Protocolo Legal
+              Última actualización: Agosto 2026 // Protocolo Legal
             </p>
           </div>
 
@@ -66,27 +66,14 @@ export default function LegalPage() {
             <section className="space-y-4">
               <h2 className="text-xl font-black uppercase tracking-widest text-white border-l-4 border-red-600 pl-4">1. Introducción</h2>
               <p className="text-zinc-400 leading-relaxed text-sm">
-                Bienvenido a TCG Store, operada por Sasori Labs. Al acceder a nuestro sitio web y utilizar nuestros servicios, usted acepta cumplir y estar sujeto a los siguientes términos y condiciones. Por favor, léalos detenidamente antes de realizar cualquier transacción.
-              </p>
-              <p className="text-zinc-400 leading-relaxed text-sm">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                Bienvenido a HoloCards Canarias. Al acceder a nuestro sitio web y utilizar nuestros servicios, usted acepta cumplir y estar sujeto a los siguientes términos y condiciones. Por favor, léalos detenidamente antes de realizar cualquier transacción.
               </p>
             </section>
 
             <section className="space-y-4">
               <h2 className="text-xl font-black uppercase tracking-widest text-white border-l-4 border-red-600 pl-4">2. Compromiso de Calidad</h2>
               <p className="text-zinc-400 leading-relaxed text-sm">
-                Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-              </p>
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-8 space-y-4 italic text-zinc-300">
-                "Nuestra misión es preservar la integridad del coleccionismo en las Islas Canarias, ofreciendo un canal seguro y profesional para todos los entrenadores y magos."
-              </div>
-            </section>
-
-            <section className="space-y-4">
-              <h2 className="text-xl font-black uppercase tracking-widest text-white border-l-4 border-red-600 pl-4">3. Limitación de Responsabilidad</h2>
-              <p className="text-zinc-400 leading-relaxed text-sm">
-                At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga.
+                Garantizamos que todos nuestros productos son 100% oficiales y provenientes de distribuidores autorizados.
               </p>
             </section>
           </div>

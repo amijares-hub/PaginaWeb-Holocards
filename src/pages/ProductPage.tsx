@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronRight, 
   ShoppingCart, 
@@ -12,19 +12,13 @@ import {
   Info,
   Package,
   Layers,
-  Zap,
-  Medal,
-  ArrowRight,
+  Truck,
   ShieldAlert,
   CheckCircle2,
   Eye,
   Link as LinkIcon,
   MessageCircle,
-  Twitter,
-  Share2,
-  CreditCard,
-  Languages,
-  Truck
+  Twitter
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { StoreNavbar } from '../components/layout/StoreNavbar';
@@ -33,7 +27,6 @@ import { useCartStore } from '../lib/cartStore';
 import { Toast } from '../components/ui/Toast';
 import { cn } from '../lib/utils';
 
-// --- Types ---
 interface Product {
   id: string;
   name: string;
@@ -44,6 +37,7 @@ interface Product {
   sku: string;
   categories: { name: string; id: string };
   top_hits_images?: string[];
+  rarity?: string;
 }
 
 export default function ProductPage() {
@@ -62,12 +56,12 @@ export default function ProductPage() {
     payments: { title: 'PAGO SEGURO', methods: [] },
     sharing: { whatsapp: true, twitter: true, link: true },
     topHits: [],
+    trustSeals: [],
     languages: [{ id: 'es', label: 'ES', flag: '🇪🇸', isActive: true }]
   };
   
   const addItem = useCartStore(state => state.addItem);
 
-  // Live Stats Randomizer based on Admin Config
   const liveStats = useMemo(() => {
     const wMin = pdpConfig.socialProof.watching?.min || 10;
     const wMax = pdpConfig.socialProof.watching?.max || 30;
@@ -115,12 +109,13 @@ export default function ProductPage() {
 
   const handleAddToCart = () => {
     if (!product) return;
+    const safePrice = Number(product.base_price) || 0;
     addItem({
       id: product.id,
       name: product.name,
-      price: product.base_price,
+      price: safePrice,
       image_url: product.image_url,
-      rarity: 'Ultra Rare',
+      rarity: product.rarity || product.categories?.name || 'Ultra Rare',
       set: product.categories?.name || 'Expansion',
       stock: product.base_stock
     } as any, quantity);
@@ -140,52 +135,57 @@ export default function ProductPage() {
       <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 text-center">
         <ShieldAlert className="w-20 h-20 text-muted-foreground/20 mb-6" />
         <h1 className="text-3xl font-black uppercase tracking-tighter mb-4 italic">Bóveda Vacía</h1>
-        <Link to="/catalog" className="px-10 py-4 bg-primary text-primary-foreground font-black uppercase tracking-[0.2em] text-[10px] rounded-xl hover:bg-foreground transition-all">
+        <Link to="/catalogo" className="px-10 py-4 bg-primary text-primary-foreground font-black uppercase tracking-[0.2em] text-[10px] rounded-xl hover:bg-foreground transition-all">
           Volver al Catálogo
         </Link>
       </div>
     );
   }
 
-  const installmentPrice = (product.base_price / 6).toFixed(2);
+  const basePriceNum = Number(product.base_price) || 0;
+  const installmentPrice = (basePriceNum / 6).toFixed(2);
+  const galleryImages = Array.from(new Set([product.image_url, ...(product.top_hits_images || [])]));
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30 overflow-x-hidden transition-colors duration-500">
       <StoreNavbar />
 
       <main className="max-w-7xl mx-auto px-4 lg:px-8 pt-24 pb-20">
-        
-        {/* Breadcrumbs */}
         <nav className="mb-4 flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
           <Link to="/" className="hover:text-foreground transition-colors">Inicio</Link>
           <ChevronRight className="w-2.5 h-2.5 opacity-30" />
-          <Link to="/catalog" className="hover:text-foreground transition-colors">Productos</Link>
+          <Link to="/catalogo" className="hover:text-foreground transition-colors">Productos</Link>
           <ChevronRight className="w-2.5 h-2.5 opacity-30" />
           <span className="opacity-50">{product.categories?.name}</span>
           <ChevronRight className="w-2.5 h-2.5 opacity-30" />
           <span className="text-foreground truncate max-w-[120px]">{product.name}</span>
         </nav>
 
-        {/* --- GRID PRINCIPAL --- */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-16">
-          
-          {/* Columna Izquierda (Galería + Sellos) */}
           <div className="lg:col-span-7">
             <div className="flex gap-4">
               <div className="hidden sm:flex flex-col gap-2 w-16 shrink-0">
-                {[product.image_url, product.image_url, product.image_url].map((img, idx) => (
-                  <div key={idx} className={cn("aspect-[4/5] rounded-lg border overflow-hidden bg-zinc-900/50 cursor-pointer transition-all", idx === 0 ? "border-red-600 shadow-[0_0_15px_rgba(220,38,38,0.2)]" : "border-white/5 hover:border-white/20")}>
-                    <img src={img} alt="" className="w-full h-full object-cover opacity-60" />
+                {galleryImages.map((img, idx) => (
+                  <div 
+                    key={idx} 
+                    onClick={() => setActiveImage(img)}
+                    className={cn(
+                      "aspect-[4/5] rounded-lg border overflow-hidden bg-zinc-900/50 cursor-pointer transition-all", 
+                      (activeImage || product.image_url) === img ? "border-red-600 shadow-[0_0_15px_rgba(220,38,38,0.2)]" : "border-white/5 hover:border-white/20"
+                    )}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-cover opacity-80" />
                   </div>
                 ))}
               </div>
 
               <motion.div 
-                initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, scale: 0.98 }} 
+                animate={{ opacity: 1, scale: 1 }}
                 className="flex-1 relative aspect-square max-h-[500px] rounded-[2.5rem] bg-gradient-to-br from-white/[0.04] to-transparent border border-white/10 flex items-center justify-center p-10 group shadow-[0_40px_100px_rgba(0,0,0,0.5)]"
               >
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(220,38,38,0.05)_0%,transparent_70%)]" />
-                <img src={product.image_url} alt={product.name} className="w-full h-full object-contain drop-shadow-[0_0_50px_rgba(239,68,68,0.15)] group-hover:scale-105 transition-transform duration-700" />
+                <img src={activeImage || product.image_url} alt={product.name} className="w-full h-full object-contain drop-shadow-[0_0_50px_rgba(239,68,68,0.15)] group-hover:scale-105 transition-transform duration-700" />
                 <div className="absolute top-8 left-8 flex flex-col gap-1">
                   <div className="px-3 py-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full">
                     <p className="text-[7px] font-black uppercase tracking-[0.2em] text-red-500">PREMIUM VAULT EDITION</p>
@@ -194,9 +194,8 @@ export default function ProductPage() {
               </motion.div>
             </div>
 
-            {/* --- SELLOS DE CONFIANZA (MINIMALISTAS BAJO LA IMAGEN) --- */}
             <div className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 py-6 border-t border-white/5">
-              {pdpConfig.trustSeals.map((seal, i) => {
+              {(pdpConfig.trustSeals || []).map((seal: any, i: number) => {
                 const Icon = i === 0 ? Truck : i === 1 ? ShieldCheck : CheckCircle2;
                 return (
                   <div key={i} className="flex items-center gap-3 group transition-all">
@@ -205,7 +204,7 @@ export default function ProductPage() {
                     </div>
                     <div className="flex flex-col">
                       <p className="text-[9px] font-black uppercase text-foreground tracking-widest">{seal.title}</p>
-                      <p className="text-[7px] font-bold text-muted-foreground uppercase tracking-tighter italic">{seal.desc || 'Garantía Sasori'}</p>
+                      <p className="text-[7px] font-bold text-muted-foreground uppercase tracking-tighter italic">{seal.desc || 'Garantía HoloCards'}</p>
                     </div>
                   </div>
                 );
@@ -213,13 +212,8 @@ export default function ProductPage() {
             </div>
           </div>
 
-          {/* Columna Derecha (Buy Box REFACTORIZADA) */}
-          <div className="lg:col-span-5 lg:sticky lg:top-24 h-fit bg-card/40 backdrop-blur-sm p-2 rounded-3xl space-y-6 border border-border/50">
-            
-            {/* 1. CONTENEDOR SUPERIOR FLEX */}
+          <div className="lg:col-span-5 lg:sticky lg:top-24 h-fit bg-card/40 backdrop-blur-sm p-6 rounded-3xl space-y-6 border border-border/50">
             <div className="flex justify-between items-start gap-6">
-              
-              {/* Lado Izquierdo: Info del Producto */}
               <div className="flex flex-col flex-1 space-y-3">
                 <div className="space-y-1.5">
                   <span className="inline-block px-2.5 py-0.5 bg-red-600/10 border border-red-600/20 rounded text-[8px] font-black text-red-500 uppercase tracking-[0.2em]">
@@ -237,7 +231,7 @@ export default function ProductPage() {
                 </div>
 
                 <div className="space-y-0.5">
-                  <p className="text-4xl font-black text-foreground tracking-tighter italic">{product.base_price.toFixed(2)}€</p>
+                  <p className="text-4xl font-black text-foreground tracking-tighter italic">{basePriceNum.toFixed(2)}€</p>
                   <div className="flex items-center gap-1.5 text-zinc-600">
                     <p className="text-[8px] font-bold uppercase tracking-widest">Hasta 6 cuotas de {installmentPrice}€</p>
                     <Info className="w-2.5 h-2.5 opacity-50 cursor-help" />
@@ -249,12 +243,11 @@ export default function ProductPage() {
                   <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500">En stock y listo para envío</span>
                 </div>
 
-                {/* Gadget de Idiomas */}
                 {pdpConfig.languages?.length > 0 && (
                   <div className="space-y-2 pt-2">
                     <p className="text-[7px] font-black text-zinc-600 uppercase tracking-widest">Idioma / Edición:</p>
                     <div className="flex gap-1.5">
-                      {pdpConfig.languages.filter(l => l.isActive).map(lang => (
+                      {pdpConfig.languages.filter((l: any) => l.isActive).map((lang: any) => (
                         <button 
                           key={lang.id} onClick={() => setSelectedLang(lang.label)}
                           className={cn(
@@ -272,10 +265,7 @@ export default function ProductPage() {
                 )}
               </div>
 
-              {/* Lado Derecho: El 'Cuadrado Rojo' (Urgencia y Compartir) */}
               <div className="flex flex-col items-end gap-4 w-[180px] shrink-0 pt-2">
-                
-                {/* Fila de Compartir */}
                 <div className="flex flex-col items-end gap-2">
                   <span className="text-[8px] font-black uppercase tracking-widest text-zinc-600">Compartir:</span>
                   <div className="flex gap-2">
@@ -285,7 +275,6 @@ export default function ProductPage() {
                   </div>
                 </div>
 
-                {/* Caja de Live Stats */}
                 {pdpConfig.socialProof.isVisible && (
                   <div className="w-full flex flex-col gap-3 p-4 bg-white/[0.02] border border-white/5 rounded-2xl shadow-2xl">
                     <div className="flex items-center gap-3">
@@ -309,11 +298,9 @@ export default function ProductPage() {
                     </div>
                   </div>
                 )}
-
               </div>
             </div>
 
-            {/* 2. BOTONES DE ACCIÓN */}
             <div className="space-y-3 pt-2 border-t border-border">
               <div className="flex items-center gap-3">
                 <div className="flex items-center bg-muted border border-border rounded-xl h-14 px-3 shrink-0">
@@ -325,28 +312,18 @@ export default function ProductPage() {
                   <ShoppingCart className="w-4 h-4 group-hover:rotate-12 transition-transform" /> {pdpConfig.primaryButtonText || 'AGREGAR AL CARRITO'}
                 </button>
               </div>
-              <button className="w-full h-14 border border-border hover:border-foreground/30 bg-muted/50 hover:bg-muted rounded-xl font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 transition-all text-foreground">
-                <ShieldCheck className="w-4 h-4 text-primary" /> {pdpConfig.secondaryButtonText || 'COMPRAR AHORA'}
-              </button>
             </div>
 
-            {/* Gadget Pago Seguro */}
             <div className="pt-2 flex flex-col items-center gap-3 border-t border-white/5">
               <p className="text-[7px] font-black text-zinc-700 uppercase tracking-widest flex items-center gap-2">
                 <ShieldCheck className="w-3 h-3" /> {pdpConfig.payments.title || 'Transacción Encriptada 256-bit'}
               </p>
-              <div className="flex flex-wrap justify-center gap-1.5 opacity-40 hover:opacity-100 transition-opacity">
-                {pdpConfig.payments.methods.filter(m => m.isActive).map(m => (
-                  <div key={m.id} className="px-2.5 py-1 bg-white/5 border border-white/10 rounded text-[7px] font-bold text-zinc-400 uppercase tracking-widest">{m.label}</div>
-                ))}
-              </div>
             </div>
           </div>
         </div>
 
-        {/* 3. Banda de Características */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 py-10 border-y border-white/5 mb-16">
-          {pdpConfig.breakdownItems?.map((item, i) => (
+          {pdpConfig.breakdownItems?.map((item: any, i: number) => (
             <div key={i} className="flex flex-col items-center gap-3 group">
               <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center group-hover:border-red-600/30 transition-all">
                 <Layers className="w-5 h-5 text-yellow-500/60 group-hover:text-yellow-500" />
@@ -356,7 +333,6 @@ export default function ProductPage() {
           ))}
         </div>
 
-        {/* 4. Sección Inferior */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-20">
           <div className="lg:col-span-8 space-y-16">
             <div className="space-y-8">
@@ -371,43 +347,24 @@ export default function ProductPage() {
             <div className="space-y-10 pt-10 border-t border-white/5">
               <h2 className="text-xl font-black uppercase italic tracking-tighter">RELACIONADOS</h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                {relatedProducts.slice(0, 4).map((item, i) => (
-                  <div key={i} className="group space-y-4">
-                    <Link to={`/producto/${item.id}`} className="block aspect-square rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center p-6 group-hover:border-red-600/30 overflow-hidden relative transition-all">
-                      <img src={item.image_url} alt={item.name} className="w-full h-full object-contain" />
-                    </Link>
-                    <div>
-                      <h3 className="text-[10px] font-black uppercase text-foreground truncate">{item.name}</h3>
-                      <p className="text-xs font-black text-foreground">{item.base_price.toFixed(2)}€</p>
+                {relatedProducts.slice(0, 4).map((item, i) => {
+                  const relPrice = Number(item.base_price) || 0;
+                  return (
+                    <div key={i} className="group space-y-4">
+                      <Link to={`/producto/${item.id}`} className="block aspect-square rounded-2xl bg-zinc-900 border border-white/5 flex items-center justify-center p-6 group-hover:border-red-600/30 overflow-hidden relative transition-all">
+                        <img src={item.image_url} alt={item.name} className="w-full h-full object-contain" />
+                      </Link>
+                      <div>
+                        <h3 className="text-[10px] font-black uppercase text-foreground truncate">{item.name}</h3>
+                        <p className="text-xs font-black text-foreground">{relPrice.toFixed(2)}€</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
-
-            {/* --- TOP HITS SECTION (Individual Product Data) --- */}
-            {product.top_hits_images && product.top_hits_images.length > 0 && (
-              <div className="lg:col-span-4">
-                <div className="p-8 rounded-[3rem] bg-card border border-border shadow-2xl relative overflow-hidden group transition-colors">
-                  <div className="relative z-10 space-y-8">
-                    <h3 className="text-sm font-black uppercase italic tracking-widest text-foreground border-b border-border pb-4">TOP HITS — VAULT</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      {product.top_hits_images.slice(0, 4).map((url, i) => (
-                        <div key={i} className="aspect-[2/3] rounded-xl overflow-hidden border border-white/10 bg-zinc-800 shadow-2xl group/hit">
-                          <img src={url} alt="Top Hit Card" className="w-full h-full object-cover group-hover/hit:scale-110 transition-transform duration-700" />
-                        </div>
-                      ))}
-                    </div>
-                    <button className="w-full py-4 border border-red-600/30 rounded-2xl text-[10px] font-black uppercase text-red-500 transition-all flex items-center justify-center gap-2 hover:bg-red-600/10">
-                      <Eye className="w-4 h-4" /> VER LISTA COMPLETA
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
         </div>
-
       </main>
 
       <Toast show={showToast} message="Añadido a la bóveda" onClose={() => setShowToast(false)} />

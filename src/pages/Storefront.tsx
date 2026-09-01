@@ -17,11 +17,6 @@ import {
 } from 'lucide-react';
 import { cn, formatCurrency } from '../lib/utils';
 import { Link } from 'react-router-dom';
-import { PulseFitHero } from '../components/ui/pulse-fit-hero';
-import TextMarquee from '../components/ui/text-marque';
-import { FeatureCarousel } from '../components/ui/feature-carousel';
-import { Features } from '../components/ui/features';
-import { TrustGrid } from '../components/ui/trust-grid';
 import { ProductCarousel } from '../components/ui/product-carousel';
 import { CtaCard } from '../components/ui/call-to-action-cta';
 import { useNavigate } from 'react-router-dom';
@@ -168,76 +163,7 @@ export default function Storefront() {
     <div className="min-h-screen bg-[#09090b] text-white selection:bg-red-500/30">
       <StoreNavbar />
       <div className="pt-32 md:pt-40">
-        <PulseFitHero 
-        title={heroContent.title}
-        subtitle={heroContent.subtitle}
-        primaryAction={{
-          label: "EXPLORAR BÓVEDA",
-          onClick: scrollToExplore
-        }}
-        secondaryAction={{
-          label: "VER NOVEDADES",
-          onClick: scrollToExplore
-        }}
-        disclaimer={heroContent.disclaimer}
-        socialProof={{
-          avatars: [
-            "/Imagenes/ME03_ES_19.png",
-            "/Imagenes/ME03_ES_22.png",
-            "/Imagenes/ME03_ES_28.png",
-            "/Imagenes/ME03_ES_6.png",
-          ],
-          text: "MÁS DE 5,000 ENTRENADORES CONFÍAN EN NOSOTROS",
-        }}
-        programs={[
-          {
-            image: storageImages.length > 0 ? storageImages[0 % storageImages.length] : "/Imagenes/ME03_ES_104.png",
-            category: "VINTAGE",
-            title: "Tesoros del Base Set",
-            onClick: scrollToExplore
-          },
-          {
-            image: storageImages.length > 0 ? storageImages[1 % storageImages.length] : "/Imagenes/ME03_ES_111.png",
-            category: "GRADEADAS",
-            title: "Certificación PSA/CGC",
-            onClick: scrollToExplore
-          },
-          {
-            image: storageImages.length > 0 ? storageImages[2 % storageImages.length] : "/Imagenes/ME03_ES_12.png",
-            category: "EXCLUSIVAS",
-            title: "Ilustraciones Especiales",
-            onClick: scrollToExplore
-          },
-          {
-            image: storageImages.length > 0 ? storageImages[3 % storageImages.length] : "/Imagenes/ME03_ES_123.png",
-            category: "JAPANESE",
-            title: "Importación Directa",
-            onClick: scrollToExplore
-          },
-          {
-            image: storageImages.length > 0 ? storageImages[4 % storageImages.length] : "/Imagenes/ME03_ES_14.png",
-            category: "SEALED",
-            title: "Elite Trainer Boxes",
-            onClick: scrollToExplore
-          },
-        ]}
-      />
-      <TextMarquee 
-        baseVelocity={-1} 
-        clasname="text-2xl md:text-5xl font-black italic tracking-tighter text-white whitespace-nowrap font-retro pt-4"
-      >
-        ENTREGAS DISPONIBLES EN TODA CANARIAS • PRODUCTOS 100% OFICIALES • 
-      </TextMarquee>
 
-      <TrustGrid startIndex={0} />
-
-      <Features 
-        features={productCategories}
-        sectionTitle="Categorías de Élite"
-        sectionSubtitle="Explora nuestro catálogo especializado"
-      />
-
-      <TrustGrid startIndex={3} />
 
       {/* Premium Inventory Section */}
       <section id="explore" className="py-24 bg-zinc-900/40 border-y border-white/5 relative overflow-hidden">
@@ -270,7 +196,7 @@ export default function Storefront() {
             <ProductCarousel cards={featuredCards} />
           </div>
  
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-6">
             {featuredCards.map((card, i) => (
               <motion.div 
                 key={card.id}
@@ -281,9 +207,11 @@ export default function Storefront() {
                 whileHover={{ y: -10 }}
                 className="group relative"
               >
-                <div className="aspect-[3/4] rounded-[2rem] bg-zinc-900 border border-white/5 overflow-hidden relative shadow-2xl">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80 z-10"></div>
-                  <img src={card.image_url || card.image} alt={card.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                <div 
+                  className="aspect-[3/4] bg-transparent relative shadow-2xl flex items-center justify-center p-3 sm:p-4 border-[1.5px] border-red-500/40 rounded-2xl overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80 z-10 pointer-events-none"></div>
+                  <img src={card.image_url || card.image} alt={card.name} className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110" />
                   
                   {/* Category Badge */}
                   <div className="absolute top-6 right-6 z-20 bg-black/60 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10 text-[8px] font-black uppercase tracking-[0.2em] italic text-white/90 font-retro pt-2">
@@ -312,7 +240,7 @@ export default function Storefront() {
                   {/* Hover Overlay Funnel */}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 z-30 flex flex-col gap-3 items-center justify-center p-6 backdrop-blur-[2px]">
                     <Button 
-                      onClick={() => navigate(`/checkout/${card.id}`)}
+                      onClick={() => { addToCart(card); navigate('/checkout'); }}
                       className="w-full bg-red-600 hover:bg-red-700 text-white font-black italic uppercase tracking-[0.2em] text-[10px] h-12 rounded-xl shadow-2xl shadow-red-600/40 border border-white/10 flex items-center justify-center gap-3 active:scale-95 transition-all"
                     >
                       Protocolo Checkout
@@ -357,9 +285,6 @@ export default function Storefront() {
 
 
 
-      {/* Protocol Features Carousel */}
-      <TrustGrid startIndex={6} />
-      
       {/* Newsletter CTA Section */}
       <section className="py-24 px-6">
         <div className="max-w-7xl mx-auto">
@@ -374,13 +299,7 @@ export default function Storefront() {
         </div>
       </section>
 
-      <section className="bg-zinc-900/20 py-20 border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-6 mb-12">
-          <span className="text-red-500 font-mono font-black text-[10px] uppercase tracking-[0.4em] mb-2 block">Academy_Sourcing</span>
-          <h2 className="text-3xl font-black tracking-tighter italic uppercase text-white">Aprende a jugar gratis</h2>
-        </div>
-        <FeatureCarousel />
-      </section>
+
 
       <section className="py-24 border-t border-white/5 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 text-center mb-16">

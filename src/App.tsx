@@ -3,47 +3,74 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { supabase } from './lib/supabase';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { StoreProvider, useStore } from './lib/StoreContext';
 import { ShieldAlert } from 'lucide-react';
 import FloatingChatBot from './components/ui/FloatingChatBot';
 import { useThemeStore, updateDocumentTheme } from './lib/useThemeStore';
+import { useAuth } from './hooks/useAuth';
 
 // Pages
-import Dashboard from './pages/admin/Dashboard';
-import Inventory from './pages/admin/InventoryV2';
-import Orders from './pages/admin/Orders';
-import POS from './pages/admin/POS';
 import Catalog from './pages/Catalog';
-import Storefront from './pages/Storefront';
-import HomeV2 from './pages/HomeV2';
 import LandingPageV2 from './pages/LandingPageV2';
 import Login from './pages/Login';
-import AdminLayout from './components/layout/AdminLayout';
 import UserProfile from './pages/UserProfile';
 import ProfileSettings from './pages/ProfileSettings';
-import UsersEngine from './pages/admin/UsersEngine';
-import SystemSettings from './pages/admin/SystemSettings';
-import ChatbotSettings from './pages/admin/ChatbotSettings';
-import HomeMainframe from './pages/admin/HomeMainframe';
-import { AdminLogin } from './pages/admin/AdminLogin';
-import { ProtectedRoute } from './components/admin/ProtectedRoute';
-import Collections from './pages/admin/Collections';
-import CartPage from './pages/CartPage';
+
 import CheckoutPage from './pages/CheckoutPage';
 import SuccessPage from './pages/SuccessPage';
 import ProductPage from './pages/ProductPage';
 import LegalPage from './pages/LegalPage';
-import ProntaApertura from './pages/ProntaApertura';
+import AboutUs from './components/AboutUs';
 
-function AppInner({ session }: { session: any }) {
+function ProtectedProfile() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#050914] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <UserProfile />;
+}
+
+function ProfileSettingsRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" /></div>;
+  if (!loading && !user) return <Navigate to="/login" replace />;
+  return <ProfileSettings />;
+}
+
+function LoginRoute() {
+  const { user, loading } = useAuth();
+  if (!loading && user) return <Navigate to="/perfil" replace />;
+  return <Login />;
+}
+
+function AppInner() {
   const { systemSettings } = useStore();
-  const isAdminPath = window.location.pathname.startsWith('/admin') || window.location.pathname === '/login';
 
-  if (systemSettings['system_maintenance'] && !isAdminPath) {
+  return (
+    <Router>
+      <RouterContent systemSettings={systemSettings} />
+    </Router>
+  );
+}
+
+function RouterContent({ systemSettings }: { systemSettings: any }) {
+  const { pathname } = useLocation();
+  const isBypassPath = pathname === '/login';
+
+  if (systemSettings['system_maintenance'] && !isBypassPath) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8 text-center transition-colors">
         <motion.div
@@ -71,74 +98,49 @@ function AppInner({ session }: { session: any }) {
   }
 
   return (
-    <Router>
+    <>
       <AnimatePresence mode="wait">
         <Routes>
 
           {/* ══════════════════════════════════════════════
-               🚧 MODO PRÓXIMAMENTE — RUTAS PÚBLICAS
-               La tienda real está en /dev-store (secreto)
+               🏠 LANDING PRINCIPAL — ÚNICA PÁGINA DE ENTRADA
           ══════════════════════════════════════════════ */}
-          <Route path="/" element={
-            window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-              ? <Navigate to="/dev-store" replace /> 
-              : <ProntaApertura />
-          } />
+          <Route path="/" element={<LandingPageV2 />} />
+
+          {/* Redirecciones de rutas antiguas → nueva raíz */}
+          <Route path="/v2-landing" element={<Navigate to="/" replace />} />
+          <Route path="/dev-store" element={<Navigate to="/" replace />} />
 
           {/* ══════════════════════════════════════════════
-               🔒 RUTA SECRETA DE DESARROLLO
-               Solo tú conoces este link — no indexado
+               🛍️ CATÁLOGO Y TIENDA
           ══════════════════════════════════════════════ */}
-          <Route path="/v2-landing" element={<LandingPageV2 />} />
-          <Route path="/dev-store" element={<HomeV2 />} />
-          <Route path="/dev-store/catalogo" element={<Catalog />} />
-          <Route path="/dev-store/producto/:id" element={<ProductPage />} />
-          <Route path="/dev-store/carrito" element={<CartPage />} />
-          <Route path="/dev-store/checkout" element={<CheckoutPage />} />
-          <Route path="/dev-store/gracias/:orderId" element={<SuccessPage />} />
-          <Route path="/dev-store/perfil" element={session ? <UserProfile /> : <Navigate to="/dev-store" />} />
-          <Route path="/dev-store/profile/settings" element={session ? <ProfileSettings /> : <Navigate to="/dev-store" />} />
-          <Route path="/dev-store/login" element={session ? <Navigate to="/dev-store/perfil" /> : <Login />} />
+          <Route path="/catalogo" element={<Catalog />} />
+          <Route path="/producto/:id" element={<ProductPage />} />
 
-          {/* Legacy paths (mantenidos por si acaso) */}
-          <Route path="/dev-store/storefront" element={<Storefront />} />
-          <Route path="/dev-store/catalog" element={<Catalog />} />
-          <Route path="/dev-store/product/:id" element={<ProductPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/gracias/:orderId" element={<SuccessPage />} />
+          <Route path="/perfil" element={<ProtectedProfile />} />
+          <Route path="/perfil/ajustes" element={<ProfileSettingsRoute />} />
+          <Route path="/login" element={<LoginRoute />} />
+          <Route path="/legal" element={<LegalPage />} />
+          <Route path="/sobre-nosotros" element={<AboutUs />} />
 
-          {/* ══════════════════════════════════════════════
-               👑 ADMIN — SIEMPRE ACCESIBLE
-          ══════════════════════════════════════════════ */}
-          <Route path="/admin/login" element={<AdminLogin />} />
+          {/* Rutas legacy del dev-store → redirigen a nuevas */}
+          <Route path="/dev-store/catalog" element={<Navigate to="/catalogo" replace />} />
+          <Route path="/dev-store/catalogo" element={<Navigate to="/catalogo" replace />} />
+          <Route path="/dev-store/producto/:id" element={<Navigate to="/producto/:id" replace />} />
+          <Route path="/dev-store/product/:id" element={<Navigate to="/producto/:id" replace />} />
 
-          <Route path="/admin" element={
-            <ProtectedRoute>
-              <AdminLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<Dashboard />} />
-            <Route path="home" element={<HomeMainframe />} />
-            <Route path="inventory" element={<Inventory />} />
-            <Route path="collections" element={<Collections />} />
-            <Route path="orders" element={<Orders />} />
-            <Route path="pos" element={<POS />} />
-            <Route path="users" element={<UsersEngine />} />
-            <Route path="chatbot" element={<ChatbotSettings />} />
-            <Route path="system" element={<SystemSettings />} />
-          </Route>
-
-          {/* Catch-all → Próximamente */}
+          {/* Catch-all → Landing */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>
-      {/* ChatBot solo en dev-store, no en la landing */}
-      {window.location.pathname.startsWith('/dev-store') && <FloatingChatBot />}
-    </Router>
+      {!isBypassPath && <FloatingChatBot />}
+    </>
   );
 }
 
 export default function App() {
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const theme = useThemeStore((state) => state.theme);
 
   useEffect(() => {
@@ -146,39 +148,9 @@ export default function App() {
     updateDocumentTheme(theme);
   }, [theme]);
 
-  useEffect(() => {
-    supabase.auth.getSession()
-      .then(({ data: { session } }) => {
-        setSession(session);
-      })
-      .catch((err) => {
-        console.error('Supabase Session Error:', err);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background transition-colors">
-        <div className="relative w-16 h-16">
-          <div className="absolute inset-0 border-4 border-red-500/20 rounded-full"></div>
-          <div className="absolute inset-0 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <StoreProvider>
-      <AppInner session={session} />
+      <AppInner />
     </StoreProvider>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
-import { useRef, useEffect, forwardRef } from 'react';
+
+import React, { useRef, useEffect, forwardRef } from 'react';
 import {
   motion,
   useScroll,
@@ -8,22 +9,27 @@ import {
   useVelocity,
   useAnimationFrame,
   useMotionValue,
-} from 'motion/react';
-import { wrap } from '@motionone/utils';
+} from 'framer-motion';
 import { cn } from '../../lib/utils';
 
 interface ComponentProps {
   children: string;
   baseVelocity: number;
-  clasname?: string;
+  className?: string;
   scrollDependent?: boolean;
   delay?: number;
 }
 
+// Helper matemático inline para evitar dependencia de @motionone/utils
+const wrap = (min: number, max: number, v: number) => {
+  const rangeSize = max - min;
+  return ((((v - min) % rangeSize) + rangeSize) % rangeSize) + min;
+};
+
 const TextMarquee = forwardRef<HTMLDivElement, ComponentProps>(({
   children,
   baseVelocity = -5,
-  clasname,
+  className,
   scrollDependent = false,
   delay = 0,
 }, ref) => {
@@ -51,7 +57,7 @@ const TextMarquee = forwardRef<HTMLDivElement, ComponentProps>(({
     return () => clearTimeout(timer);
   }, [delay]);
 
-  useAnimationFrame((t, delta) => {
+  useAnimationFrame((_, delta) => {
     if (!hasStarted.current) return;
 
     let moveBy = directionFactor.current * baseVelocity * (delta / 1000);
@@ -65,20 +71,19 @@ const TextMarquee = forwardRef<HTMLDivElement, ComponentProps>(({
     }
 
     moveBy += directionFactor.current * moveBy * velocityFactor.get();
-
     baseX.set(baseX.get() + moveBy);
   });
 
   return (
-    <div ref={ref} className='overflow-hidden whitespace-nowrap flex flex-nowrap py-4 bg-red-600/5'>
+    <div ref={ref} className="overflow-hidden whitespace-nowrap flex flex-nowrap py-4 bg-red-600/5">
       <motion.div
-        className='flex whitespace-nowrap gap-10 flex-nowrap'
+        className="flex whitespace-nowrap gap-10 flex-nowrap"
         style={{ x }}
       >
-        <span className={cn(`block text-[8vw] font-black uppercase italic tracking-tighter`, clasname)}>{children}</span>
-        <span className={cn(`block text-[8vw] font-black uppercase italic tracking-tighter`, clasname)}>{children}</span>
-        <span className={cn(`block text-[8vw] font-black uppercase italic tracking-tighter`, clasname)}>{children}</span>
-        <span className={cn(`block text-[8vw] font-black uppercase italic tracking-tighter`, clasname)}>{children}</span>
+        <span className={cn('block text-[8vw] font-black uppercase italic tracking-tighter', className)}>{children}</span>
+        <span className={cn('block text-[8vw] font-black uppercase italic tracking-tighter', className)}>{children}</span>
+        <span className={cn('block text-[8vw] font-black uppercase italic tracking-tighter', className)}>{children}</span>
+        <span className={cn('block text-[8vw] font-black uppercase italic tracking-tighter', className)}>{children}</span>
       </motion.div>
     </div>
   );

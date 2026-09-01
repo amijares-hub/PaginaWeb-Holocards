@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Card } from '../types';
 import { fetchStorageImages } from '../services/imageSync';
 import { supabase } from './supabase';
+import { useCartStore } from './cartStore';
 
 interface CartItem extends Card {
   quantity: number;
@@ -21,51 +22,44 @@ interface StoreContextType {
   calculatePrice: (costPrice: number) => number;
   getLootProbability: (rarity: string) => number;
   freeShippingThreshold: number;
-  announcement: { active: boolean, message: string, color: string };
-  heroContent: { title: string, subtitle: string, disclaimer: string };
+  announcement: { active: boolean; message: string; color: string };
+  heroContent: { title: string; subtitle: string; disclaimer: string };
   activeSuppliers: string[];
   homepageDesign: Record<string, any>;
+  marketing: Record<string, any>;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const { 
+    items: cartStoreItems, 
+    addItem: zustandAddItem, 
+    removeItem: zustandRemoveItem, 
+    updateQuantity: zustandUpdateQuantity, 
+    clearCart: zustandClearCart 
+  } = useCartStore();
+
   const [favorites, setFavorites] = useState<Card[]>([]);
   const [storageImages, setStorageImages] = useState<string[]>([]);
   const [systemSettings, setSystemSettings] = useState<Record<string, any>>({});
   const [homepageDesign, setHomepageDesign] = useState<Record<string, any>>({});
 
-  // Load from localStorage and fetch remote images
   useEffect(() => {
-    const savedCart = localStorage.getItem('sasori_cart');
-    const savedFavorites = localStorage.getItem('sasori_favorites');
-    if (savedCart) setCart(JSON.parse(savedCart));
+    const savedFavorites = localStorage.getItem('holocards_favorites');
     if (savedFavorites) setFavorites(JSON.parse(savedFavorites));
 
-    // Fetch images from Supabase Storage
     fetchStorageImages().then(images => {
       if (images && images.length > 0) {
         setStorageImages(images);
-        
-        // Normalize existing cart/favorites if they use old unsplash links
-        setCart(prev => prev.map((item, i) => ({
-          ...item,
-          image_url: item.image_url.includes('unsplash.com') ? images[i % images.length] : item.image_url
-        })));
-        setFavorites(prev => prev.map((item, i) => ({
-          ...item,
-          image_url: item.image_url.includes('unsplash.com') ? images[i % images.length] : item.image_url
-        })));
       }
     });
 
-    // Fetch System Settings
     const fetchSettings = async () => {
       const { data, error } = await supabase.from('system_settings').select('*');
       if (!error && data) {
         const settingsMap = data.reduce((acc: any, item: any) => {
-          acc[item.id] = item.value.value;
+          acc[item.id] = item.value?.value;
           return acc;
         }, {});
         setSystemSettings(settingsMap);
@@ -73,7 +67,6 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
     fetchSettings();
 
-    // Fetch Homepage Design
     const fetchDesign = async () => {
       const { data, error } = await supabase.from('homepage_clon_design').select('*');
       if (!error && data) {
@@ -86,13 +79,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
     fetchDesign();
 
-    // Subscribe to settings changes
     const settingsSub = supabase
       .channel('system_settings_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'system_settings' }, fetchSettings)
       .subscribe();
 
-    // Subscribe to design changes
     const designSub = supabase
       .channel('homepage_design_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'homepage_clon_design' }, fetchDesign)
@@ -104,39 +95,28 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, []);
 
-  // Sync to localStorage
   useEffect(() => {
-    localStorage.setItem('sasori_cart', JSON.stringify(cart));
-  }, [cart]);
-
-  useEffect(() => {
-    localStorage.setItem('sasori_favorites', JSON.stringify(favorites));
+    localStorage.setItem('holocards_favorites', JSON.stringify(favorites));
   }, [favorites]);
 
   const addToCart = (card: Card) => {
-    setCart(prev => {
-      const existing = prev.find(item => item.id === card.id);
-      if (existing) {
-        return prev.map(item => 
-          item.id === card.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
-      return [...prev, { ...card, quantity: 1 }];
-    });
+    zustandAddItem({
+      id: card.id,
+      name: card.name,
+      price: Number(card.price) || 0,
+      image_url: card.image_url,
+      rarity: card.rarity || 'Rare',
+      set: card.set || 'General',
+      stock: card.stock || 10
+    }, 1);
   };
 
   const removeFromCart = (cardId: string) => {
-    setCart(prev => prev.filter(item => item.id !== cardId));
+    zustandRemoveItem(cardId);
   };
 
   const updateQuantity = (cardId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(cardId);
-      return;
-    }
-    setCart(prev => prev.map(item => 
-      item.id === cardId ? { ...item, quantity } : item
-    ));
+    zustandUpdateQuantity(cardId, quantity);
   };
 
   const toggleFavorite = (card: Card) => {
@@ -153,11 +133,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return favorites.some(item => item.id === cardId);
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => zustandClearCart();
 
   const calculatePrice = (costPrice: number) => {
     const margin = systemSettings['financial_margin'] || 1.15;
-    return costPrice * margin;
+    return (Number(costPrice) || 0) * margin;
   };
 
   const getLootProbability = (rarity: string) => {
@@ -174,20 +154,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const freeShippingThreshold = systemSettings['logistics_shipping']?.free_shipping_threshold || 50;
   const announcement = systemSettings['content_announcement'] || {
     active: true,
-    message: "¡BIENVENIDO A SASORI LABS! ENVÍOS GRATIS EN PEDIDOS SUPERIORES A 50€",
+    message: "¡BIENVENIDO A HOLOCARDS! ENVÍOS GRATIS EN PEDIDOS SUPERIORES A 50€",
     color: "bg-red-600",
     scroll_speed: 5000
   };
 
   const heroContent = systemSettings['content_hero'] || {
     title: "EL SANTUARIO POKÉMON EN CANARIAS.",
-    subtitle: "DESCUBRE EL COLECCIONISMO DE ÉLITE. CARTAS GRADUADAS, SELLADAS Y RAREZAS EXCLUSIVAS CON ENVÍO ASEGURADO A TODAS LAS ISLAS CON EL SELLO DE SASORI LABS.",
+    subtitle: "DESCUBRE EL COLECCIONISMO DE ÉLITE.",
     disclaimer: "*AUTENTICIDAD GARANTIZADA // ENVÍOS 24/48H"
   };
 
   const marketing = homepageDesign['ui_marketing'] || {
     countdown: { isActive: false, endDate: '', message: '', color: '#EF4444' },
-    gamification: { popupEnabled: true, captureChance: 0.05, currentEntity: 'Charizard', popupMessage: '' }
+    gamification: { popupEnabled: false, captureChance: 0.05, currentEntity: 'Charizard', popupMessage: '' }
   };
 
   const [activeSuppliers, setActiveSuppliers] = useState<string[]>([]);
@@ -200,20 +180,23 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     };
     fetchSuppliers();
-
-    const sub = supabase
-      .channel('suppliers_sync')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'suppliers' }, () => {
-        fetchSuppliers();
-      })
-      .subscribe();
-    
-    return () => { supabase.removeChannel(sub); };
   }, []);
+
+  const cartItemsFormatted: CartItem[] = cartStoreItems.map(i => ({
+    id: i.id,
+    name: i.name,
+    price: i.price,
+    image_url: i.image_url,
+    rarity: i.rarity,
+    set: i.set,
+    stock: i.stock,
+    quantity: i.quantity,
+    isFeatured: true
+  }));
 
   return (
     <StoreContext.Provider value={{ 
-      cart, 
+      cart: cartItemsFormatted, 
       favorites, 
       storageImages,
       addToCart, 

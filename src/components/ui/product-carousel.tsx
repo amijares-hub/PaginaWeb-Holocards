@@ -21,17 +21,20 @@ interface ProductCarouselProps {
   cards: Card[];
 }
 
-export function ProductCarousel({ cards }: ProductCarouselProps) {
+export function ProductCarousel({ cards = [] }: ProductCarouselProps) {
   const navigate = useNavigate();
   const { addToCart, toggleFavorite, isFavorite } = useStore();
-  // Triple the items for a smooth infinite scroll
+  
+  if (!cards || cards.length === 0) return null;
+
   const displayCards = [...cards, ...cards, ...cards];
+  const duration = Math.max(cards.length, 1) * 5;
 
   const handleAddToCart = (card: Card) => {
     const storeCard: StoreCard = {
       id: card.id,
       name: card.name,
-      price: card.price,
+      price: Number(card.price) || 0,
       image_url: card.image_url || card.image,
       rarity: card.rarity || card.category,
       stock: 1,
@@ -45,7 +48,7 @@ export function ProductCarousel({ cards }: ProductCarouselProps) {
     const storeCard: StoreCard = {
       id: card.id,
       name: card.name,
-      price: card.price,
+      price: Number(card.price) || 0,
       image_url: card.image_url || card.image,
       rarity: card.rarity || card.category,
       stock: 1,
@@ -57,20 +60,19 @@ export function ProductCarousel({ cards }: ProductCarouselProps) {
 
   return (
     <div className="relative w-full overflow-hidden py-12">
-      {/* Gradient Overlays - responsive width */}
       <div className="absolute left-0 top-0 bottom-0 z-10 w-16 sm:w-32 bg-gradient-to-r from-[#09090b] to-transparent pointer-events-none" />
       <div className="absolute right-0 top-0 bottom-0 z-10 w-16 sm:w-32 bg-gradient-to-l from-[#09090b] to-transparent pointer-events-none" />
 
       <motion.div
         className="flex gap-4 sm:gap-6 whitespace-nowrap"
         animate={{
-          x: [0, -((cards.length * (window.innerWidth < 640 ? 240 : 320)))], // Adjusted for responsive width
+          x: ['0%', '-33.333333%'],
         }}
         transition={{
           x: {
             repeat: Infinity,
             repeatType: "loop",
-            duration: cards.length * 5,
+            duration: duration,
             ease: "linear",
           },
         }}
@@ -82,13 +84,12 @@ export function ProductCarousel({ cards }: ProductCarouselProps) {
           >
             <div className="relative aspect-[3/4] rounded-3xl overflow-hidden border border-white/10 bg-zinc-900/50">
               <img
-                src={card.image}
+                src={card.image_url || card.image}
                 alt={card.name}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
               
-              {/* Favorite Button */}
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
@@ -110,17 +111,18 @@ export function ProductCarousel({ cards }: ProductCarouselProps) {
                   {card.name}
                 </h3>
                 <p className="text-[10px] sm:text-sm font-bold text-white/60">
-                  {formatCurrency(card.price)}
+                  {formatCurrency(Number(card.price) || 0)}
                 </p>
               </div>
               
-              {/* Premium Glow on hover */}
               <div className="absolute inset-0 bg-red-600/0 group-hover:bg-red-600/5 transition-colors duration-500" />
               
-              {/* Hover Overlay Funnel */}
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 z-30 flex flex-col gap-2 items-center justify-center p-8 backdrop-blur-[2px]">
                 <Button 
-                  onClick={() => navigate(`/checkout/${card.id}`)}
+                  onClick={() => {
+                    handleAddToCart(card);
+                    navigate('/checkout');
+                  }}
                   className="w-full bg-red-600 hover:bg-red-700 text-white font-black italic uppercase tracking-[0.2em] text-[8px] h-10 rounded-xl shadow-2xl shadow-red-600/40 border border-white/10 flex items-center justify-center gap-2 active:scale-95 transition-all whitespace-nowrap"
                 >
                   Checkout_Protocol

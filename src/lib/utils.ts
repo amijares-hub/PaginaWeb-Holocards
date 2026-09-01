@@ -11,3 +11,8 @@ export function formatCurrency(amount: number) {
     currency: 'EUR',
   }).format(amount);
 }
+
+export const getRealPrice = (p: any): number => {
+  const price = parseFloat(p?.base_price ?? p?.price ?? p?.precio ?? 0);
+  return isNaN(price) ? 0 : price;
+};

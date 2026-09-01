@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageSquare, X, Send, Bot, User, CornerDownLeft } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, User } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface ChatbotConfig {
@@ -26,9 +26,13 @@ export default function FloatingChatBot() {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetchConfig();
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, []);
 
   const fetchConfig = async () => {
@@ -40,7 +44,6 @@ export default function FloatingChatBot() {
 
       if (!error && data) {
         setConfig(data);
-        // Add initial message
         setMessages([
           {
             sender: 'bot',
@@ -54,7 +57,6 @@ export default function FloatingChatBot() {
     }
   };
 
-  // Scroll to bottom helper
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -62,10 +64,9 @@ export default function FloatingChatBot() {
   }, [messages, isTyping]);
 
   if (!config || !config.is_active) {
-    return null; // Don't render anything if bot is disabled or missing
+    return null;
   }
 
-  // Predefined FAQ answers mapping
   const getFAQAnswer = (question: string): string => {
     const q = question.toLowerCase();
     if (q.includes('pedido') || q.includes('dónde') || q.includes('donde') || q.includes('localizar')) {
@@ -83,9 +84,10 @@ export default function FloatingChatBot() {
   const handleSendMessage = (text: string) => {
     if (!text.trim()) return;
 
+    const cleanText = text.trim();
     const userMsg: Message = {
       sender: 'user',
-      text: text.trim(),
+      text: cleanText,
       timestamp: new Date()
     };
 
@@ -93,9 +95,10 @@ export default function FloatingChatBot() {
     setInputValue('');
     setIsTyping(true);
 
-    // Bot response simulation with standard 800ms thinking delay
-    setTimeout(() => {
-      const botReplyText = getFAQAnswer(text);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    timeoutRef.current = setTimeout(() => {
+      const botReplyText = getFAQAnswer(cleanText);
       const botMsg: Message = {
         sender: 'bot',
         text: botReplyText,
@@ -106,13 +109,8 @@ export default function FloatingChatBot() {
     }, 1000);
   };
 
-  const handleQuickReplyClick = (reply: string) => {
-    handleSendMessage(reply);
-  };
-
   return (
     <>
-      {/* FLOATING ACTION BUTTON (FAB) */}
       <div className="fixed bottom-6 right-4 sm:right-6 z-[200] safe-bottom">
         <motion.button
           onClick={() => setIsOpen(!isOpen)}
@@ -132,12 +130,10 @@ export default function FloatingChatBot() {
             <MessageSquare className="w-6 h-6 transition-transform hover:scale-110 duration-200" />
           )}
 
-          {/* Pulse effect */}
           <span className="absolute inset-0 rounded-full bg-white/20 animate-ping opacity-20 pointer-events-none" />
         </motion.button>
       </div>
 
-      {/* CHAT INTERFACE POPUP */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -147,7 +143,6 @@ export default function FloatingChatBot() {
             transition={{ type: 'spring', damping: 25, stiffness: 220 }}
             className="fixed bottom-24 right-2 sm:right-6 w-[calc(100vw-16px)] sm:w-[400px] h-[75vh] sm:h-[550px] max-h-[600px] bg-background/95 dark:bg-zinc-950/95 border border-border/80 rounded-[2.5rem] shadow-2xl z-[200] overflow-hidden flex flex-col backdrop-blur-xl"
           >
-            {/* Header */}
             <div 
               className="p-5 flex items-center justify-between text-white"
               style={{ backgroundColor: config.primary_color }}
@@ -175,7 +170,6 @@ export default function FloatingChatBot() {
               </button>
             </div>
 
-            {/* Conversation Area */}
             <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar bg-slate-50/50 dark:bg-black/20">
               {messages.map((msg, i) => (
                 <div 
@@ -215,7 +209,6 @@ export default function FloatingChatBot() {
                 </div>
               ))}
 
-              {/* Typing indicator */}
               {isTyping && (
                 <div className="flex gap-3 max-w-[85%] items-end">
                   <div 
@@ -234,13 +227,12 @@ export default function FloatingChatBot() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Quick Replies Panel */}
-            {config.quick_replies.length > 0 && (
+            {config.quick_replies && config.quick_replies.length > 0 && (
               <div className="p-4 border-t border-border/50 bg-slate-50/20 dark:bg-black/10 flex flex-wrap gap-2 shrink-0">
                 {config.quick_replies.map((reply, index) => (
                   <button
                     key={index}
-                    onClick={() => handleQuickReplyClick(reply)}
+                    onClick={() => handleSendMessage(reply)}
                     className="px-3.5 py-2 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-border/70 rounded-full text-[10px] font-bold text-zinc-700 dark:text-zinc-300 transition-all hover:scale-[1.02] shadow-sm flex items-center"
                   >
                     {reply}
@@ -249,30 +241,29 @@ export default function FloatingChatBot() {
               </div>
             )}
 
-            {/* Input Bar */}
-            <div className="p-4 border-t border-border/80 bg-background flex items-center gap-2.5">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendMessage(inputValue);
+              }}
+              className="p-4 border-t border-border/80 bg-background flex items-center gap-2.5"
+            >
               <input
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSendMessage(inputValue);
-                  }
-                }}
                 placeholder="Escribe tu mensaje..."
                 className="flex-1 bg-slate-100 dark:bg-zinc-900 border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-all placeholder:text-muted-foreground/60"
               />
               <button
-                onClick={() => handleSendMessage(inputValue)}
+                type="submit"
                 className="w-10 h-10 rounded-xl flex items-center justify-center text-white transition-all hover:scale-105 active:scale-95 shadow-lg shadow-indigo-900/10"
                 style={{ backgroundColor: config.primary_color }}
                 title="Enviar mensaje"
               >
                 <Send className="w-4 h-4" />
               </button>
-            </div>
+            </form>
           </motion.div>
         )}
       </AnimatePresence>
