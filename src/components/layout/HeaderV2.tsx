@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  ChevronDown, Search, User, ShoppingCart, X, Plus, Minus, Trash2, Menu, Sparkles 
+  ChevronDown, Search, User, ShoppingCart, X, Plus, Minus, Trash2, Menu 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '../../lib/cartStore';
@@ -16,7 +16,6 @@ function CartSidebar({ onClose }: { onClose: () => void }) {
 
   return (
     <>
-      {/* Overlay */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -25,7 +24,6 @@ function CartSidebar({ onClose }: { onClose: () => void }) {
         className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150]"
       />
 
-      {/* Panel lateral */}
       <motion.div
         initial={{ x: '100%' }}
         animate={{ x: 0 }}
@@ -33,8 +31,7 @@ function CartSidebar({ onClose }: { onClose: () => void }) {
         transition={{ type: 'spring', damping: 28, stiffness: 220 }}
         className="fixed top-0 right-0 bottom-0 w-[90vw] max-w-[400px] bg-[#050914] border-l border-cyan-900/40 z-[160] flex flex-col shadow-[-20px_0_60px_rgba(0,0,0,0.8)]"
       >
-        {/* Header del drawer */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+        <div className="flex items-center justify-between px-5 py-4 sm:px-6 sm:py-5 border-b border-white/10">
           <div className="flex items-center gap-2">
             <ShoppingCart className="w-5 h-5 text-cyan-400" />
             <span className="text-white font-black uppercase tracking-widest text-sm">Mi Carrito</span>
@@ -52,7 +49,6 @@ function CartSidebar({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        {/* Lista de productos */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 custom-scrollbar">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 text-center py-16">
@@ -161,41 +157,41 @@ export default function HeaderV2({ onHomeClick, onFranchiseClick }: HeaderV2Prop
   return (
     <>
       <header className="sticky top-0 z-[100] w-full backdrop-blur-xl bg-[#050914]/90 border-b border-cyan-900/30 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
+        <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16 sm:h-20">
 
-            {/* Lado Izquierdo: Logo + Menú Hamburguesa en Móvil/Tablet */}
-            <div className="flex items-center gap-3">
+            {/* Lado Izquierdo: Menú Hamburguesa + Logo aislado */}
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="lg:hidden p-2 rounded-xl text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                className="lg:hidden p-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
                 aria-label="Abrir menú"
               >
-                <Menu className="w-6 h-6 text-cyan-400" />
+                <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400" />
               </button>
 
               <div className="flex-shrink-0 flex items-center">
                 {onHomeClick ? (
-                  <button onClick={onHomeClick} className="flex items-center gap-2">
+                  <button onClick={onHomeClick} className="flex items-center">
                     <img
                       src="https://dopieoflkqfalnuvpwch.supabase.co/storage/v1/object/public/Recursos%20Visuales%20Disenador/Logotipos/Isologo%20Transparente.png"
                       alt="Holocards"
-                      className="h-9 sm:h-10 object-contain"
+                      className="h-7 sm:h-10 object-contain"
                     />
                   </button>
                 ) : (
-                  <Link to="/" className="flex items-center gap-2">
+                  <Link to="/" className="flex items-center">
                     <img
                       src="https://dopieoflkqfalnuvpwch.supabase.co/storage/v1/object/public/Recursos%20Visuales%20Disenador/Logotipos/Isologo%20Transparente.png"
                       alt="Holocards"
-                      className="h-9 sm:h-10 object-contain"
+                      className="h-7 sm:h-10 object-contain"
                     />
                   </Link>
                 )}
               </div>
             </div>
 
-            {/* Centro: Navegación Escritorio y Tablet Ancha (≥1024px) */}
+            {/* Centro: Navegación Escritorio (≥1024px) */}
             <nav className="hidden lg:flex space-x-6 xl:space-x-8">
               {onHomeClick ? (
                 <button
@@ -213,16 +209,10 @@ export default function HeaderV2({ onHomeClick, onFranchiseClick }: HeaderV2Prop
                 </Link>
               )}
 
-              {/* ─── DROPDOWN: FRANQUICIAS ─── */}
-              <div 
-                className="relative group"
-                onMouseLeave={() => setOpenDropdown(null)}
-              >
+              {/* DROPDOWN FRANQUICIAS */}
+              <div className="relative group" onMouseLeave={() => setOpenDropdown(null)}>
                 <button 
-                  onClick={() => {
-                    if (onFranchiseClick) onFranchiseClick();
-                    toggleDropdown('franquicias');
-                  }}
+                  onClick={() => { if (onFranchiseClick) onFranchiseClick(); toggleDropdown('franquicias'); }}
                   className="flex items-center gap-1 text-xs xl:text-sm font-semibold text-gray-300 hover:text-cyan-400 transition-colors uppercase tracking-wide py-2"
                 >
                   Pokémon / Magic / One Piece
@@ -236,10 +226,7 @@ export default function HeaderV2({ onHomeClick, onFranchiseClick }: HeaderV2Prop
                     <span className="text-blue-400 text-xs">◆</span>Magic The Gathering
                   </Link>
                   <button 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      alert("La sección One Piece TCG estará disponible próximamente.");
-                    }}
+                    onClick={(e) => { e.preventDefault(); alert("La sección One Piece TCG estará disponible próximamente."); }}
                     className="opacity-50 cursor-not-allowed px-4 py-3 text-sm text-gray-200 transition-colors border-b border-white/5 flex items-center justify-between gap-2 w-full text-left"
                   >
                     <div className="flex items-center gap-2">
@@ -253,11 +240,8 @@ export default function HeaderV2({ onHomeClick, onFranchiseClick }: HeaderV2Prop
                 </div>
               </div>
 
-              {/* ─── DROPDOWN: TIPOS DE PRODUCTO ─── */}
-              <div 
-                className="relative group"
-                onMouseLeave={() => setOpenDropdown(null)}
-              >
+              {/* DROPDOWN PRODUCTOS */}
+              <div className="relative group" onMouseLeave={() => setOpenDropdown(null)}>
                 <button 
                   onClick={() => toggleDropdown('productos')}
                   className="flex items-center gap-1 text-xs xl:text-sm font-semibold text-gray-300 hover:text-cyan-400 transition-colors uppercase tracking-wide py-2"
@@ -278,11 +262,8 @@ export default function HeaderV2({ onHomeClick, onFranchiseClick }: HeaderV2Prop
                 </div>
               </div>
 
-              {/* MÁS INFORMACIÓN Dropdown */}
-              <div 
-                className="relative group"
-                onMouseLeave={() => setOpenDropdown(null)}
-              >
+              {/* DROPDOWN MÁS INFORMACIÓN */}
+              <div className="relative group" onMouseLeave={() => setOpenDropdown(null)}>
                 <button 
                   onClick={() => toggleDropdown('info')}
                   className="flex items-center gap-1 text-xs xl:text-sm font-semibold text-gray-300 hover:text-cyan-400 transition-colors uppercase tracking-wide py-2"
@@ -300,22 +281,30 @@ export default function HeaderV2({ onHomeClick, onFranchiseClick }: HeaderV2Prop
               </div>
             </nav>
 
-            {/* Lado Derecho: Iconos */}
-            <div className="flex items-center space-x-2">
-              <Link to="/catalogo" className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors" aria-label="Buscar">
-                <Search className="w-5 h-5" />
-              </Link>
-              <Link to={user ? "/perfil" : "/login"} className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors" aria-label="Mi Cuenta">
-                <User className="w-5 h-5" />
+            {/* Lado Derecho: Iconos ordenados en fila derecha */}
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              <Link 
+                to="/catalogo" 
+                className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg sm:rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors" 
+                aria-label="Buscar"
+              >
+                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
               </Link>
 
-              {/* CARRITO */}
+              <Link 
+                to={user ? "/perfil" : "/login"} 
+                className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg sm:rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors" 
+                aria-label="Mi Cuenta"
+              >
+                <User className="w-4 h-4 sm:w-5 sm:h-5" />
+              </Link>
+
               <button
                 onClick={() => setIsCartOpen(true)}
-                className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors relative active:scale-95"
+                className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg sm:rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-colors relative active:scale-95"
                 aria-label="Abrir carrito"
               >
-                <ShoppingCart className="w-5 h-5" />
+                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
                 <AnimatePresence>
                   {itemCount > 0 && (
                     <motion.span
@@ -323,7 +312,7 @@ export default function HeaderV2({ onHomeClick, onFranchiseClick }: HeaderV2Prop
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       exit={{ scale: 0 }}
-                      className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-tr from-yellow-500 to-yellow-300 text-[10px] font-black text-black border-2 border-[#050914] shadow-[0_0_10px_rgba(234,179,8,0.5)]"
+                      className="absolute -top-1 -right-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-gradient-to-tr from-yellow-500 to-yellow-300 text-[9px] sm:text-[10px] font-black text-black border-2 border-[#050914] shadow-[0_0_10px_rgba(234,179,8,0.5)]"
                     >
                       {itemCount}
                     </motion.span>
@@ -336,7 +325,7 @@ export default function HeaderV2({ onHomeClick, onFranchiseClick }: HeaderV2Prop
         </div>
       </header>
 
-      {/* ─── DRAWER MENÚ MÓVIL Y TABLET (`<1024px`) ─── */}
+      {/* DRAWER MÓVIL Y TABLET */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
@@ -372,7 +361,6 @@ export default function HeaderV2({ onHomeClick, onFranchiseClick }: HeaderV2Prop
               </div>
 
               <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 custom-scrollbar">
-                {/* Inicio */}
                 {onHomeClick ? (
                   <button
                     onClick={() => { onHomeClick(); setIsMobileMenuOpen(false); }}
@@ -390,7 +378,6 @@ export default function HeaderV2({ onHomeClick, onFranchiseClick }: HeaderV2Prop
                   </Link>
                 )}
 
-                {/* Acordeón Franquicias */}
                 <div className="border-b border-white/5 pb-2">
                   <button
                     onClick={() => toggleMobileAccordion('franquicias')}
@@ -421,7 +408,6 @@ export default function HeaderV2({ onHomeClick, onFranchiseClick }: HeaderV2Prop
                   )}
                 </div>
 
-                {/* Acordeón Productos */}
                 <div className="border-b border-white/5 pb-2">
                   <button
                     onClick={() => toggleMobileAccordion('productos')}
@@ -445,7 +431,6 @@ export default function HeaderV2({ onHomeClick, onFranchiseClick }: HeaderV2Prop
                   )}
                 </div>
 
-                {/* Acordeón Más Información */}
                 <div className="border-b border-white/5 pb-2">
                   <button
                     onClick={() => toggleMobileAccordion('info')}
@@ -470,7 +455,6 @@ export default function HeaderV2({ onHomeClick, onFranchiseClick }: HeaderV2Prop
         )}
       </AnimatePresence>
 
-      {/* CART SIDEBAR DRAWER */}
       <AnimatePresence>
         {isCartOpen && <CartSidebar onClose={() => setIsCartOpen(false)} />}
       </AnimatePresence>
