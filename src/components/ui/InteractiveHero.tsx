@@ -135,7 +135,6 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
     try {
       if (!supabase) return;
 
-      // 1. Obtener todas las Colecciones creadas en el Backoffice (tabla tags)
       const { data: cols, error: colError } = await supabase.from('tags').select('*');
       let collectionsList: CollectionDb[] = [];
 
@@ -146,14 +145,12 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
         }));
         setDbCollections(collectionsList);
 
-        // Si no hay colección seleccionada o la actual no existe, seleccionar la primera por defecto
         if (!selectedCollectionId || !collectionsList.some(c => c.id === selectedCollectionId)) {
           setSelectedCollectionId(collectionsList[0].id);
           setHighlightType(collectionsList[0].name);
         }
       }
 
-      // 2. Obtener Productos, Categorías y la tabla pivote de Colecciones (product_tags)
       const [prodsRes, catRes, gamesRes, prodColsRes] = await Promise.all([
         supabase.from('products').select('*'),
         supabase.from('categories').select('*, games(name)'),
@@ -175,7 +172,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
 
       prodColsPivot.forEach((pc: any) => {
         const pId = String(pc.product_id);
-        const cId = String(pc.tag_id || pc.collection_id);
+        const cId = String(pc.tag_id);
 
         if (!prodToColIdsMap.has(pId)) prodToColIdsMap.set(pId, new Set());
         prodToColIdsMap.get(pId)!.add(cId);
@@ -207,6 +204,31 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
           }
         }
 
+        if (extractedCategories.size === 0) {
+          let rawCat = findValueByKeywords(p, ["categor", "tag", "taxonom", "tipo", "label"]);
+          const parseItem = (item: any) => {
+            if (!item) return;
+            if (typeof item === 'string') {
+              if (/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(item)) return;
+              item.split(',').forEach((sub: string) => {
+                const clean = sub.trim();
+                if (clean && clean.toUpperCase() !== "GENERAL") extractedCategories.add(clean);
+              });
+            } else if (typeof item === 'object' && item !== null) {
+              const name = item.name || item.nombre || item.label || item.value || Object.values(item)[0];
+              if (name && typeof name === 'string') {
+                name.split(',').forEach((sub: string) => {
+                  const clean = sub.trim();
+                  if (clean && clean.toUpperCase() !== "GENERAL") extractedCategories.add(clean);
+                });
+              }
+            }
+          };
+
+          if (Array.isArray(rawCat)) rawCat.forEach(parseItem);
+          else parseItem(rawCat);
+        }
+
         const catArray = Array.from(extractedCategories);
         const extractedColIds = prodToColIdsMap.get(String(p.id)) || new Set<string>();
         const extractedColNames = prodToColNamesMap.get(String(p.id)) || new Set<string>();
@@ -217,9 +239,23 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
             extractedColNames.add(collectionIdToName.get(String(p.collection_id))!);
           }
         }
-        if (p.tag_id) {
-          extractedColIds.add(String(p.tag_id));
-        }
+
+        let rawColField = findValueByKeywords(p, ["collect", "coleccion", "tags", "etiqueta", "destacado"]);
+        const parseColItem = (item: any) => {
+          if (!item) return;
+          if (typeof item === 'string') {
+            item.split(',').forEach(sub => {
+              const clean = sub.trim();
+              if (clean) extractedColNames.add(clean.toUpperCase());
+            });
+          } else if (typeof item === 'object' && item !== null) {
+            const name = item.name || item.nombre || item.label || item.value;
+            if (name && typeof name === 'string') extractedColNames.add(name.trim().toUpperCase());
+          }
+        };
+
+        if (Array.isArray(rawColField)) rawColField.forEach(parseColItem);
+        else parseColItem(rawColField);
 
         const colArray = Array.from(extractedColNames);
         let rawSet = findValueByKeywords(p, ["franchis", "franquici", "brand", "marca", "juego", "linea", "set"]) || "";
@@ -230,6 +266,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
         };
         if (Array.isArray(p.top_hits_images)) p.top_hits_images.forEach(addIfNew);
         else if (Array.isArray(p.images)) p.images.forEach(addIfNew);
+        else if (Array.isArray(p.gallery)) p.gallery.forEach(addIfNew);
 
         return {
           id: String(p.id),
@@ -253,7 +290,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
 
       setDbProducts(formattedProducts);
     } catch (error) {
-      console.error("Error cargando colecciones e inventario del backend:", error);
+      console.error("Error procesando datos del backend:", error);
       setDbProducts([]);
     }
   };
@@ -311,30 +348,33 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
     return ["Todos", ...Array.from(catSet).sort()];
   }, [isHomePage, activeTab, dbGames, dbProducts]);
 
-  // FILTRADO DINÁMICO DE PRODUCTOS POR COLECCIÓN SELECCIONADA
   const currentCards = useMemo(() => {
     let cards = dbProducts;
 
     if (isHomePage) {
-      if (!selectedCollectionId && dbCollections.length > 0) {
-        const defaultId = dbCollections[0].id;
-        return cards.filter(p => p.collectionIds.includes(defaultId));
-      }
+      if (!selectedCollectionId && !highlightType) return [];
 
-      if (!selectedCollectionId) return cards;
-
-      // Filtrar estrictamente productos que pertenezcan a la colección seleccionada en el Backoffice
       const targetColNorm = normalizeText(highlightType);
 
-      return cards.filter(p => {
-        const matchesId = p.collectionIds.includes(selectedCollectionId);
+      let filtered = cards.filter(p => {
+        const matchesId = selectedCollectionId && p.collectionIds.includes(selectedCollectionId);
         if (matchesId) return true;
 
-        return p.collectionsList.some(colName => {
+        const matchesName = p.collectionsList.some(colName => {
           const colNorm = normalizeText(colName);
           return colNorm === targetColNorm || colNorm.includes(targetColNorm) || targetColNorm.includes(colNorm);
         });
+        if (matchesName) return true;
+
+        const fullProdStr = normalizeText(`${p.name} ${p.description} ${p.collection} ${JSON.stringify(p.collectionsList)}`);
+        return fullProdStr.includes(targetColNorm);
       });
+
+      if (filtered.length === 0) {
+        return cards;
+      }
+
+      return filtered;
     }
 
     const currentGame = dbGames.find((g: any) => {
@@ -361,11 +401,14 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
 
     if (selectedCategory !== "Todos") {
       const selNorm = normalizeText(selectedCategory);
-      cards = cards.filter(card => card.categoriesList.some(c => normalizeText(c) === selNorm));
+
+      cards = cards.filter(card => {
+        return card.categoriesList.some(c => normalizeText(c) === selNorm);
+      });
     }
 
     return cards;
-  }, [selectedCategory, activeTab, isHomePage, highlightType, selectedCollectionId, dbProducts, dbCollections, dbGames]);
+  }, [selectedCategory, activeTab, isHomePage, highlightType, selectedCollectionId, dbProducts, dbGames]);
 
   const visibleCards = useMemo(() => {
     const startIndex = carouselPage * 4;
@@ -506,8 +549,6 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       {isInicioQuirurgico ? (
         <div className="relative z-20 w-full px-4 sm:px-12 mt-2 sm:mt-3 lg:mt-4 flex flex-col gap-1 transition-all">
           <div className="flex flex-col xl:flex-row items-center justify-between gap-2 w-full">
-            
-            {/* SELECTOR DESPLEGABLE DE COLECCIONES REALES DEL BACKOFFICE */}
             <div className="flex items-center justify-center xl:justify-start w-full xl:w-auto xl:flex-1 min-w-0 z-40">
               <div className="relative">
                 <button 
@@ -516,7 +557,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                 >
                   <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400"/>
                   <h2 className="text-sm sm:text-lg lg:text-xl font-black uppercase tracking-tight m-0 leading-none whitespace-nowrap">
-                    {highlightType || (dbCollections[0]?.name) || "SELECCIONAR COLECCIÓN"}
+                    {highlightType || "SELECCIONAR COLECCIÓN"}
                   </h2>
                   <ChevronDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 group-hover:text-yellow-400 transition-transform ${isHighlightDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
@@ -539,7 +580,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                             setIsHighlightDropdownOpen(false);
                           }}
                           className={`text-left px-4 py-3 text-sm font-bold transition-colors border-b last:border-0 border-white/5 uppercase tracking-wider ${
-                            selectedCollectionId === col.id ? "text-yellow-400 bg-white/5" : "text-gray-300 hover:bg-yellow-400/10 hover:text-yellow-300"
+                            highlightType === col.name ? "text-yellow-400 bg-white/5" : "text-gray-300 hover:bg-yellow-400/10 hover:text-yellow-300"
                           }`}
                         >
                           {col.name}
@@ -569,13 +610,17 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
           </div>
         </div>
       ) : (
+        /* VISTA DE PESTAÑAS DE FRANQUICIAS (Pokémon, Magic, Accesorios, etc.) */
         <div className="relative z-20 w-full px-4 sm:px-12 mt-2 sm:mt-4 lg:mt-6 flex flex-col gap-3 lg:gap-5 transition-all">
+
+          {/* Botonera de Franquicias */}
           <div className="flex justify-center shrink-0 z-30 w-full">
             <div className="flex flex-wrap sm:flex-nowrap justify-center items-end gap-2.5 sm:gap-4 px-2 pt-1 pb-1 relative overflow-visible">
               {renderTabs()}
             </div>
           </div>
 
+          {/* Categorías de Colección / Tipos */}
           <div className="flex justify-center w-full z-30 relative">
             <div className="flex items-center justify-start lg:justify-center gap-1.5 sm:gap-2 overflow-x-auto hide-scrollbar w-full px-2 sm:px-10 py-1 scroll-smooth">
               {dynamicCategories.map((cat) => (
@@ -596,7 +641,20 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
         </div>
       )}
 
-      {/* CARRUSEL DE PRODUCTOS CORRESPONDIENTES A LA COLECCIÓN SELECCIONADA */}
+      {/* Decorative Arts */}
+      <img
+        src="https://dopieoflkqfalnuvpwch.supabase.co/storage/v1/object/public/Recursos%20Visuales%20Disenador/Iconos%20Pagina%20Web/Carta%20y%20Pikachu.png"
+        alt=""
+        aria-hidden="true"
+        className="absolute left-2 xl:left-6 top-1/2 -translate-y-1/2 z-0 hidden xl:block w-auto max-h-[198px] xl:max-h-[242px] 2xl:max-h-[286px] object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.6)] opacity-50 pointer-events-none select-none transition-all duration-300"
+      />
+      <img
+        src="https://dopieoflkqfalnuvpwch.supabase.co/storage/v1/object/public/Recursos%20Visuales%20Disenador/Iconos%20Pagina%20Web/Matgic.png"
+        alt=""
+        aria-hidden="true"
+        className="absolute right-2 xl:right-6 top-1/2 -translate-y-1/2 z-0 hidden xl:block w-auto max-h-[198px] xl:max-h-[242px] 2xl:max-h-[286px] object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.6)] opacity-50 pointer-events-none select-none transition-all duration-300"
+      />
+
       <div className="relative w-full max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto px-8 sm:px-12 xl:px-16 z-20 my-1 flex items-center justify-center flex-1 overflow-x-hidden">
         <button
           type="button"
@@ -694,7 +752,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
               ) : (
                 <div className="w-full py-12 flex flex-col items-center justify-center text-gray-500">
                   <LayoutGrid className="w-10 h-10 mb-2 opacity-30"/>
-                  <p className="font-bold tracking-widest uppercase text-xs text-center">Sin artículos asignados a esta colección</p>
+                  <p className="font-bold tracking-widest uppercase text-xs text-center">Cargando productos...</p>
                 </div>
               )}
             </motion.div>
