@@ -1,272 +1,40 @@
-import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../../lib/supabase';
-import { motion, AnimatePresence } from 'motion/react';
-import { MessageSquare, X, Send, Bot, User } from 'lucide-react';
-import { cn } from '../../lib/utils';
-
-interface ChatbotConfig {
-  id: string;
-  is_active: boolean;
-  bot_name: string;
-  welcome_message: string;
-  primary_color: string;
-  quick_replies: string[];
-}
-
-interface Message {
-  sender: 'bot' | 'user';
-  text: string;
-  timestamp: Date;
-}
+import React from 'react';
+import { motion } from 'framer-motion';
 
 export default function FloatingChatBot() {
-  const [config, setConfig] = useState<ChatbotConfig | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    fetchConfig();
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, []);
-
-  const fetchConfig = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('chatbot_config')
-        .select('*')
-        .single();
-
-      if (!error && data) {
-        setConfig(data);
-        setMessages([
-          {
-            sender: 'bot',
-            text: data.welcome_message,
-            timestamp: new Date()
-          }
-        ]);
-      }
-    } catch (err) {
-      console.warn('Error loading chatbot config:', err);
-    }
-  };
-
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, isTyping]);
-
-  if (!config || !config.is_active) {
-    return null;
-  }
-
-  const getFAQAnswer = (question: string): string => {
-    const q = question.toLowerCase();
-    if (q.includes('pedido') || q.includes('dónde') || q.includes('donde') || q.includes('localizar')) {
-      return "📦 Para localizar tu pedido en tiempo real, por favor introduce tu código de seguimiento de HoloCards (ej. `#HC-48293`) o inicia sesión en el menú superior para ver tu historial de envíos.";
-    }
-    if (q.includes('envío') || q.includes('envio') || q.includes('política') || q.includes('canarias') || q.includes('islas')) {
-      return "✈️ Realizamos envíos diarios asegurados a todas las Islas Canarias. Los tiempos de entrega estimados son de 24h a 48h en islas capitalinas y hasta 72h en islas no capitalinas.";
-    }
-    if (q.includes('humano') || q.includes('hablar') || q.includes('persona') || q.includes('soporte')) {
-      return "👨‍💻 Entendido. He enviado una alerta a la central de Sasori Labs. Un agente humano se pondrá en contacto contigo en este mismo chat en breve. ¡Gracias por tu paciencia!";
-    }
-    return "💡 ¡Excelente pregunta! He registrado tu consulta y la he derivado a nuestro soporte técnico. Si necesitas una respuesta inmediata, te sugiero utilizar nuestros accesos rápidos o escribir directamente a soporte@holocards.com.";
-  };
-
-  const handleSendMessage = (text: string) => {
-    if (!text.trim()) return;
-
-    const cleanText = text.trim();
-    const userMsg: Message = {
-      sender: 'user',
-      text: cleanText,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMsg]);
-    setInputValue('');
-    setIsTyping(true);
-
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-
-    timeoutRef.current = setTimeout(() => {
-      const botReplyText = getFAQAnswer(cleanText);
-      const botMsg: Message = {
-        sender: 'bot',
-        text: botReplyText,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, botMsg]);
-      setIsTyping(false);
-    }, 1000);
-  };
+  const phoneNumber = "34680735375";
+  const defaultMessage = encodeURIComponent("¡Hola HOLOCARDS! Quisiera información sobre un pedido o producto.");
+  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${defaultMessage}`;
 
   return (
-    <>
-      <div className="fixed bottom-6 right-4 sm:right-6 z-[200] safe-bottom">
-        <motion.button
-          onClick={() => setIsOpen(!isOpen)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="relative w-14 h-14 rounded-full flex items-center justify-center text-white shadow-2xl transition-all group"
-          style={{ 
-            backgroundColor: config.primary_color,
-            boxShadow: `0 8px 30px ${config.primary_color}44` 
-          }}
-          title={`Chat con ${config.bot_name}`}
-          aria-label={`Abrir chat con ${config.bot_name}`}
+    <div className="fixed bottom-6 right-6 z-[200]">
+      <motion.a
+        href={whatsappUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        className="relative flex items-center justify-center w-14 h-14 bg-[#25D366] hover:bg-[#20ba59] text-white rounded-full shadow-2xl transition-all duration-300 group"
+        title="Contactar por WhatsApp"
+        aria-label="Abrir chat de WhatsApp de HOLOCARDS"
+      >
+        {/* Anillo de pulso animado */}
+        <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-30 pointer-events-none" />
+
+        {/* Icono Vectorial Oficial de WhatsApp */}
+        <svg
+          className="w-8 h-8 fill-current relative z-10"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          {isOpen ? (
-            <X className="w-6 h-6 transition-transform rotate-90 duration-300" />
-          ) : (
-            <MessageSquare className="w-6 h-6 transition-transform hover:scale-110 duration-200" />
-          )}
+          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-0.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+        </svg>
 
-          <span className="absolute inset-0 rounded-full bg-white/20 animate-ping opacity-20 pointer-events-none" />
-        </motion.button>
-      </div>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 30, scale: 0.9 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-            className="fixed bottom-24 right-2 sm:right-6 w-[calc(100vw-16px)] sm:w-[400px] h-[75vh] sm:h-[550px] max-h-[600px] bg-background/95 dark:bg-zinc-950/95 border border-border/80 rounded-[2.5rem] shadow-2xl z-[200] overflow-hidden flex flex-col backdrop-blur-xl"
-          >
-            <div 
-              className="p-5 flex items-center justify-between text-white"
-              style={{ backgroundColor: config.primary_color }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center relative border border-white/10">
-                  <Bot className="w-5 h-5 text-white" />
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background animate-pulse" />
-                </div>
-                <div>
-                  <h3 className="font-black text-sm uppercase italic tracking-wider leading-none">
-                    {config.bot_name}
-                  </h3>
-                  <p className="text-[9px] uppercase tracking-widest text-white/70 font-mono mt-1">
-                    Soporte Inteligente
-                  </p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setIsOpen(false)}
-                className="p-1.5 hover:bg-white/10 rounded-xl transition-all"
-                title="Minimizar chat"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar bg-slate-50/50 dark:bg-black/20">
-              {messages.map((msg, i) => (
-                <div 
-                  key={i} 
-                  className={cn(
-                    "flex gap-3 max-w-[85%] items-end",
-                    msg.sender === 'user' ? "ml-auto flex-row-reverse" : ""
-                  )}
-                >
-                  <div className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center border shrink-0 text-xs shadow-sm",
-                    msg.sender === 'user' 
-                      ? "bg-slate-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200" 
-                      : "bg-white dark:bg-zinc-900 border-border"
-                  )}
-                  style={{
-                    color: msg.sender === 'user' ? undefined : config.primary_color,
-                    borderColor: msg.sender === 'user' ? undefined : `${config.primary_color}22`
-                  }}
-                  >
-                    {msg.sender === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-                  </div>
-
-                  <div 
-                    className={cn(
-                      "p-4 text-xs leading-relaxed shadow-sm font-medium",
-                      msg.sender === 'user' 
-                        ? "text-white rounded-[1.5rem] rounded-br-none" 
-                        : "bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 border border-border/50 rounded-[1.5rem] rounded-bl-none"
-                    )}
-                    style={{
-                      backgroundColor: msg.sender === 'user' ? config.primary_color : undefined
-                    }}
-                  >
-                    {msg.text}
-                  </div>
-                </div>
-              ))}
-
-              {isTyping && (
-                <div className="flex gap-3 max-w-[85%] items-end">
-                  <div 
-                    className="w-8 h-8 rounded-full flex items-center justify-center border border-border bg-white dark:bg-zinc-900 shrink-0 shadow-sm"
-                    style={{ color: config.primary_color }}
-                  >
-                    <Bot className="w-4 h-4" />
-                  </div>
-                  <div className="p-4 bg-white dark:bg-zinc-900 border border-border/50 rounded-[1.5rem] rounded-bl-none shadow-sm flex items-center gap-1.5 min-w-[60px]">
-                    <span className="w-1.5 h-1.5 bg-zinc-400 dark:bg-zinc-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 bg-zinc-400 dark:bg-zinc-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1.5 h-1.5 bg-zinc-400 dark:bg-zinc-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {config.quick_replies && config.quick_replies.length > 0 && (
-              <div className="p-4 border-t border-border/50 bg-slate-50/20 dark:bg-black/10 flex flex-wrap gap-2 shrink-0">
-                {config.quick_replies.map((reply, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSendMessage(reply)}
-                    className="px-3.5 py-2 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-border/70 rounded-full text-[10px] font-bold text-zinc-700 dark:text-zinc-300 transition-all hover:scale-[1.02] shadow-sm flex items-center"
-                  >
-                    {reply}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSendMessage(inputValue);
-              }}
-              className="p-4 border-t border-border/80 bg-background flex items-center gap-2.5"
-            >
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Escribe tu mensaje..."
-                className="flex-1 bg-slate-100 dark:bg-zinc-900 border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-all placeholder:text-muted-foreground/60"
-              />
-              <button
-                type="submit"
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-white transition-all hover:scale-105 active:scale-95 shadow-lg shadow-indigo-900/10"
-                style={{ backgroundColor: config.primary_color }}
-                title="Enviar mensaje"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+        {/* Cartel Flotante al pasar el ratón */}
+        <span className="absolute right-16 bg-[#0a1628] text-white text-[10px] font-black uppercase tracking-wider px-3.5 py-2 rounded-xl border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap shadow-2xl pointer-events-none">
+          ¿Dudas? Chatea con nosotros
+        </span>
+      </motion.a>
+    </div>
   );
 }
