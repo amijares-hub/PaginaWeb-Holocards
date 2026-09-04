@@ -8,6 +8,7 @@ import {
   ShoppingCart, 
   ChevronLeft, 
   ChevronRight, 
+  ChevronDown,
   Plus, 
   Minus,
   Trash2,
@@ -32,6 +33,43 @@ export interface CanaryLocation {
   municipality: string;
   island: string;
 }
+
+export const CANARY_MUNICIPALITIES_BY_ISLAND: Record<string, string[]> = {
+  "Tenerife": [
+    "Adeje", "Arafo", "Arico", "Arona", "Buenavista del Norte", "Candelaria",
+    "El Rosario", "El Sauzal", "El Tanque", "Fasnia", "Garachico", "Granadilla de Abona",
+    "Guía de Isora", "Güímar", "Icod de los Vinos", "La Guancha", "La Matanza de Acentejo",
+    "La Orotava", "La Victoria de Acentejo", "Los Realejos", "Los Silos", "Puerto de la Cruz",
+    "San Cristóbal de La Laguna", "San Juan de la Rambla", "San Miguel de Abona",
+    "Santa Cruz de Tenerife", "Santa Úrsula", "Santiago del Teide", "Tacoronte", "Tegueste", "Vilaflor de Chasna"
+  ],
+  "Gran Canaria": [
+    "Agaete", "Agüimes", "Artenara", "Arucas", "Firgas", "Gáldar", "Ingenio",
+    "La Aldea de San Nicolás", "Las Palmas de Gran Canaria", "Mogán", "Moya",
+    "San Bartolomé de Tirajana", "Santa Brígida", "Santa Lucía de Tirajana",
+    "Santa María de Guía", "Tejeda", "Telde", "Teror", "Valleseco", "Valsequillo de Gran Canaria", "Vega de San Mateo"
+  ],
+  "Lanzarote": [
+    "Arrecife", "Haría", "San Bartolomé", "Teguise", "Tías", "Tinajo", "Yaiza"
+  ],
+  "Fuerteventura": [
+    "Antigua", "Betancuria", "La Oliva", "Pájara", "Puerto del Rosario", "Tuineje"
+  ],
+  "La Palma": [
+    "Barlovento", "Breña Alta", "Breña Baja", "El Paso", "Fuencaliente de La Palma",
+    "Garafía", "Los Llanos de Aridane", "Puntagorda", "Puntallana", "San Andrés y Sauces",
+    "Santa Cruz de La Palma", "Tazacorte", "Tijarafe", "Villa de Mazo"
+  ],
+  "La Gomera": [
+    "Agulo", "Alajeró", "Hermigua", "San Sebastián de La Gomera", "Valle Gran Rey", "Vallehermoso"
+  ],
+  "El Hierro": [
+    "El Pinar de El Hierro", "Frontera", "Valverde"
+  ],
+  "La Graciosa": [
+    "La Graciosa"
+  ]
+};
 
 const CANARY_CP_MAP: Record<string, CanaryLocation> = {
   // --- GRAN CANARIA (35000 - 35499) ---
@@ -434,14 +472,25 @@ export default function CheckoutPage() {
           setContactData({ email, phone });
 
           if (profile) {
-            setShippingData(prev => ({
-              ...prev,
-              firstName: profile.full_name?.split(' ')[0] || prev.firstName,
-              lastName: profile.full_name?.split(' ').slice(1).join(' ') || prev.lastName,
-              address: address || prev.address,
-              city: city || prev.city,
-              postalCode: postalCode || prev.postalCode,
-            }));
+            setShippingData(prev => {
+              const updated = {
+                ...prev,
+                firstName: profile.full_name?.split(' ')[0] || prev.firstName,
+                lastName: profile.full_name?.split(' ').slice(1).join(' ') || prev.lastName,
+                address: address || prev.address,
+                city: city || prev.city,
+                postalCode: postalCode || prev.postalCode,
+              };
+
+              if (postalCode && postalCode.trim().length === 5) {
+                const detected = getCanaryLocationByZip(postalCode);
+                if (detected) {
+                  if (detected.municipality) updated.city = detected.municipality;
+                  if (detected.island) updated.province = detected.island;
+                }
+              }
+              return updated;
+            });
           }
 
           if (address && city && postalCode) {
@@ -455,7 +504,7 @@ export default function CheckoutPage() {
     fetchUserAndPreFill();
   }, []);
 
-  // Autodetección reactiva siempre que cambie el código postal
+  // Autodetección reactiva cuando cambia el código postal
   useEffect(() => {
     const zip = shippingData.postalCode?.trim() || "";
     if (zip.length === 5) {
@@ -478,6 +527,24 @@ export default function CheckoutPage() {
       postalCode: newZip,
       city: newZip.trim().length === 5 && detected?.municipality ? detected.municipality : prev.city,
       province: newZip.trim().length === 5 && detected?.island ? detected.island : prev.province
+    }));
+  };
+
+  const handleCitySelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedCity = e.target.value;
+    let foundIsland = shippingData.province;
+
+    for (const [island, munis] of Object.entries(CANARY_MUNICIPALITIES_BY_ISLAND)) {
+      if (munis.includes(selectedCity)) {
+        foundIsland = island;
+        break;
+      }
+    }
+
+    setShippingData(prev => ({
+      ...prev,
+      city: selectedCity,
+      province: foundIsland
     }));
   };
 
@@ -886,13 +953,27 @@ export default function CheckoutPage() {
 
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1">Municipio</label>
-                    <input 
-                      type="text"
-                      placeholder="Escribe o autodetectado con CP..."
-                      value={shippingData.city}
-                      onChange={e => setShippingData({...shippingData, city: e.target.value})}
-                      className="bg-[#030c1a] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-yellow-400"
-                    />
+                    <div className="relative">
+                      <select
+                        value={shippingData.city}
+                        onChange={handleCitySelectChange}
+                        className="w-full bg-[#030c1a] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-yellow-400 appearance-none cursor-pointer pr-10"
+                      >
+                        <option value="" disabled className="bg-[#0a1628] text-gray-400">
+                          Selecciona tu municipio...
+                        </option>
+                        {Object.entries(CANARY_MUNICIPALITIES_BY_ISLAND).map(([island, munis]) => (
+                          <optgroup key={island} label={island} className="bg-[#0a1628] text-yellow-400 font-bold">
+                            {munis.map(muni => (
+                              <option key={muni} value={muni} className="bg-[#0a1628] text-white font-normal">
+                                {muni}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
                   </div>
 
                   <div className="flex flex-col gap-1.5 sm:col-span-2">
