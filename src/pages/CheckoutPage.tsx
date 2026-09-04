@@ -215,9 +215,11 @@ export default function CheckoutPage() {
       setPaymentLoading(true)
       setPaymentError(null)
       try {
-        const amountInCents = Math.round(total * 100)
         const { data, error } = await supabase.functions.invoke('create-payment-intent', {
-          body: { amount: amountInCents }
+          body: { 
+            items: items.map(i => ({ id: i.id, quantity: i.quantity })),
+            shippingCost: shippingCost 
+          }
         })
         if (error || !data?.clientSecret) {
           throw new Error(error?.message || data?.error || 'No se pudo iniciar el pago')

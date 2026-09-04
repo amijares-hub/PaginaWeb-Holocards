@@ -20,10 +20,11 @@ import {
 } from 'lucide-react';
 import HeaderV2 from '../components/layout/HeaderV2';
 import AnnouncementBar from '../components/layout/AnnouncementBar';
-import { cn, getRealPrice } from '../lib/utils';
+import { cn, getRealPrice, getOptimizedImageUrl } from '../lib/utils';
 import { useCartStore } from '../lib/cartStore';
 import { supabase } from '../lib/supabase';
 import { Toast } from '../components/ui/Toast';
+import { useDebounce } from '../hooks/useDebounce';
 
 interface Product {
   id: string;
@@ -324,7 +325,7 @@ const ProductCardItem = ({
           className="absolute inset-0 bg-transparent flex items-center justify-center p-2.5 sm:p-4 cursor-zoom-in transition-shadow duration-500 hover:shadow-2xl hover:shadow-cyan-500/20 border-[1.5px] border-cyan-500/40 rounded-2xl overflow-hidden"
         >
           <img 
-            src={product.image_url} 
+            src={getOptimizedImageUrl(product.image_url, 400)} 
             className={cn(
               "w-full h-full object-contain transition-transform duration-700 group-hover:scale-105",
               isUpcoming && "opacity-80 grayscale-[20%]"
@@ -415,6 +416,7 @@ export default function Catalog() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const debouncedSearchTerm = useDebounce(searchTerm, 250);
 
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
   const [isModalFlipped, setIsModalFlipped] = useState(false);
@@ -558,7 +560,7 @@ export default function Catalog() {
 
   const filteredProducts = useMemo(() => {
     let list = products.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
       
       const matchesCategory = selectedCategories.length === 0 || selectedCategories.some(catId => {
         const selectedCat = categories.find(c => c.id === catId);
@@ -660,7 +662,7 @@ export default function Catalog() {
     });
 
     return list;
-  }, [products, categories, searchTerm, selectedCategories, selectedLanguages, selectedFranchises, priceRange, sortOption]);
+  }, [products, categories, debouncedSearchTerm, selectedCategories, selectedLanguages, selectedFranchises, priceRange, sortOption]);
 
   const toggleCategory = (id: string) => {
     setSelectedCategories(prev => 

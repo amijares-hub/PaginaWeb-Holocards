@@ -12,17 +12,19 @@ import FloatingChatBot from './components/ui/FloatingChatBot';
 import { useThemeStore, updateDocumentTheme } from './lib/useThemeStore';
 import { useAuth } from './hooks/useAuth';
 
-// Pages
-import Catalog from './pages/Catalog';
-import LandingPageV2 from './pages/LandingPageV2';
-import Login from './pages/Login';
-import UserProfile from './pages/UserProfile';
-import ProfileSettings from './pages/ProfileSettings';
+import { lazy, Suspense } from 'react';
 
-import CheckoutPage from './pages/CheckoutPage';
-import SuccessPage from './pages/SuccessPage';
-import ProductPage from './pages/ProductPage';
-import LegalPage from './pages/LegalPage';
+// Pages
+const Catalog = lazy(() => import('./pages/Catalog'));
+const LandingPageV2 = lazy(() => import('./pages/LandingPageV2'));
+const Login = lazy(() => import('./pages/Login'));
+const UserProfile = lazy(() => import('./pages/UserProfile'));
+const ProfileSettings = lazy(() => import('./pages/ProfileSettings'));
+
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
+const SuccessPage = lazy(() => import('./pages/SuccessPage'));
+const ProductPage = lazy(() => import('./pages/ProductPage'));
+const LegalPage = lazy(() => import('./pages/LegalPage'));
 import AboutUs from './components/AboutUs';
 
 function ProtectedProfile() {
@@ -100,40 +102,42 @@ function RouterContent({ systemSettings }: { systemSettings: any }) {
   return (
     <>
       <AnimatePresence mode="wait">
-        <Routes>
+        <Suspense fallback={<div className="min-h-screen bg-[#050914] flex items-center justify-center"><div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" /></div>}>
+          <Routes>
 
-          {/* ══════════════════════════════════════════════
-               🏠 LANDING PRINCIPAL — ÚNICA PÁGINA DE ENTRADA
-          ══════════════════════════════════════════════ */}
-          <Route path="/" element={<LandingPageV2 />} />
+            {/* ══════════════════════════════════════════════
+                 🏠 LANDING PRINCIPAL — ÚNICA PÁGINA DE ENTRADA
+            ══════════════════════════════════════════════ */}
+            <Route path="/" element={<LandingPageV2 />} />
 
-          {/* Redirecciones de rutas antiguas → nueva raíz */}
-          <Route path="/v2-landing" element={<Navigate to="/" replace />} />
-          <Route path="/dev-store" element={<Navigate to="/" replace />} />
+            {/* Redirecciones de rutas antiguas → nueva raíz */}
+            <Route path="/v2-landing" element={<Navigate to="/" replace />} />
+            <Route path="/dev-store" element={<Navigate to="/" replace />} />
 
-          {/* ══════════════════════════════════════════════
-               🛍️ CATÁLOGO Y TIENDA
-          ══════════════════════════════════════════════ */}
-          <Route path="/catalogo" element={<Catalog />} />
-          <Route path="/producto/:id" element={<ProductPage />} />
+            {/* ══════════════════════════════════════════════
+                 🛍️ CATÁLOGO Y TIENDA
+            ══════════════════════════════════════════════ */}
+            <Route path="/catalogo" element={<Catalog />} />
+            <Route path="/producto/:id" element={<ProductPage />} />
 
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/gracias/:orderId" element={<SuccessPage />} />
-          <Route path="/perfil" element={<ProtectedProfile />} />
-          <Route path="/perfil/ajustes" element={<ProfileSettingsRoute />} />
-          <Route path="/login" element={<LoginRoute />} />
-          <Route path="/legal" element={<LegalPage />} />
-          <Route path="/sobre-nosotros" element={<AboutUs />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/gracias/:orderId" element={<SuccessPage />} />
+            <Route path="/perfil" element={<ProtectedProfile />} />
+            <Route path="/perfil/ajustes" element={<ProfileSettingsRoute />} />
+            <Route path="/login" element={<LoginRoute />} />
+            <Route path="/legal" element={<LegalPage />} />
+            <Route path="/sobre-nosotros" element={<AboutUs />} />
 
-          {/* Rutas legacy del dev-store → redirigen a nuevas */}
-          <Route path="/dev-store/catalog" element={<Navigate to="/catalogo" replace />} />
-          <Route path="/dev-store/catalogo" element={<Navigate to="/catalogo" replace />} />
-          <Route path="/dev-store/producto/:id" element={<Navigate to="/producto/:id" replace />} />
-          <Route path="/dev-store/product/:id" element={<Navigate to="/producto/:id" replace />} />
+            {/* Rutas legacy del dev-store → redirigen a nuevas */}
+            <Route path="/dev-store/catalog" element={<Navigate to="/catalogo" replace />} />
+            <Route path="/dev-store/catalogo" element={<Navigate to="/catalogo" replace />} />
+            <Route path="/dev-store/producto/:id" element={<Navigate to="/producto/:id" replace />} />
+            <Route path="/dev-store/product/:id" element={<Navigate to="/producto/:id" replace />} />
 
-          {/* Catch-all → Landing */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            {/* Catch-all → Landing */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </AnimatePresence>
       {!isBypassPath && <FloatingChatBot />}
     </>
