@@ -16,7 +16,8 @@ import {
   Tag,
   CheckCircle2,
   X,
-  Loader2
+  Loader2,
+  MapPin
 } from "lucide-react"
 import { useCartStore } from "../lib/cartStore"
 import { supabase } from "../lib/supabase"
@@ -26,6 +27,238 @@ import { CheckoutForm as VerificationForm } from "../components/CheckoutForm"
 
 const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_PLACEHOLDER';
 const stripePromise = loadStripe(publishableKey);
+
+export interface CanaryLocation {
+  municipality: string;
+  island: string;
+}
+
+const CANARY_CP_MAP: Record<string, CanaryLocation> = {
+  // --- GRAN CANARIA (35000 - 35499) ---
+  '35001': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35002': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35003': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35004': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35005': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35006': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35007': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35008': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35009': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35010': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35011': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35012': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35013': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35014': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35015': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35016': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35017': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35018': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35019': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
+  '35100': { municipality: 'San Bartolomé de Tirajana', island: 'Gran Canaria' },
+  '35108': { municipality: 'San Bartolomé de Tirajana', island: 'Gran Canaria' },
+  '35109': { municipality: 'San Bartolomé de Tirajana', island: 'Gran Canaria' },
+  '35110': { municipality: 'Santa Lucía de Tirajana', island: 'Gran Canaria' },
+  '35118': { municipality: 'Santa Lucía de Tirajana', island: 'Gran Canaria' },
+  '35120': { municipality: 'Mogán', island: 'Gran Canaria' },
+  '35130': { municipality: 'Mogán', island: 'Gran Canaria' },
+  '35138': { municipality: 'Mogán', island: 'Gran Canaria' },
+  '35140': { municipality: 'Mogán', island: 'Gran Canaria' },
+  '35200': { municipality: 'Telde', island: 'Gran Canaria' },
+  '35210': { municipality: 'Telde', island: 'Gran Canaria' },
+  '35211': { municipality: 'Telde', island: 'Gran Canaria' },
+  '35212': { municipality: 'Telde', island: 'Gran Canaria' },
+  '35213': { municipality: 'Telde', island: 'Gran Canaria' },
+  '35214': { municipality: 'Telde', island: 'Gran Canaria' },
+  '35215': { municipality: 'Telde', island: 'Gran Canaria' },
+  '35218': { municipality: 'Telde', island: 'Gran Canaria' },
+  '35220': { municipality: 'Telde', island: 'Gran Canaria' },
+  '35230': { municipality: 'Valsequillo de Gran Canaria', island: 'Gran Canaria' },
+  '35240': { municipality: 'Ingenio', island: 'Gran Canaria' },
+  '35250': { municipality: 'Ingenio', island: 'Gran Canaria' },
+  '35260': { municipality: 'Agüimes', island: 'Gran Canaria' },
+  '35270': { municipality: 'Telde', island: 'Gran Canaria' },
+  '35280': { municipality: 'Santa Brígida', island: 'Gran Canaria' },
+  '35290': { municipality: 'San Bartolomé de Tirajana', island: 'Gran Canaria' },
+  '35300': { municipality: 'Santa Brígida', island: 'Gran Canaria' },
+  '35310': { municipality: 'Vega de San Mateo', island: 'Gran Canaria' },
+  '35320': { municipality: 'Vega de San Mateo', island: 'Gran Canaria' },
+  '35330': { municipality: 'Teror', island: 'Gran Canaria' },
+  '35340': { municipality: 'Valleseco', island: 'Gran Canaria' },
+  '35350': { municipality: 'Artenara', island: 'Gran Canaria' },
+  '35360': { municipality: 'Tejeda', island: 'Gran Canaria' },
+  '35400': { municipality: 'Arucas', island: 'Gran Canaria' },
+  '35411': { municipality: 'Arucas', island: 'Gran Canaria' },
+  '35412': { municipality: 'Arucas', island: 'Gran Canaria' },
+  '35413': { municipality: 'Firgas', island: 'Gran Canaria' },
+  '35420': { municipality: 'Moya', island: 'Gran Canaria' },
+  '35430': { municipality: 'Firgas', island: 'Gran Canaria' },
+  '35440': { municipality: 'Moya', island: 'Gran Canaria' },
+  '35450': { municipality: 'Santa María de Guía', island: 'Gran Canaria' },
+  '35460': { municipality: 'Gáldar', island: 'Gran Canaria' },
+  '35470': { municipality: 'La Aldea de San Nicolás', island: 'Gran Canaria' },
+  '35480': { municipality: 'Agaete', island: 'Gran Canaria' },
+
+  // --- LANZAROTE Y LA GRACIOSA (35500 - 35599) ---
+  '35500': { municipality: 'Arrecife', island: 'Lanzarote' },
+  '35508': { municipality: 'Teguise', island: 'Lanzarote' },
+  '35509': { municipality: 'San Bartolomé', island: 'Lanzarote' },
+  '35510': { municipality: 'Tías', island: 'Lanzarote' },
+  '35520': { municipality: 'Haría', island: 'Lanzarote' },
+  '35530': { municipality: 'Teguise', island: 'Lanzarote' },
+  '35540': { municipality: 'Haría', island: 'Lanzarote' },
+  '35541': { municipality: 'Teguise', island: 'La Graciosa' },
+  '35542': { municipality: 'Haría', island: 'Lanzarote' },
+  '35543': { municipality: 'Haría', island: 'Lanzarote' },
+  '35550': { municipality: 'San Bartolomé', island: 'Lanzarote' },
+  '35559': { municipality: 'Tinajo', island: 'Lanzarote' },
+  '35560': { municipality: 'Tinajo', island: 'Lanzarote' },
+  '35570': { municipality: 'Yaiza', island: 'Lanzarote' },
+  '35571': { municipality: 'Yaiza', island: 'Lanzarote' },
+  '35572': { municipality: 'Tías', island: 'Lanzarote' },
+  '35580': { municipality: 'Yaiza', island: 'Lanzarote' },
+
+  // --- FUERTEVENTURA (35600 - 35699) ---
+  '35600': { municipality: 'Puerto del Rosario', island: 'Fuerteventura' },
+  '35610': { municipality: 'Antigua', island: 'Fuerteventura' },
+  '35611': { municipality: 'Antigua', island: 'Fuerteventura' },
+  '35612': { municipality: 'Puerto del Rosario', island: 'Fuerteventura' },
+  '35613': { municipality: 'Puerto del Rosario', island: 'Fuerteventura' },
+  '35620': { municipality: 'Tuineje', island: 'Fuerteventura' },
+  '35625': { municipality: 'Pájara', island: 'Fuerteventura' },
+  '35626': { municipality: 'Pájara', island: 'Fuerteventura' },
+  '35627': { municipality: 'Pájara', island: 'Fuerteventura' },
+  '35628': { municipality: 'Tuineje', island: 'Fuerteventura' },
+  '35630': { municipality: 'Betancuria', island: 'Fuerteventura' },
+  '35640': { municipality: 'La Oliva', island: 'Fuerteventura' },
+
+  // --- TENERIFE (38000 - 38699) ---
+  '38001': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
+  '38002': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
+  '38003': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
+  '38004': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
+  '38005': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
+  '38006': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
+  '38007': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
+  '38008': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
+  '38009': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
+  '38010': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
+  '38107': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
+  '38108': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
+  '38109': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
+  '38201': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
+  '38202': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
+  '38203': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
+  '38204': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
+  '38205': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
+  '38206': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
+  '38207': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
+  '38208': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
+  '38280': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
+  '38290': { municipality: 'El Rosario', island: 'Tenerife' },
+  '38291': { municipality: 'Tacoronte', island: 'Tenerife' },
+  '38292': { municipality: 'Tegueste', island: 'Tenerife' },
+  '38296': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
+  '38300': { municipality: 'La Orotava', island: 'Tenerife' },
+  '38310': { municipality: 'La Orotava', island: 'Tenerife' },
+  '38311': { municipality: 'La Orotava', island: 'Tenerife' },
+  '38312': { municipality: 'La Orotava', island: 'Tenerife' },
+  '38320': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
+  '38350': { municipality: 'Tacoronte', island: 'Tenerife' },
+  '38355': { municipality: 'El Sauzal', island: 'Tenerife' },
+  '38360': { municipality: 'La Matanza de Acentejo', island: 'Tenerife' },
+  '38370': { municipality: 'La Victoria de Acentejo', island: 'Tenerife' },
+  '38380': { municipality: 'Santa Úrsula', island: 'Tenerife' },
+  '38390': { municipality: 'La Orotava', island: 'Tenerife' },
+  '38400': { municipality: 'Puerto de la Cruz', island: 'Tenerife' },
+  '38410': { municipality: 'Los Realejos', island: 'Tenerife' },
+  '38420': { municipality: 'San Juan de la Rambla', island: 'Tenerife' },
+  '38429': { municipality: 'La Guancha', island: 'Tenerife' },
+  '38430': { municipality: 'Icod de los Vinos', island: 'Tenerife' },
+  '38440': { municipality: 'Garachico', island: 'Tenerife' },
+  '38450': { municipality: 'Los Silos', island: 'Tenerife' },
+  '38460': { municipality: 'Buenavista del Norte', island: 'Tenerife' },
+  '38470': { municipality: 'El Tanque', island: 'Tenerife' },
+  '38480': { municipality: 'Santiago del Teide', island: 'Tenerife' },
+  '38500': { municipality: 'Güímar', island: 'Tenerife' },
+  '38510': { municipality: 'Candelaria', island: 'Tenerife' },
+  '38520': { municipality: 'Arico', island: 'Tenerife' },
+  '38530': { municipality: 'Candelaria', island: 'Tenerife' },
+  '38540': { municipality: 'Arafo', island: 'Tenerife' },
+  '38570': { municipality: 'Fasnia', island: 'Tenerife' },
+  '38580': { municipality: 'Arico', island: 'Tenerife' },
+  '38590': { municipality: 'Granadilla de Abona', island: 'Tenerife' },
+  '38591': { municipality: 'San Miguel de Abona', island: 'Tenerife' },
+  '38594': { municipality: 'Vilaflor de Chasna', island: 'Tenerife' },
+  '38600': { municipality: 'Granadilla de Abona', island: 'Tenerife' },
+  '38611': { municipality: 'Granadilla de Abona', island: 'Tenerife' },
+  '38612': { municipality: 'Granadilla de Abona', island: 'Tenerife' },
+  '38620': { municipality: 'San Miguel de Abona', island: 'Tenerife' },
+  '38626': { municipality: 'Arona', island: 'Tenerife' },
+  '38630': { municipality: 'Arona', island: 'Tenerife' },
+  '38631': { municipality: 'Arona', island: 'Tenerife' },
+  '38639': { municipality: 'Arona', island: 'Tenerife' },
+  '38640': { municipality: 'Arona', island: 'Tenerife' },
+  '38650': { municipality: 'Arona', island: 'Tenerife' },
+  '38660': { municipality: 'Adeje', island: 'Tenerife' },
+  '38670': { municipality: 'Adeje', island: 'Tenerife' },
+  '38680': { municipality: 'Guía de Isora', island: 'Tenerife' },
+  '38683': { municipality: 'Santiago del Teide', island: 'Tenerife' },
+
+  // --- LA PALMA (38700 - 38799) ---
+  '38700': { municipality: 'Santa Cruz de La Palma', island: 'La Palma' },
+  '38710': { municipality: 'Breña Alta', island: 'La Palma' },
+  '38711': { municipality: 'Breña Baja', island: 'La Palma' },
+  '38715': { municipality: 'Puntallana', island: 'La Palma' },
+  '38720': { municipality: 'San Andrés y Sauces', island: 'La Palma' },
+  '38726': { municipality: 'Barlovento', island: 'La Palma' },
+  '38727': { municipality: 'Garafía', island: 'La Palma' },
+  '38730': { municipality: 'Villa de Mazo', island: 'La Palma' },
+  '38739': { municipality: 'Fuencaliente de La Palma', island: 'La Palma' },
+  '38750': { municipality: 'El Paso', island: 'La Palma' },
+  '38760': { municipality: 'Los Llanos de Aridane', island: 'La Palma' },
+  '38770': { municipality: 'Tazacorte', island: 'La Palma' },
+  '38780': { municipality: 'Tijarafe', island: 'La Palma' },
+  '38788': { municipality: 'Puntagorda', island: 'La Palma' },
+
+  // --- LA GOMERA (38800 - 38899) ---
+  '38800': { municipality: 'San Sebastián de La Gomera', island: 'La Gomera' },
+  '38810': { municipality: 'Hermigua', island: 'La Gomera' },
+  '38811': { municipality: 'Agulo', island: 'La Gomera' },
+  '38820': { municipality: 'Vallehermoso', island: 'La Gomera' },
+  '38870': { municipality: 'Valle Gran Rey', island: 'La Gomera' },
+  '38880': { municipality: 'Alajeró', island: 'La Gomera' },
+
+  // --- EL HIERRO (38900 - 38999) ---
+  '38900': { municipality: 'Valverde', island: 'El Hierro' },
+  '38911': { municipality: 'Frontera', island: 'El Hierro' },
+  '38912': { municipality: 'El Pinar de El Hierro', island: 'El Hierro' },
+};
+
+export function getCanaryLocationByZip(cp: string): CanaryLocation | null {
+  const cleanCp = cp.trim();
+  if (cleanCp.length < 5) return null;
+
+  if (CANARY_CP_MAP[cleanCp]) {
+    return CANARY_CP_MAP[cleanCp];
+  }
+
+  if (cleanCp.startsWith('35')) {
+    const num = parseInt(cleanCp, 10);
+    if (num >= 35500 && num <= 35599) return { municipality: '', island: 'Lanzarote' };
+    if (num >= 35600 && num <= 35699) return { municipality: '', island: 'Fuerteventura' };
+    return { municipality: '', island: 'Gran Canaria' };
+  }
+
+  if (cleanCp.startsWith('38')) {
+    const num = parseInt(cleanCp, 10);
+    if (num >= 38700 && num <= 38799) return { municipality: '', island: 'La Palma' };
+    if (num >= 38800 && num <= 38899) return { municipality: '', island: 'La Gomera' };
+    if (num >= 38900 && num <= 38999) return { municipality: '', island: 'El Hierro' };
+    return { municipality: '', island: 'Tenerife' };
+  }
+
+  return null;
+}
 
 type RelatedProduct = {
   id: string
@@ -162,7 +395,7 @@ export default function CheckoutPage() {
     address: "",
     city: "",
     postalCode: "",
-    province: "Las Palmas"
+    province: "Tenerife"
   })
 
   const [couponCodeInput, setCouponCodeInput] = useState("")
@@ -201,14 +434,25 @@ export default function CheckoutPage() {
           setContactData({ email, phone });
 
           if (profile) {
-            setShippingData(prev => ({
-              ...prev,
-              firstName: profile.full_name?.split(' ')[0] || prev.firstName,
-              lastName: profile.full_name?.split(' ').slice(1).join(' ') || prev.lastName,
-              address: address || prev.address,
-              city: city || prev.city,
-              postalCode: postalCode || prev.postalCode,
-            }));
+            setShippingData(prev => {
+              const updated = {
+                ...prev,
+                firstName: profile.full_name?.split(' ')[0] || prev.firstName,
+                lastName: profile.full_name?.split(' ').slice(1).join(' ') || prev.lastName,
+                address: address || prev.address,
+                city: city || prev.city,
+                postalCode: postalCode || prev.postalCode,
+              };
+
+              if (postalCode && postalCode.trim().length === 5) {
+                const detected = getCanaryLocationByZip(postalCode);
+                if (detected) {
+                  if (detected.municipality) updated.city = detected.municipality;
+                  if (detected.island) updated.province = detected.island;
+                }
+              }
+              return updated;
+            });
           }
 
           if (address && city && postalCode) {
@@ -222,7 +466,21 @@ export default function CheckoutPage() {
     fetchUserAndPreFill();
   }, []);
 
-  // Proceso de validación de cupones resiliente con Timeout
+  const handlePostalCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newZip = e.target.value;
+    setShippingData(prev => {
+      const updated = { ...prev, postalCode: newZip };
+      if (newZip.trim().length === 5) {
+        const detected = getCanaryLocationByZip(newZip);
+        if (detected) {
+          if (detected.municipality) updated.city = detected.municipality;
+          if (detected.island) updated.province = detected.island;
+        }
+      }
+      return updated;
+    });
+  };
+
   const validateCouponCode = useCallback(async (codeToValidate: string) => {
     const cleanCode = codeToValidate.trim().toUpperCase()
     if (!cleanCode) return
@@ -230,7 +488,6 @@ export default function CheckoutPage() {
     setCouponLoading(true)
     setCouponError(null)
 
-    // Timeout de seguridad de 3.5 segundos
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error("TIMEOUT")), 3500)
     )
@@ -239,7 +496,6 @@ export default function CheckoutPage() {
       if (!supabase) throw new Error("Conexión no disponible")
 
       const executionPromise = (async () => {
-        // Nivel 1: RPC de Supabase
         try {
           const { data: rpcData, error: rpcError } = await supabase.rpc('validate_and_apply_promo_code', {
             p_code: cleanCode,
@@ -262,7 +518,6 @@ export default function CheckoutPage() {
           console.warn("[Coupon] RPC no disponible, intentando fallback directo...", rpcErr)
         }
 
-        // Nivel 2: Fallback a tabla promo_codes
         const { data: promoData } = await supabase
           .from('promo_codes')
           .select('*')
@@ -280,7 +535,6 @@ export default function CheckoutPage() {
           }
         }
 
-        // Nivel 3: Fallback a tabla coupons
         const { data: couponData } = await supabase
           .from('coupons')
           .select('*')
@@ -314,12 +568,12 @@ export default function CheckoutPage() {
       } else {
         setCouponError(err.message || "Código no válido")
       }
-    } finally {
+    } font-medium
+    finally {
       setCouponLoading(false)
     }
   }, [subtotal, userProfile]);
 
-  // Carga automática si el código viene en la URL o Storage
   useEffect(() => {
     const codeFromUrl = searchParams.get('code') || searchParams.get('promo') || searchParams.get('coupon');
     if (codeFromUrl && !appliedCoupon) {
@@ -347,30 +601,61 @@ export default function CheckoutPage() {
   const total = subtotalWithDiscount + shippingCost
 
   useEffect(() => {
-    if (step !== 'payment') return
-    if (clientSecret) return
+    if (step !== 'payment') return;
+    if (clientSecret) return;
+    if (!items || items.length === 0 || total <= 0) return;
 
     const fetchPaymentIntent = async () => {
-      setPaymentLoading(true)
-      setPaymentError(null)
+      setPaymentLoading(true);
+      setPaymentError(null);
       try {
-        const amountInCents = Math.round(total * 100)
-        const { data, error } = await supabase.functions.invoke('create-payment-intent', {
-          body: { amount: amountInCents }
-        })
-        if (error || !data?.clientSecret) {
-          throw new Error(error?.message || data?.error || 'No se pudo iniciar el pago')
+        const amountInCents = Math.round(total * 100);
+        
+        if (amountInCents < 50) {
+          throw new Error('El importe mínimo para procesar el pago con tarjeta es 0.50€');
         }
-        setClientSecret(data.clientSecret)
-      } catch (err: any) {
-        setPaymentError(err.message || 'Error al conectar con el servidor de pagos')
-      } finally {
-        setPaymentLoading(false)
-      }
-    }
 
-    fetchPaymentIntent()
-  }, [step, total, clientSecret])
+        const { data, error } = await supabase.functions.invoke('create-payment-intent', {
+          body: { 
+            amount: amountInCents,
+            currency: 'eur',
+            items: items.map(i => ({ id: i.id, quantity: i.quantity, price: i.price })),
+            shippingCost: shippingCost
+          }
+        });
+
+        if (error) {
+          let customMsg = '';
+          try {
+            if (error.context && typeof error.context.json === 'function') {
+              const jsonErr = await error.context.json();
+              customMsg = jsonErr?.error || jsonErr?.message || '';
+            }
+          } catch (e) {
+            console.warn('Error extrayendo cuerpo de la respuesta:', e);
+          }
+
+          if (!customMsg || customMsg.includes('non-2xx status code')) {
+            customMsg = 'Error en la pasarela de Stripe. Verifica que la variable STRIPE_SECRET_KEY esté configurada en los Secrets de Supabase.';
+          }
+
+          throw new Error(customMsg);
+        }
+
+        if (!data?.clientSecret) {
+          throw new Error(data?.error || 'No se pudo generar la clave secreta de la pasarela de pago');
+        }
+
+        setClientSecret(data.clientSecret);
+      } catch (err: any) {
+        setPaymentError(err.message || 'Error al conectar con el servidor de pagos');
+      } finally {
+        setPaymentLoading(false);
+      }
+    };
+
+    fetchPaymentIntent();
+  }, [step, total, clientSecret, items, shippingCost]);
 
   const stripeOptions = useMemo(() => {
     if (!clientSecret) return undefined;
@@ -584,48 +869,41 @@ export default function CheckoutPage() {
                       className="bg-[#030c1a] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-yellow-400"
                     />
                   </div>
+
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1">Ciudad / Municipio (Canarias)</label>
-                    <select
-                      value={shippingData.city}
-                      onChange={e => setShippingData({...shippingData, city: e.target.value})}
-                      className="bg-[#030c1a] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-yellow-400 appearance-none"
-                    >
-                      <option value="">Selecciona tu municipio...</option>
-                      <optgroup label="Tenerife">
-                        <option value="Santa Cruz de Tenerife">Santa Cruz de Tenerife</option>
-                        <option value="San Cristóbal de La Laguna">San Cristóbal de La Laguna</option>
-                        <option value="Arona">Arona</option>
-                        <option value="Adeje">Adeje</option>
-                        <option value="La Orotava">La Orotava</option>
-                        <option value="Puerto de la Cruz">Puerto de la Cruz</option>
-                        <option value="Granadilla de Abona">Granadilla de Abona</option>
-                      </optgroup>
-                      <optgroup label="Gran Canaria">
-                        <option value="Las Palmas de Gran Canaria">Las Palmas de Gran Canaria</option>
-                        <option value="Telde">Telde</option>
-                        <option value="Santa Lucía de Tirajana">Santa Lucía de Tirajana</option>
-                        <option value="Arucas">Arucas</option>
-                        <option value="Maspalomas">Maspalomas</option>
-                      </optgroup>
-                      <optgroup label="Otras Islas">
-                        <option value="Arrecife">Arrecife (Lanzarote)</option>
-                        <option value="Puerto del Rosario">Puerto del Rosario (Fuerteventura)</option>
-                        <option value="Santa Cruz de La Palma">Santa Cruz de La Palma (La Palma)</option>
-                        <option value="San Sebastián de La Gomera">San Sebastián de La Gomera (La Gomera)</option>
-                        <option value="Valverde">Valverde (El Hierro)</option>
-                      </optgroup>
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1">Código Postal</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1">Código Postal (Canarias)</label>
                     <input 
                       type="text"
-                      placeholder="Ej: 35001"
+                      placeholder="Ej: 38200"
+                      maxLength={5}
                       value={shippingData.postalCode}
-                      onChange={e => setShippingData({...shippingData, postalCode: e.target.value})}
+                      onChange={handlePostalCodeChange}
                       className="bg-[#030c1a] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-yellow-400 font-mono"
                     />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1">Municipio</label>
+                    <input 
+                      type="text"
+                      placeholder="Escribe o autodetectado con CP..."
+                      value={shippingData.city}
+                      onChange={e => setShippingData({...shippingData, city: e.target.value})}
+                      className="bg-[#030c1a] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-yellow-400"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 sm:col-span-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400 ml-1">Isla de Canarias</label>
+                    <div className="relative">
+                      <input 
+                        type="text"
+                        readOnly
+                        value={shippingData.province || "Tenerife"}
+                        className="w-full bg-[#030c1a]/60 border border-white/10 rounded-2xl px-4 py-3 text-xs text-yellow-400 font-bold cursor-not-allowed uppercase"
+                      />
+                      <MapPin className="w-4 h-4 text-yellow-400 absolute right-4 top-1/2 -translate-y-1/2" />
+                    </div>
                   </div>
                 </div>
 
@@ -942,8 +1220,13 @@ export default function CheckoutPage() {
             </a>
           </div>
 
-        </div>
+          <div className="border-t border-white/5 pt-3">
+            <p className="text-xs sm:text-sm font-medium text-gray-300 tracking-wide text-center leading-relaxed mt-4 opacity-90">
+              *Exención Franquicia Fiscal, Ley 7/2017, de 27 de diciembre, de Presupuestos Generales de la Comunidad Autónoma de Canarias*
+            </p>
+          </div>
 
+        </div>
       </div>
     </div>
   )
