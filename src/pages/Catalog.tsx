@@ -20,11 +20,10 @@ import {
 } from 'lucide-react';
 import HeaderV2 from '../components/layout/HeaderV2';
 import AnnouncementBar from '../components/layout/AnnouncementBar';
-import { cn, getRealPrice, getOptimizedImageUrl } from '../lib/utils';
+import { cn, getRealPrice } from '../lib/utils';
 import { useCartStore } from '../lib/cartStore';
 import { supabase } from '../lib/supabase';
 import { Toast } from '../components/ui/Toast';
-import { useDebounce } from '../hooks/useDebounce';
 
 interface Product {
   id: string;
@@ -325,7 +324,7 @@ const ProductCardItem = ({
           className="absolute inset-0 bg-transparent flex items-center justify-center p-2.5 sm:p-4 cursor-zoom-in transition-shadow duration-500 hover:shadow-2xl hover:shadow-cyan-500/20 border-[1.5px] border-cyan-500/40 rounded-2xl overflow-hidden"
         >
           <img 
-            src={getOptimizedImageUrl(product.image_url, 400)} 
+            src={product.image_url} 
             className={cn(
               "w-full h-full object-contain transition-transform duration-700 group-hover:scale-105",
               isUpcoming && "opacity-80 grayscale-[20%]"
@@ -416,7 +415,6 @@ export default function Catalog() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  const debouncedSearchTerm = useDebounce(searchTerm, 250);
 
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
   const [isModalFlipped, setIsModalFlipped] = useState(false);
@@ -473,7 +471,6 @@ export default function Catalog() {
         setCategories(Array.from(uniqueMap.values()));
       }
 
-      // Consulta Resiliente Dual
       let prodsData: any[] = [];
       const { data: relationalData, error: relErr } = await supabase
         .from('products')
@@ -560,7 +557,7 @@ export default function Catalog() {
 
   const filteredProducts = useMemo(() => {
     let list = products.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesCategory = selectedCategories.length === 0 || selectedCategories.some(catId => {
         const selectedCat = categories.find(c => c.id === catId);
@@ -596,46 +593,58 @@ export default function Catalog() {
         const pGameType = (product.game_type || '').toLowerCase();
         const pFranchise = (product.franchise || '').toLowerCase();
         const pSet = (product.set_name || product.set || '').toLowerCase();
-        const pDesc = (product.description || '').toLowerCase();
-        const pContent = (product.content || '').toLowerCase();
 
-        const combinedText = `${pName} ${pCat} ${pGame} ${pGameType} ${pFranchise} ${pSet} ${pDesc} ${pContent}`;
+        // NUNCA incluir descripción o contenido en el filtro de franquicia
+        const coreText = `${pName} ${pCat} ${pGame} ${pGameType} ${pFranchise} ${pSet}`;
+
+        const accKeywords = [
+          'funda', 'sleeve', 'binder', 'carpeta', 'deck box', 'caja de mazo', 
+          'toploader', 'playmat', 'tapete', 'album', 'álbum', 'hojas', 'accesorio', 'dice', 'dados', 'protector', 'portadeck', 'dragon shield', 'ultra pro', 'perfect fit'
+        ];
+        
+        const isAccessoryProduct = accKeywords.some(kw => coreText.includes(kw)) || pGameType.includes('accesorio') || pCat.includes('accesorio') || pFranchise.includes('accesorio');
 
         if (franchiseId === 'accesorios') {
-          const accKeywords = [
-            'funda', 'sleeve', 'binder', 'carpeta', 'deck box', 'caja de mazo', 
-            'toploader', 'playmat', 'tapete', 'album', 'álbum', 'hojas', 'accesorio', 'dice', 'dados', 'protector', 'portadeck'
-          ];
-          return accKeywords.some(kw => combinedText.includes(kw)) || pGameType.includes('accesorio') || pCat.includes('accesorio') || pFranchise.includes('accesorio');
+          return isAccessoryProduct;
+        }
+
+        const hasExplicitPokemon = /\bpokemon\b|\bpokémon\b/i.test(coreText);
+        const hasExplicitMagic = /\bmagic\b|\bmtg\b|\bgathering\b/i.test(coreText);
+
+        if (isAccessoryProduct) {
+          if (franchiseId === 'pokemon') return hasExplicitPokemon && !hasExplicitMagic;
+          if (franchiseId === 'magic') return hasExplicitMagic && !hasExplicitPokemon;
+          return false;
         }
 
         if (franchiseId === 'pokemon') {
-          if (pGame.includes('magic') || pGame.includes('mtg') || pFranchise.includes('magic') || pGame.includes('one piece') || pGame.includes('onepiece')) return false;
-          if (pFranchise.includes('pokemon') || pFranchise.includes('pokémon') || pGameType.includes('pokemon') || pGame.includes('pokemon') || pGame.includes('pokémon')) return true;
+          if (hasExplicitMagic) return false;
+          if (hasExplicitPokemon) return true;
 
           const pkmKeywords = [
-            'pokemon', 'pokémon', 'pkmn', 'pkm', 'pikachu', 'charizard', 'mewtwo', 
-            'scarlet', 'violet', 'escarlata', 'púrpura', 'purpura', 'paldea', '151', 
-            'paradox', 'obsidian', 'stellar', 'surging', 'crown zenith', 'lost origin', 
-            'silver tempest', 'fusion strike', 'brilliant stars', 'shrouded', 'twilight', 
-            'temporal', 'destinos', 'evoluciones', 'rivales', 'caos', 'etb', 'pokeball', 'pokéball', 
-            'elite trainer', 'booster', 'sobres', 'caja', 'vmax', 'vstar', 'ex'
+            'pikachu', 'charizard', 'mewtwo', 'scarlet', 'violet', 'escarlata', 'púrpura', 'purpura', 
+            'paldea', '151', 'paradox', 'obsidian', 'stellar', 'surging', 'crown zenith', 'lost origin', 
+            'silver tempest', 'fusion strike', 'brilliant stars', 'shrouded', 'twilight', 'temporal', 
+            'destinos', 'evoluciones', 'rivales', 'caos', 'etb', 'pokeball', 'pokéball', 'elite trainer'
           ];
-          return pkmKeywords.some(kw => combinedText.includes(kw));
+
+          const hasKeyword = pkmKeywords.some(kw => coreText.includes(kw));
+          const hasStandaloneEx = /\bex\b/i.test(pName) || /\bvmax\b/i.test(pName) || /\bvstar\b/i.test(pName);
+
+          return hasKeyword || hasStandaloneEx;
         }
 
         if (franchiseId === 'magic') {
-          if (pGame.includes('pokemon') || pGame.includes('pokémon') || pFranchise.includes('pokemon') || pGame.includes('one piece') || pGame.includes('onepiece')) return false;
-          if (pFranchise.includes('magic') || pFranchise.includes('mtg') || pGameType.includes('magic') || pGame.includes('magic') || pGame.includes('mtg')) return true;
+          if (hasExplicitPokemon) return false;
+          if (hasExplicitMagic) return true;
 
           const magicKeywords = [
-            'magic', 'mtg', 'gathering', 'commander', 'planeswalker', 'bloomburrow', 
-            'duskmourn', 'tarkir', 'ixalan', 'ravnica', 'eldraine', 'lorwyn', 'karlov', 
-            'foundations', 'modern', 'draft booster', 'play booster', 'collector booster', 
-            'secret lair', 'multiverso', 'reforjado', 'malkor', 'tales of middle-earth', 
-            'outlaws', 'thunder junction', 'dominaria', 'innistrad', 'kamigawa', 'phyrexia', 'prerelease', 'bundle'
+            'commander', 'planeswalker', 'bloomburrow', 'duskmourn', 'tarkir', 'ixalan', 'ravnica', 
+            'eldraine', 'lorwyn', 'karlov', 'foundations', 'modern', 'draft booster', 'play booster', 
+            'collector booster', 'secret lair', 'multiverso', 'reforjado', 'malkor', 'tales of middle-earth'
           ];
-          return magicKeywords.some(kw => combinedText.includes(kw));
+
+          return magicKeywords.some(kw => coreText.includes(kw));
         }
 
         return false;
@@ -662,7 +671,7 @@ export default function Catalog() {
     });
 
     return list;
-  }, [products, categories, debouncedSearchTerm, selectedCategories, selectedLanguages, selectedFranchises, priceRange, sortOption]);
+  }, [products, categories, searchTerm, selectedCategories, selectedLanguages, selectedFranchises, priceRange, sortOption]);
 
   const toggleCategory = (id: string) => {
     setSelectedCategories(prev => 

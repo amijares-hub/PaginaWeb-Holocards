@@ -263,14 +263,18 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
 
     if (!supabase) return;
 
-    const channel = supabase
-      .channel('realtime-hero-products')
+    // Canal único con timestamp para evitar colisiones de socket
+    const channelId = `hero-realtime-${Date.now()}`;
+    const channel = supabase.channel(channelId);
+
+    channel
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => fetchBackendData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tags' }, () => fetchBackendData())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'product_tags' }, () => fetchBackendData())
       .subscribe();
 
     return () => {
+      // Desconexión limpia del canal
       supabase.removeChannel(channel);
     };
   }, [isHomePage]);
@@ -344,20 +348,63 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       return gName.includes(tabNorm) || tabNorm.includes(gName);
     });
 
-    const keywordMap: Record<string, string[]> = {
-      "Pokémon TCG": ["poke", "pokémon", "pokemon"],
-      "Magic The Gathering": ["magic", "mtg", "gathering"],
-      "One Piece TCG": ["piece", "one piece", "op"],
-      "Accesorios": ["acces", "fundas", "sleeves", "deckbox", "carpetas", "binder", "toploader"]
-    };
-
-    const currentFranchiseKeywords = keywordMap[activeTab] || ["poke"];
+    const accKeywords = [
+      'funda', 'sleeve', 'binder', 'carpeta', 'deck box', 'caja de mazo', 
+      'toploader', 'playmat', 'tapete', 'album', 'álbum', 'hojas', 'accesorio', 'dice', 'dados', 'protector', 'portadeck', 'dragon shield', 'ultra pro', 'perfect fit'
+    ];
 
     cards = cards.filter(card => {
-      if (currentGame && card.gameId === currentGame.id) return true;
+      const pName = card.name.toLowerCase();
+      const pSet = card.set.toLowerCase();
+      const pCat = card.category.toLowerCase();
+      const pSkus = (card.sku || '').toLowerCase();
+      const coreText = `${pName} ${pSet} ${pCat} ${pSkus} ${card.categoriesList.join(" ").toLowerCase()}`;
+      
+      const isAccessoryProduct = accKeywords.some(kw => coreText.includes(kw));
 
-      const prodDataStr = normalizeText(`${card.set} ${card.sku} ${card.category} ${card.categoriesList.join(" ")} ${JSON.stringify(card.rawCategory)}`);
-      return currentFranchiseKeywords.some(kw => prodDataStr.includes(kw));
+      if (activeTab === "Accesorios") {
+        return isAccessoryProduct;
+      }
+
+      const hasExplicitPokemon = /\bpokemon\b|\bpokémon\b/i.test(coreText);
+      const hasExplicitMagic = /\bmagic\b|\bmtg\b|\bgathering\b/i.test(coreText);
+
+      if (isAccessoryProduct) {
+        if (activeTab === "Pokémon TCG") return hasExplicitPokemon && !hasExplicitMagic;
+        if (activeTab === "Magic The Gathering") return hasExplicitMagic && !hasExplicitPokemon;
+        return false;
+      }
+
+      if (activeTab === "Pokémon TCG") {
+        if (hasExplicitMagic) return false;
+        if (hasExplicitPokemon) return true;
+        if (currentGame && card.gameId === currentGame.id) return true;
+        
+        const pkmKeywords = [
+          'pikachu', 'charizard', 'mewtwo', 'scarlet', 'violet', 'escarlata', 'púrpura', 'purpura', 
+          'paldea', '151', 'paradox', 'obsidian', 'stellar', 'surging', 'crown zenith', 'lost origin', 
+          'silver tempest', 'fusion strike', 'brilliant stars', 'shrouded', 'twilight', 'temporal', 
+          'destinos', 'evoluciones', 'rivales', 'caos', 'etb', 'pokeball', 'pokéball', 'elite trainer'
+        ];
+        const hasKeyword = pkmKeywords.some(kw => coreText.includes(kw));
+        const hasStandaloneEx = /\bex\b/i.test(pName) || /\bvmax\b/i.test(pName) || /\bvstar\b/i.test(pName);
+        return hasKeyword || hasStandaloneEx;
+      }
+
+      if (activeTab === "Magic The Gathering") {
+        if (hasExplicitPokemon) return false;
+        if (hasExplicitMagic) return true;
+        if (currentGame && card.gameId === currentGame.id) return true;
+
+        const magicKeywords = [
+          'commander', 'planeswalker', 'bloomburrow', 'duskmourn', 'tarkir', 'ixalan', 'ravnica', 
+          'eldraine', 'lorwyn', 'karlov', 'foundations', 'modern', 'draft booster', 'play booster', 
+          'collector booster', 'secret lair', 'multiverso', 'reforjado', 'malkor', 'tales of middle-earth'
+        ];
+        return magicKeywords.some(kw => coreText.includes(kw));
+      }
+
+      return true;
     });
 
     if (selectedCategory !== "Todos") {
@@ -612,10 +659,10 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
         </div>
       )}
 
-      {/* CARRUSEL PRINCIPAL: DUAL MOBILE (SIDE-SCROLL/SWIPE) Y DESKTOP (PAGINADO CON FLECHAS) */}
+      {/* CARRUSEL PRINCIPAL */}
       <div className="relative w-full max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto px-2 sm:px-12 xl:px-16 z-20 my-1 flex items-center justify-center flex-1 overflow-x-hidden">
         
-        {/* VISTA MÓVIL: DESLIZAMIENTO HORIZONTAL NATIVO (SIDE-SCROLL / SWIPE) */}
+        {/* VISTA MÓVIL */}
         <div className="flex md:hidden w-full overflow-x-auto snap-x snap-mandatory hide-scrollbar px-3 py-2 gap-3 scroll-smooth">
           {currentCards.length > 0 ? (
             currentCards.map((card, index) => {
@@ -690,7 +737,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
           )}
         </div>
 
-        {/* VISTA DESKTOP Y TABLET: PAGINADO CON FLECHAS */}
+        {/* VISTA DESKTOP Y TABLET */}
         <button
           type="button"
           onClick={handlePrevPage}
@@ -901,7 +948,6 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                       <span className="text-gray-500 font-black uppercase text-sm">Sin Imagen</span>
                     )}
                     
-                    {/* BOTÓN VER DETALLES PERMANENTE */}
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
                       <button 
                         type="button"
@@ -917,7 +963,6 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                     </div>
                   </div>
 
-                  {/* CARA TRASERA DEL MODAL EN EL HERO: CARRUSEL INTACTO + DESCRIPCIÓN + CONTENIDO */}
                   <div 
                     className="absolute inset-0 bg-[#050914] rounded-2xl md:rounded-[2rem] overflow-hidden p-4 sm:p-5 border border-yellow-400/50 shadow-[0_0_80px_rgba(250,204,21,0.3)] flex flex-col justify-between" 
                     style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
@@ -929,7 +974,6 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                       <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 shrink-0"/>
                     </div>
 
-                    {/* COMPONENTE DE IMÁGENES INTACTO */}
                     <div className="relative w-full flex-1 min-h-0 bg-transparent rounded-xl overflow-hidden border border-yellow-400/20 group flex items-center justify-center">
                       {selectedImageIndex > 0 && (
                         <div className="absolute top-2 left-2 z-30 pointer-events-none">
@@ -988,7 +1032,6 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                       )}
                     </div>
 
-                    {/* DESCRIPCIÓN Y CONTENIDO DEL PRODUCTO SIEMPRE VISIBLES */}
                     <div className="w-full shrink-0 max-h-32 overflow-y-auto text-left px-1 my-1 space-y-2 custom-scrollbar">
                       <div>
                         <span className="text-[10px] font-black uppercase text-yellow-400 tracking-wider block">
