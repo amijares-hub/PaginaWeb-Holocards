@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useEffect, useMemo } from "react"
-import { Link } from "react-router-dom"
+import React, { useState, useEffect, useMemo, useCallback } from "react"
+import { Link, useSearchParams } from "react-router-dom"
 import { 
   ArrowLeft, 
   Lock, 
@@ -106,6 +106,7 @@ const CheckoutForm = ({
       });
 
       clearCart();
+      sessionStorage.removeItem('holocards_applied_coupon');
 
       const { error: stripeError } = await stripe.confirmPayment({
         elements,
@@ -120,9 +121,9 @@ const CheckoutForm = ({
     } catch (err: any) {
       console.error("Error al procesar el pedido:", err)
       setErrorMessage(err.message || "Error al guardar la orden.")
+    } finally {
+      setIsProcessing(false)
     }
-    
-    setIsProcessing(false)
   }
 
   return (
@@ -132,7 +133,7 @@ const CheckoutForm = ({
       <button 
         type="submit" 
         disabled={!stripe || isProcessing}
-        className="w-full mt-2 bg-yellow-400 hover:bg-yellow-300 text-black font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_rgba(250,204,21,0.2)] active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+        className="w-full mt-2 bg-yellow-400 hover:bg-yellow-300 text-black font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_rgba(250,204,21,0.2)] active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
       >
         {isProcessing ? (
            <><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</>
@@ -146,6 +147,7 @@ const CheckoutForm = ({
 
 export default function CheckoutPage() {
   const { items, addItem, removeItem, updateQuantity, getTotalPrice, clearCart } = useCartStore()
+  const [searchParams] = useSearchParams()
   
   const [step, setStep] = useState<"verification" | "contact" | "shipping" | "payment">("verification")
   const [userProfile, setUserProfile] = useState<any>(null)
@@ -166,46 +168,183 @@ export default function CheckoutPage() {
   const [couponCodeInput, setCouponCodeInput] = useState("")
   const [couponLoading, setCouponLoading] = useState(false)
   const [couponError, setCouponError] = useState<string | null>(null)
-  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null)
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(() => {
+    try {
+      const saved = sessionStorage.getItem('holocards_applied_coupon')
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      return null
+    }
+  })
+
+  const subtotal = Number(getTotalPrice()) || 0
 
   useEffect(() => {
     const fetchUserAndPreFill = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserProfile(user);
-        
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserProfile(user);
+          
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
 
-        const email = user.email || "";
-        const phone = profile?.phone || user.user_metadata?.phone || "";
-        const address = profile?.address_street || "";
-        const city = profile?.address_city || "";
-        const postalCode = profile?.address_zip || "";
+          const email = user.email || "";
+          const phone = profile?.phone || user.user_metadata?.phone || "";
+          const address = profile?.address_street || "";
+          const city = profile?.address_city || "";
+          const postalCode = profile?.address_zip || "";
 
-        setContactData({ email, phone });
+          setContactData({ email, phone });
 
-        if (profile) {
-          setShippingData(prev => ({
-            ...prev,
-            firstName: profile.full_name?.split(' ')[0] || prev.firstName,
-            lastName: profile.full_name?.split(' ').slice(1).join(' ') || prev.lastName,
-            address: address || prev.address,
-            city: city || prev.city,
-            postalCode: postalCode || prev.postalCode,
-          }));
+          if (profile) {
+            setShippingData(prev => ({
+              ...prev,
+              firstName: profile.full_name?.split(' ')[0] || prev.firstName,
+              lastName: profile.full_name?.split(' ').slice(1).join(' ') || prev.lastName,
+              address: address || prev.address,
+              city: city || prev.city,
+              postalCode: postalCode || prev.postalCode,
+            }));
+          }
+
+          if (address && city && postalCode) {
+            setStep("payment");
+          }
         }
-
-        if (address && city && postalCode) {
-          setStep("payment");
-        }
+      } catch (e) {
+        console.warn("Aviso inicializando usuario en checkout:", e);
       }
     };
     fetchUserAndPreFill();
   }, []);
+
+  // Proceso de validación de cupones resiliente con Timeout
+  const validateCouponCode = useCallback(async (codeToValidate: string) => {
+    const cleanCode = codeToValidate.trim().toUpperCase()
+    if (!cleanCode) return
+
+    setCouponLoading(true)
+    setCouponError(null)
+
+    // Timeout de seguridad de 3.5 segundos
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("TIMEOUT")), 3500)
+    )
+
+    try {
+      if (!supabase) throw new Error("Conexión no disponible")
+
+      const executionPromise = (async () => {
+        // Nivel 1: RPC de Supabase
+        try {
+          const { data: rpcData, error: rpcError } = await supabase.rpc('validate_and_apply_promo_code', {
+            p_code: cleanCode,
+            p_user_id: userProfile?.id || null,
+            p_order_amount: subtotal || 1,
+            p_shipping_cost: 4.95
+          })
+
+          if (!rpcError && rpcData && rpcData.valid) {
+            return {
+              id: rpcData.promo_id || `promo_${Date.now()}`,
+              code: rpcData.code || cleanCode,
+              discount_type: (rpcData.discount_type === 'free_shipping' ? 'free_shipping' : (rpcData.discount_type === 'percentage' ? 'percentage' : 'fixed')) as any,
+              discount_value: Number(rpcData.discount_value) || 0,
+              calculated_discount: Number(rpcData.calculated_discount) || 0,
+              is_free_shipping: Boolean(rpcData.is_free_shipping)
+            }
+          }
+        } catch (rpcErr) {
+          console.warn("[Coupon] RPC no disponible, intentando fallback directo...", rpcErr)
+        }
+
+        // Nivel 2: Fallback a tabla promo_codes
+        const { data: promoData } = await supabase
+          .from('promo_codes')
+          .select('*')
+          .ilike('code', cleanCode)
+          .eq('is_active', true)
+          .maybeSingle()
+
+        if (promoData) {
+          return {
+            id: String(promoData.id),
+            code: promoData.code,
+            discount_type: (promoData.discount_type === 'free_shipping' ? 'free_shipping' : (promoData.discount_type === 'percentage' ? 'percentage' : 'fixed')) as any,
+            discount_value: Number(promoData.discount_value || promoData.value || 0),
+            is_free_shipping: promoData.discount_type === 'free_shipping'
+          }
+        }
+
+        // Nivel 3: Fallback a tabla coupons
+        const { data: couponData } = await supabase
+          .from('coupons')
+          .select('*')
+          .ilike('code', cleanCode)
+          .eq('is_active', true)
+          .maybeSingle()
+
+        if (couponData) {
+          return {
+            id: String(couponData.id),
+            code: couponData.code,
+            discount_type: couponData.discount_type === 'percentage' ? 'percentage' : 'fixed',
+            discount_value: Number(couponData.discount_value || 0)
+          }
+        }
+
+        throw new Error("Código de descuento no encontrado o no válido")
+      })()
+
+      const result = await Promise.race([executionPromise, timeoutPromise]) as AppliedCoupon
+
+      setAppliedCoupon(result)
+      sessionStorage.setItem('holocards_applied_coupon', JSON.stringify(result))
+      setCouponCodeInput("")
+      setCouponError(null)
+
+    } catch (err: any) {
+      console.error("[Coupon] Error validando cupón:", err)
+      if (err.message === "TIMEOUT") {
+        setCouponError("Error de conexión. Inténtalo de nuevo.")
+      } else {
+        setCouponError(err.message || "Código no válido")
+      }
+    } finally {
+      setCouponLoading(false)
+    }
+  }, [subtotal, userProfile]);
+
+  // Carga automática si el código viene en la URL o Storage
+  useEffect(() => {
+    const codeFromUrl = searchParams.get('code') || searchParams.get('promo') || searchParams.get('coupon');
+    if (codeFromUrl && !appliedCoupon) {
+      setCouponCodeInput(codeFromUrl.toUpperCase());
+      validateCouponCode(codeFromUrl);
+    }
+  }, [searchParams, appliedCoupon, validateCouponCode]);
+
+  const discountAmount = useMemo(() => {
+    if (!appliedCoupon) return 0
+    if (appliedCoupon.is_free_shipping || appliedCoupon.discount_type === 'free_shipping') {
+      return 0
+    }
+    if (appliedCoupon.discount_type === 'percentage') {
+      return (subtotal * appliedCoupon.discount_value) / 100
+    }
+    return Math.min(subtotal, appliedCoupon.discount_value)
+  }, [subtotal, appliedCoupon])
+
+  const subtotalWithDiscount = Math.max(0, subtotal - discountAmount)
+  const isFreeShippingByCoupon = appliedCoupon?.is_free_shipping || appliedCoupon?.discount_type === 'free_shipping'
+  const shippingCost = (isFreeShippingByCoupon || subtotalWithDiscount >= 100 || subtotalWithDiscount === 0) ? 0 : 4.95
+  const freeShippingThreshold = 100.00
+  const remainingForFreeShipping = isFreeShippingByCoupon ? 0 : Math.max(0, freeShippingThreshold - subtotalWithDiscount)
+  const total = subtotalWithDiscount + shippingCost
 
   useEffect(() => {
     if (step !== 'payment') return
@@ -215,11 +354,9 @@ export default function CheckoutPage() {
       setPaymentLoading(true)
       setPaymentError(null)
       try {
+        const amountInCents = Math.round(total * 100)
         const { data, error } = await supabase.functions.invoke('create-payment-intent', {
-          body: { 
-            items: items.map(i => ({ id: i.id, quantity: i.quantity })),
-            shippingCost: shippingCost 
-          }
+          body: { amount: amountInCents }
         })
         if (error || !data?.clientSecret) {
           throw new Error(error?.message || data?.error || 'No se pudo iniciar el pago')
@@ -233,7 +370,7 @@ export default function CheckoutPage() {
     }
 
     fetchPaymentIntent()
-  }, [step])
+  }, [step, total, clientSecret])
 
   const stripeOptions = useMemo(() => {
     if (!clientSecret) return undefined;
@@ -254,26 +391,6 @@ export default function CheckoutPage() {
   const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([])
   const [carouselIndex, setCarouselPage] = useState(0)
   const [addedTempIds, setAddedTempIds] = useState<Set<string>>(new Set())
-
-  const subtotal = Number(getTotalPrice()) || 0
-
-  const discountAmount = useMemo(() => {
-    if (!appliedCoupon) return 0
-    if (appliedCoupon.is_free_shipping || appliedCoupon.discount_type === 'free_shipping') {
-      return 0
-    }
-    if (appliedCoupon.discount_type === 'percentage') {
-      return (subtotal * appliedCoupon.discount_value) / 100
-    }
-    return Math.min(subtotal, appliedCoupon.discount_value)
-  }, [subtotal, appliedCoupon])
-
-  const subtotalWithDiscount = Math.max(0, subtotal - discountAmount)
-  const isFreeShippingByCoupon = appliedCoupon?.is_free_shipping || appliedCoupon?.discount_type === 'free_shipping'
-  const shippingCost = (isFreeShippingByCoupon || subtotalWithDiscount >= 100 || subtotalWithDiscount === 0) ? 0 : 4.95
-  const freeShippingThreshold = 100.00
-  const remainingForFreeShipping = isFreeShippingByCoupon ? 0 : Math.max(0, freeShippingThreshold - subtotalWithDiscount)
-  const total = subtotalWithDiscount + shippingCost
 
   useEffect(() => {
     const fetchRelated = async () => {
@@ -306,54 +423,15 @@ export default function CheckoutPage() {
     fetchRelated()
   }, [items])
 
-  const handleApplyCoupon = async (e: React.FormEvent) => {
+  const handleApplyCouponSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const cleanCode = couponCodeInput.trim().toUpperCase()
-    if (!cleanCode) return
-
-    setCouponLoading(true)
-    setCouponError(null)
-
-    try {
-      if (!supabase) throw new Error("Conexión no disponible")
-
-      // Validación con la función RPC para consultar promo_codes
-      const { data, error } = await supabase.rpc('validate_and_apply_promo_code', {
-        p_code: cleanCode,
-        p_user_id: userProfile?.id || null,
-        p_order_amount: subtotal,
-        p_shipping_cost: 4.95
-      })
-
-      if (error) throw error
-
-      if (!data || !data.valid) {
-        setCouponError(data?.message || "Código inválido o expirado")
-        return
-      }
-
-      setAppliedCoupon({
-        id: data.promo_id,
-        code: data.code,
-        discount_type: data.discount_type === 'free_shipping' ? 'free_shipping' : (data.discount_type === 'percentage' ? 'percentage' : 'fixed'),
-        discount_value: Number(data.discount_value) || 0,
-        calculated_discount: Number(data.calculated_discount) || 0,
-        is_free_shipping: Boolean(data.is_free_shipping)
-      })
-
-      setCouponCodeInput("")
-      setCouponError(null)
-    } catch (err: any) {
-      console.error("Error al validar código:", err)
-      setCouponError(err.message || "Error al validar el código")
-    } finally {
-      setCouponLoading(false)
-    }
+    validateCouponCode(couponCodeInput)
   }
 
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null)
     setCouponError(null)
+    sessionStorage.removeItem('holocards_applied_coupon')
   }
 
   const handleAddRelatedToCart = (prod: RelatedProduct) => {
@@ -457,7 +535,7 @@ export default function CheckoutPage() {
 
             <button 
               onClick={() => setStep("shipping")}
-              className="w-full mt-6 bg-yellow-400 hover:bg-yellow-300 text-black font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_rgba(250,204,21,0.2)] active:scale-95 flex items-center justify-center gap-2"
+              className="w-full mt-6 bg-yellow-400 hover:bg-yellow-300 text-black font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_rgba(250,204,21,0.2)] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
             >
               Continuar al Envío →
             </button>
@@ -553,7 +631,7 @@ export default function CheckoutPage() {
 
                 <button 
                   onClick={() => setStep("payment")}
-                  className="w-full mt-6 bg-yellow-400 hover:bg-yellow-300 text-black font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_rgba(250,204,21,0.2)] active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full mt-6 bg-yellow-400 hover:bg-yellow-300 text-black font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_rgba(250,204,21,0.2)] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   Continuar al Pago →
                 </button>
@@ -582,7 +660,7 @@ export default function CheckoutPage() {
                   <p className="text-red-400 text-xs font-bold text-center">{paymentError}</p>
                   <button
                     onClick={() => { setClientSecret(null); setPaymentError(null); setStep('payment'); }}
-                    className="text-xs font-black uppercase text-yellow-400 hover:underline"
+                    className="text-xs font-black uppercase text-yellow-400 hover:underline cursor-pointer"
                   >
                     Reintentar →
                   </button>
@@ -648,7 +726,7 @@ export default function CheckoutPage() {
                         <button
                           type="button"
                           onClick={() => updateQuantity(item.id, Math.max(1, (item.quantity || 1) - 1))}
-                          className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 rounded transition-colors active:scale-90"
+                          className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 rounded transition-colors active:scale-90 cursor-pointer"
                           title="Reducir cantidad"
                         >
                           <Minus className="w-3 h-3" />
@@ -659,7 +737,7 @@ export default function CheckoutPage() {
                         <button
                           type="button"
                           onClick={() => updateQuantity(item.id, (item.quantity || 1) + 1)}
-                          className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-yellow-400 hover:bg-yellow-400/10 rounded transition-colors active:scale-90"
+                          className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-yellow-400 hover:bg-yellow-400/10 rounded transition-colors active:scale-90 cursor-pointer"
                           title="Aumentar cantidad"
                         >
                           <Plus className="w-3 h-3" />
@@ -669,7 +747,7 @@ export default function CheckoutPage() {
                       <button
                         type="button"
                         onClick={() => removeItem(item.id)}
-                        className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                        className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors cursor-pointer"
                         title="Eliminar producto"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -689,7 +767,7 @@ export default function CheckoutPage() {
 
           <div className="border-t border-b border-white/10 py-3 flex flex-col gap-2">
             {!appliedCoupon ? (
-              <form onSubmit={handleApplyCoupon} className="flex gap-2">
+              <form onSubmit={handleApplyCouponSubmit} className="flex gap-2">
                 <div className="relative flex-1">
                   <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
@@ -703,7 +781,7 @@ export default function CheckoutPage() {
                 <button
                   type="submit"
                   disabled={couponLoading || !couponCodeInput.trim()}
-                  className="bg-yellow-400 hover:bg-yellow-300 text-black font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition-all disabled:opacity-50 active:scale-95 flex items-center gap-1.5 shrink-0"
+                  className="bg-yellow-400 hover:bg-yellow-300 text-black font-black px-4 py-2 rounded-xl text-xs uppercase tracking-wider transition-all disabled:opacity-50 active:scale-95 flex items-center gap-1.5 shrink-0 cursor-pointer"
                 >
                   {couponLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Aplicar"}
                 </button>
@@ -724,7 +802,7 @@ export default function CheckoutPage() {
                 </div>
                 <button
                   onClick={handleRemoveCoupon}
-                  className="text-gray-400 hover:text-red-400 p-1 transition-colors"
+                  className="text-gray-400 hover:text-red-400 p-1 transition-colors cursor-pointer"
                   title="Quitar descuento"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -781,13 +859,13 @@ export default function CheckoutPage() {
                 <div className="flex items-center gap-1">
                   <button 
                     onClick={handlePrevRelated}
-                    className="p-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-colors"
+                    className="p-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-colors cursor-pointer"
                   >
                     <ChevronLeft className="w-3.5 h-3.5" />
                   </button>
                   <button 
                     onClick={handleNextRelated}
-                    className="p-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-colors"
+                    className="p-1 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition-colors cursor-pointer"
                   >
                     <ChevronRight className="w-3.5 h-3.5" />
                   </button>
@@ -824,7 +902,7 @@ export default function CheckoutPage() {
                         <button
                           onClick={() => handleAddRelatedToCart(prod)}
                           disabled={isAdded}
-                          className={`p-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                          className={`p-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
                             isAdded 
                               ? "bg-green-500/20 text-green-400 border border-green-500/30" 
                               : "bg-yellow-400 hover:bg-yellow-300 text-black active:scale-95"
@@ -864,13 +942,8 @@ export default function CheckoutPage() {
             </a>
           </div>
 
-          <div className="border-t border-white/5 pt-3">
-            <p className="text-xs sm:text-sm font-medium text-gray-300 tracking-wide text-center leading-relaxed mt-4 opacity-90">
-              *Exención Franquicia Fiscal, Ley 7/2017, de 27 de diciembre, de Presupuestos Generales de la Comunidad Autónoma de Canarias*
-            </p>
-          </div>
-
         </div>
+
       </div>
     </div>
   )
