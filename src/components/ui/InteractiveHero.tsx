@@ -905,10 +905,20 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                     ) : (
                       <span className="text-gray-500 font-black uppercase text-sm">Sin Imagen</span>
                     )}
-                    <div className="absolute bottom-4 flex flex-col items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <span className="bg-black/80 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full flex items-center gap-2 backdrop-blur-sm shadow-xl">
-                        <RotateCcw className="w-3.5 h-3.5"/> Haz clic para girar
-                      </span>
+                    
+                    {/* BOTÓN VER DETALLES PERMANENTE */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsModalFlipped(!isModalFlipped);
+                        }}
+                        className="bg-[#0a1628]/90 hover:bg-yellow-400 text-yellow-400 hover:text-black border border-yellow-400/50 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 backdrop-blur-md shadow-[0_0_15px_rgba(250,204,21,0.25)] hover:shadow-[0_0_20px_rgba(250,204,21,0.6)] transition-all active:scale-95"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        VER DETALLES
+                      </button>
                     </div>
                   </div>
 
