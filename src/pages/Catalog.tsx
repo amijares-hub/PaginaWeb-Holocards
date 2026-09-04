@@ -44,6 +44,7 @@ interface Product {
   rating?: number;
   language?: string;
   description?: string;
+  content?: string;
   franchise?: string; 
   created_at?: string;
   is_upcoming?: boolean;
@@ -78,7 +79,7 @@ const isProductUpcoming = (p: Product): boolean => {
     return true;
   }
   
-  const fullText = `${p.name || ''} ${p.description || ''} ${p.set || ''} ${p.set_name || ''} ${p.franchise || ''} ${p.status || ''}`.toLowerCase();
+  const fullText = `${p.name || ''} ${p.description || ''} ${p.content || ''} ${p.set || ''} ${p.set_name || ''} ${p.franchise || ''} ${p.status || ''}`.toLowerCase();
   return fullText.includes('proximamente') || fullText.includes('próximamente') || fullText.includes('upcoming');
 };
 
@@ -496,7 +497,8 @@ export default function Catalog() {
           rating: 4.5 + Math.random() * 0.5,
           rarity: 'Rare',
           set: p.categories?.name || 'General',
-          description: p.description || ''
+          description: p.description || '',
+          content: p.content || ''
         };
       }));
     }
@@ -577,8 +579,9 @@ export default function Catalog() {
         const franchiseField = (product.franchise || '').toLowerCase();
         const setName = (product.set_name || product.set || '').toLowerCase();
         const description = (product.description || '').toLowerCase();
+        const content = (product.content || '').toLowerCase();
 
-        const combinedText = `${prodName} ${catName} ${gameName} ${gameType} ${franchiseField} ${setName} ${description}`;
+        const combinedText = `${prodName} ${catName} ${gameName} ${gameType} ${franchiseField} ${setName} ${description} ${content}`;
 
         const accKeywords = [
           'funda', 'sleeve', 'binder', 'carpeta', 'deck box', 'caja de mazo', 
@@ -943,7 +946,7 @@ export default function Catalog() {
                   </div>
                 </div>
 
-                {/* CARA TRASERA DEL MODAL: MUESTRA CARRUSEL DE IMÁGENES Y DESCRIPCIÓN */}
+                {/* CARA TRASERA DEL MODAL: CARRUSEL + DESCRIPCIÓN + CONTENIDO */}
                 <div 
                   className="absolute inset-0 bg-[#050914] rounded-2xl md:rounded-[2rem] overflow-hidden p-4 md:p-5 border border-cyan-500/50 shadow-[0_0_80px_rgba(6,182,212,0.4)] flex flex-col items-center justify-between text-center" 
                   style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
@@ -955,8 +958,8 @@ export default function Catalog() {
                     <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 shrink-0"/>
                   </div>
 
-                  {/* CARRUSEL DE IMÁGENES */}
-                  <div className="relative w-full h-36 sm:h-40 bg-transparent rounded-xl overflow-hidden border border-yellow-400/20 group my-2 flex items-center justify-center shrink-0">
+                  {/* CARRUSEL DE IMÁGENES INTACTO */}
+                  <div className="relative w-full flex-1 min-h-0 bg-transparent rounded-xl overflow-hidden border border-yellow-400/20 group my-1 flex items-center justify-center">
                     {selectedImageIndex > 0 && (
                       <div className="absolute top-2 left-2 z-30 pointer-events-none">
                         <span className="bg-[#F3B91C] text-black font-extrabold text-[8px] uppercase tracking-wider px-2 py-0.5 rounded-md shadow-xl border border-yellow-300">
@@ -1015,16 +1018,29 @@ export default function Catalog() {
                     )}
                   </div>
 
-                  {/* DESCRIPCIÓN DEL PRODUCTO */}
-                  <div className="w-full flex-1 overflow-y-auto text-left px-1 space-y-1 my-1 custom-scrollbar min-h-0">
-                    <span className="text-[10px] font-black uppercase text-yellow-400 tracking-wider block">
-                      DESCRIPCIÓN DEL PRODUCTO
-                    </span>
-                    <p className="text-gray-200 text-xs leading-relaxed font-medium">
-                      {activeProduct.description && activeProduct.description.trim() !== ''
-                        ? activeProduct.description
-                        : 'Sin descripción asignada para este producto.'}
-                    </p>
+                  {/* DESCRIPCIÓN Y CONTENIDO DEL PRODUCTO */}
+                  <div className="w-full shrink-0 max-h-32 overflow-y-auto text-left px-1 my-1 space-y-2 custom-scrollbar">
+                    <div>
+                      <span className="text-[10px] font-black uppercase text-yellow-400 tracking-wider block">
+                        DESCRIPCIÓN DEL PRODUCTO
+                      </span>
+                      <p className="text-gray-200 text-xs leading-relaxed font-medium">
+                        {activeProduct.description && activeProduct.description.trim() !== ''
+                          ? activeProduct.description
+                          : 'Sin descripción asignada para este producto.'}
+                      </p>
+                    </div>
+
+                    <div className="pt-1.5 border-t border-white/10">
+                      <span className="text-[10px] font-black uppercase text-cyan-400 tracking-wider block">
+                        CONTENIDO DEL PRODUCTO
+                      </span>
+                      <p className="text-gray-200 text-xs leading-relaxed font-medium">
+                        {activeProduct.content && activeProduct.content.trim() !== ''
+                          ? activeProduct.content
+                          : 'Sin contenido especificado para este producto.'}
+                      </p>
+                    </div>
                   </div>
 
                   {/* FOOTER DEL REVERSO */}

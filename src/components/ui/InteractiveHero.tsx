@@ -27,6 +27,7 @@ type ProductCard = {
   extraImages: string[];
   name: string; 
   description: string;
+  content?: string;
   set: string;
   gameId?: string;
   rating: number;
@@ -240,6 +241,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
           extraImages: extraImgs,
           name: p.name || p.title || p.producto || "Producto TCG",
           description: p.description || p.details || "",
+          content: p.content || "",
           set: typeof rawSet === 'string' ? rawSet : JSON.stringify(rawSet),
           gameId: p.game_id || p.gameId || null,
           rating: p.rating || 5.0,
@@ -910,7 +912,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                     </div>
                   </div>
 
-                  {/* CARA TRASERA DEL MODAL EN EL HERO: REEMPLAZO EXACTO DE LAS 3 CAJAS POR LA DESCRIPCIÓN */}
+                  {/* CARA TRASERA DEL MODAL EN EL HERO: CARRUSEL INTACTO + DESCRIPCIÓN + CONTENIDO */}
                   <div 
                     className="absolute inset-0 bg-[#050914] rounded-2xl md:rounded-[2rem] overflow-hidden p-4 sm:p-5 border border-yellow-400/50 shadow-[0_0_80px_rgba(250,204,21,0.3)] flex flex-col justify-between" 
                     style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
@@ -922,7 +924,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                       <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 shrink-0"/>
                     </div>
 
-                    {/* COMPONENTE DE IMÁGENES INTACTO DE ARRIBA (flex-1 min-h-0) SIN REDUCIR SU TAMAÑO */}
+                    {/* COMPONENTE DE IMÁGENES INTACTO */}
                     <div className="relative w-full flex-1 min-h-0 bg-transparent rounded-xl overflow-hidden border border-yellow-400/20 group flex items-center justify-center">
                       {selectedImageIndex > 0 && (
                         <div className="absolute top-2 left-2 z-30 pointer-events-none">
@@ -981,16 +983,29 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                       )}
                     </div>
 
-                    {/* SECCIÓN DE DESCRIPCIÓN QUE SUSTITUYE A LAS 3 CAJAS SIN ALTERAR EL TAMAÑO DE LA IMAGEN */}
-                    <div className="w-full shrink-0 max-h-28 overflow-y-auto text-left px-1 my-1 space-y-1 custom-scrollbar">
-                      <span className="text-[10px] font-black uppercase text-yellow-400 tracking-wider block">
-                        DESCRIPCIÓN DEL PRODUCTO
-                      </span>
-                      <p className="text-gray-200 text-xs leading-relaxed font-medium">
-                        {activeProduct.description && activeProduct.description.trim() !== ''
-                          ? activeProduct.description
-                          : 'Sin descripción asignada para este producto.'}
-                      </p>
+                    {/* DESCRIPCIÓN Y CONTENIDO DEL PRODUCTO SIEMPRE VISIBLES */}
+                    <div className="w-full shrink-0 max-h-32 overflow-y-auto text-left px-1 my-1 space-y-2 custom-scrollbar">
+                      <div>
+                        <span className="text-[10px] font-black uppercase text-yellow-400 tracking-wider block">
+                          DESCRIPCIÓN DEL PRODUCTO
+                        </span>
+                        <p className="text-gray-200 text-xs leading-relaxed font-medium">
+                          {activeProduct.description && activeProduct.description.trim() !== ''
+                            ? activeProduct.description
+                            : 'Sin descripción asignada para este producto.'}
+                        </p>
+                      </div>
+
+                      <div className="pt-1.5 border-t border-white/10">
+                        <span className="text-[10px] font-black uppercase text-cyan-400 tracking-wider block">
+                          CONTENIDO DEL PRODUCTO
+                        </span>
+                        <p className="text-gray-200 text-xs leading-relaxed font-medium">
+                          {activeProduct.content && activeProduct.content.trim() !== ''
+                            ? activeProduct.content
+                            : 'Sin contenido especificado para este producto.'}
+                        </p>
+                      </div>
                     </div>
 
                     <div className="shrink-0 text-center pt-2 border-t border-white/10">
