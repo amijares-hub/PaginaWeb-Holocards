@@ -72,7 +72,6 @@ export default function UserProfile() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Formulario de dirección y datos
   const [formData, setFormData] = useState({
     phone: '',
     address_street: '',
@@ -87,78 +86,90 @@ export default function UserProfile() {
 
   const initData = async () => {
     setLoading(true);
-    const { data: { user }, error } = await supabase.auth.getUser();
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
 
-    if (error || !user) {
-      navigate('/login');
-      return;
+      if (error || !user) {
+        localStorage.removeItem('sb-dopieoflkqfalnuvpwch-auth-token');
+        await supabase.auth.signOut();
+        navigate('/login', { replace: true });
+        return;
+      }
+
+      setUser(user);
+
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const initialName = profile?.full_name || user.user_metadata?.full_name || '';
+      setFullName(initialName);
+      setTempName(initialName);
+
+      if (profile) {
+        setFormData({
+          phone: profile.phone || '',
+          address_street: profile.address_street || profile.address || '',
+          address_city: profile.address_city || profile.city || '',
+          address_zip: profile.address_zip || profile.postal_code || profile.zip_code || '',
+          address_country: profile.address_country || profile.country || 'España'
+        });
+      }
+
+      await fetchOrders(user.id, user.email || '');
+    } catch (err) {
+      console.error("Error al inicializar sesión de usuario:", err);
+      navigate('/login', { replace: true });
+    } finally {
+      setLoading(false);
     }
-
-    setUser(user);
-
-    // Cargar perfil desde user_profiles
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    const initialName = profile?.full_name || user.user_metadata?.full_name || '';
-    setFullName(initialName);
-    setTempName(initialName);
-
-    if (profile) {
-      setFormData({
-        phone: profile.phone || '',
-        address_street: profile.address_street || profile.address || '',
-        address_city: profile.address_city || profile.city || '',
-        address_zip: profile.address_zip || profile.postal_code || profile.zip_code || '',
-        address_country: profile.address_country || profile.country || 'España'
-      });
-    }
-
-    await fetchOrders(user.id, user.email || '');
-    setLoading(false);
   };
 
   const fetchOrders = async (userId: string, email: string) => {
-    const { data: ordersData } = await supabase
-      .from('orders')
-      .select('id, created_at, total_amount, status')
-      .or(`user_id.eq.${userId},customer_email.eq.${email}`)
-      .order('created_at', { ascending: false });
+    try {
+      const { data: ordersData } = await supabase
+        .from('orders')
+        .select('id, created_at, total_amount, status')
+        .or(`user_id.eq.${userId},customer_email.eq.${email}`)
+        .order('created_at', { ascending: false });
 
-    if (!ordersData || ordersData.length === 0) {
+      if (!ordersData || ordersData.length === 0) {
+        setOrders([]);
+        return;
+      }
+
+      const orderIds = ordersData.map(o => o.id);
+
+      const [{ data: items }, { data: events }] = await Promise.all([
+        supabase.from('order_items').select('id, order_id, quantity, price_at_purchase, products(id, name, image_url)').in('order_id', orderIds),
+        supabase.from('order_tracking_events').select('*').in('order_id', orderIds)
+      ]);
+
+      const parsedOrders: Order[] = ordersData.map((order: any) => ({
+        ...order,
+        total_amount: Number(order.total_amount) || 0,
+        order_items: (items || []).filter(i => i.order_id === order.id).map((i: any) => ({
+          ...i,
+          products: Array.isArray(i.products) ? i.products[0] : i.products,
+          price_at_purchase: Number(i.price_at_purchase) || 0
+        }) as OrderItem),
+        order_tracking_events: (events || []).filter(e => e.order_id === order.id).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      }));
+
+      setOrders(parsedOrders);
+
+      if (orderIdFromUrl) {
+        const match = parsedOrders.find(o => o.id === orderIdFromUrl);
+        if (match) setSelectedOrder(match);
+        else setSelectedOrder(parsedOrders[0]);
+      } else if (parsedOrders.length > 0) {
+        setSelectedOrder(parsedOrders[0]);
+      }
+    } catch (err) {
+      console.error("Error al cargar pedidos del usuario:", err);
       setOrders([]);
-      return;
-    }
-
-    const orderIds = ordersData.map(o => o.id);
-
-    const [{ data: items }, { data: events }] = await Promise.all([
-      supabase.from('order_items').select('id, order_id, quantity, price_at_purchase, products(id, name, image_url)').in('order_id', orderIds),
-      supabase.from('order_tracking_events').select('*').in('order_id', orderIds)
-    ]);
-
-    const parsedOrders: Order[] = ordersData.map((order: any) => ({
-      ...order,
-      total_amount: Number(order.total_amount) || 0,
-      order_items: (items || []).filter(i => i.order_id === order.id).map((i: any) => ({
-        ...i,
-        products: Array.isArray(i.products) ? i.products[0] : i.products,
-        price_at_purchase: Number(i.price_at_purchase) || 0
-      }) as OrderItem),
-      order_tracking_events: (events || []).filter(e => e.order_id === order.id).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    }));
-
-    setOrders(parsedOrders);
-
-    if (orderIdFromUrl) {
-      const match = parsedOrders.find(o => o.id === orderIdFromUrl);
-      if (match) setSelectedOrder(match);
-      else setSelectedOrder(parsedOrders[0]);
-    } else if (parsedOrders.length > 0) {
-      setSelectedOrder(parsedOrders[0]);
     }
   };
 
@@ -169,12 +180,10 @@ export default function UserProfile() {
     const cleanName = tempName.trim();
 
     try {
-      // 1. Guardar en metadatos Auth de Supabase (Siempre seguro)
       await supabase.auth.updateUser({
         data: { full_name: cleanName }
       });
 
-      // 2. Intentar UPDATE en user_profiles
       const { data, error: updateErr } = await supabase
         .from('user_profiles')
         .update({ full_name: cleanName })
@@ -211,7 +220,6 @@ export default function UserProfile() {
     };
 
     try {
-      // 1. Intentar actualización vía UPDATE por ID
       const { data, error: updateErr } = await supabase
         .from('user_profiles')
         .update(payload)
@@ -220,7 +228,6 @@ export default function UserProfile() {
 
       let error = updateErr;
 
-      // 2. Fallback a UPSERT si la fila aún no existía
       if (!error && (!data || data.length === 0)) {
         const { error: upsertErr } = await supabase
           .from('user_profiles')
@@ -233,8 +240,6 @@ export default function UserProfile() {
         error = upsertErr;
       }
 
-      setSavingProfile(false);
-
       if (error) {
         console.error("Error Supabase user_profiles:", error);
         alert('Error al guardar datos de envío: ' + error.message);
@@ -242,14 +247,16 @@ export default function UserProfile() {
         alert('¡Datos de envío guardados correctamente!');
       }
     } catch (err: any) {
-      setSavingProfile(false);
       console.error("Excepción al guardar perfil:", err);
       alert('Excepción al guardar datos: ' + err.message);
+    } finally {
+      setSavingProfile(false);
     }
   };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem('sb-dopieoflkqfalnuvpwch-auth-token');
     navigate('/login');
   };
 
@@ -289,7 +296,6 @@ export default function UserProfile() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
         
-        {/* Cabecera de usuario con Botón de Edición */}
         <div className="bg-[#0a1628] border border-cyan-900/40 rounded-3xl p-6 sm:p-8 mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 shadow-xl">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#F3B91C] to-yellow-200 text-black font-black text-2xl flex items-center justify-center shadow-lg shadow-yellow-500/20 shrink-0">
@@ -356,7 +362,6 @@ export default function UserProfile() {
           </button>
         </div>
 
-        {/* Pestañas de navegación */}
         <div className="flex border-b border-white/10 mb-8 overflow-x-auto custom-scrollbar">
           <button
             onClick={() => setActiveTab('orders')}
@@ -392,7 +397,6 @@ export default function UserProfile() {
           </button>
         </div>
 
-        {/* CONTENIDO 1: MIS PEDIDOS */}
         {activeTab === 'orders' && (
           <div>
             {orders.length === 0 ? (
@@ -521,7 +525,6 @@ export default function UserProfile() {
           </div>
         )}
 
-        {/* CONTENIDO 2: DIRECCIÓN DE ENVÍO */}
         {activeTab === 'address' && (
           <div className="max-w-2xl bg-[#0a1628] border border-white/10 rounded-3xl p-6 sm:p-8">
             <h2 className="text-lg font-black text-white mb-1">Datos de Envío habituales</h2>
@@ -595,7 +598,6 @@ export default function UserProfile() {
           </div>
         )}
 
-        {/* CONTENIDO 3: SEGURIDAD */}
         {activeTab === 'account' && (
           <div className="max-w-2xl bg-[#0a1628] border border-white/10 rounded-3xl p-6 sm:p-8 space-y-6">
             <div>
