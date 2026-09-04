@@ -38,8 +38,10 @@ type RelatedProduct = {
 type AppliedCoupon = {
   id: string
   code: string
-  discount_type: 'percentage' | 'fixed'
+  discount_type: 'percentage' | 'fixed' | 'free_shipping'
   discount_value: number
+  calculated_discount?: number
+  is_free_shipping?: boolean
 }
 
 const CheckoutForm = ({ 
@@ -197,7 +199,6 @@ export default function CheckoutPage() {
           }));
         }
 
-        // Si el usuario ya está registrado y tiene su dirección guardada, salta directo a Stripe (Paso 3)
         if (address && city && postalCode) {
           setStep("payment");
         }
@@ -256,6 +257,9 @@ export default function CheckoutPage() {
 
   const discountAmount = useMemo(() => {
     if (!appliedCoupon) return 0
+    if (appliedCoupon.is_free_shipping || appliedCoupon.discount_type === 'free_shipping') {
+      return 0
+    }
     if (appliedCoupon.discount_type === 'percentage') {
       return (subtotal * appliedCoupon.discount_value) / 100
     }
@@ -263,9 +267,10 @@ export default function CheckoutPage() {
   }, [subtotal, appliedCoupon])
 
   const subtotalWithDiscount = Math.max(0, subtotal - discountAmount)
-  const shippingCost = subtotalWithDiscount >= 100 || subtotalWithDiscount === 0 ? 0 : 4.95
+  const isFreeShippingByCoupon = appliedCoupon?.is_free_shipping || appliedCoupon?.discount_type === 'free_shipping'
+  const shippingCost = (isFreeShippingByCoupon || subtotalWithDiscount >= 100 || subtotalWithDiscount === 0) ? 0 : 4.95
   const freeShippingThreshold = 100.00
-  const remainingForFreeShipping = Math.max(0, freeShippingThreshold - subtotalWithDiscount)
+  const remainingForFreeShipping = isFreeShippingByCoupon ? 0 : Math.max(0, freeShippingThreshold - subtotalWithDiscount)
   const total = subtotalWithDiscount + shippingCost
 
   useEffect(() => {
@@ -310,43 +315,34 @@ export default function CheckoutPage() {
     try {
       if (!supabase) throw new Error("Conexión no disponible")
 
-      const { data, error } = await supabase
-        .from('coupons')
-        .select('*')
-        .eq('code', cleanCode)
-        .eq('is_active', true)
-        .maybeSingle()
+      // Validación con la función RPC para consultar promo_codes
+      const { data, error } = await supabase.rpc('validate_and_apply_promo_code', {
+        p_code: cleanCode,
+        p_user_id: userProfile?.id || null,
+        p_order_amount: subtotal,
+        p_shipping_cost: 4.95
+      })
 
-      if (error || !data) {
-        setCouponError("Código inválido o expirado")
-        return
-      }
+      if (error) throw error
 
-      if (data.expires_at && new Date(data.expires_at) < new Date()) {
-        setCouponError("Este código ha expirado")
-        return
-      }
-
-      if (data.min_purchase && subtotal < parseFloat(data.min_purchase)) {
-        setCouponError(`Compra mínima de ${parseFloat(data.min_purchase).toFixed(2)}€ requerida`)
-        return
-      }
-
-      if (data.max_uses !== null && data.used_count >= data.max_uses) {
-        setCouponError("Este código ha alcanzado el límite de usos")
+      if (!data || !data.valid) {
+        setCouponError(data?.message || "Código inválido o expirado")
         return
       }
 
       setAppliedCoupon({
-        id: String(data.id),
+        id: data.promo_id,
         code: data.code,
-        discount_type: data.discount_type,
-        discount_value: parseFloat(data.discount_value)
+        discount_type: data.discount_type === 'free_shipping' ? 'free_shipping' : (data.discount_type === 'percentage' ? 'percentage' : 'fixed'),
+        discount_value: Number(data.discount_value) || 0,
+        calculated_discount: Number(data.calculated_discount) || 0,
+        is_free_shipping: Boolean(data.is_free_shipping)
       })
 
       setCouponCodeInput("")
       setCouponError(null)
     } catch (err: any) {
+      console.error("Error al validar código:", err)
       setCouponError(err.message || "Error al validar el código")
     } finally {
       setCouponLoading(false)
@@ -548,7 +544,7 @@ export default function CheckoutPage() {
                       placeholder="Ej: 35001"
                       value={shippingData.postalCode}
                       onChange={e => setShippingData({...shippingData, postalCode: e.target.value})}
-                      className="bg-[#030c1a] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-yellow-400"
+                      className="bg-[#030c1a] border border-white/10 rounded-2xl px-4 py-3 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-yellow-400 font-mono"
                     />
                   </div>
                 </div>
@@ -632,7 +628,6 @@ export default function CheckoutPage() {
                   key={item.id}
                   className="flex items-center gap-3 bg-[#0a1628]/80 rounded-2xl p-3 border border-white/10 shadow-lg"
                 >
-                  {/* Imagen */}
                   <div className="w-14 h-14 bg-[#050914] rounded-xl overflow-hidden shrink-0 flex items-center justify-center p-1 border border-white/5">
                     {item.image_url ? (
                       <img src={item.image_url} alt={item.name} className="w-full h-full object-contain" />
@@ -641,13 +636,11 @@ export default function CheckoutPage() {
                     )}
                   </div>
 
-                  {/* Info + Controles */}
                   <div className="flex-1 min-w-0 pr-1">
                     <p className="text-white text-xs font-bold uppercase truncate leading-tight tracking-wide">
                       {item.name}
                     </p>
 
-                    {/* Selector de cantidad */}
                     <div className="flex items-center gap-2 mt-2">
                       <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5">
                         <button
@@ -671,7 +664,6 @@ export default function CheckoutPage() {
                         </button>
                       </div>
 
-                      {/* Botón eliminar */}
                       <button
                         type="button"
                         onClick={() => removeItem(item.id)}
@@ -683,7 +675,6 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  {/* Precio total del ítem */}
                   <div className="text-right shrink-0">
                     <span className="text-white font-black text-sm tracking-tight">
                       {itemTotal.toFixed(2)}€
@@ -704,7 +695,7 @@ export default function CheckoutPage() {
                     placeholder="CÓDIGO PROMOCIONAL"
                     value={couponCodeInput}
                     onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
-                    className="w-full bg-[#030c1a] border border-white/10 rounded-xl pl-8 pr-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 uppercase"
+                    className="w-full bg-[#030c1a] border border-white/10 rounded-xl pl-8 pr-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 uppercase font-mono tracking-wider"
                   />
                 </div>
                 <button
@@ -716,11 +707,17 @@ export default function CheckoutPage() {
                 </button>
               </form>
             ) : (
-              <div className="flex items-center justify-between bg-green-500/10 border border-green-500/30 rounded-xl px-3 py-2">
+              <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-3 py-2">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-400" />
-                  <span className="text-xs font-black uppercase text-green-400 tracking-wider">
-                    {appliedCoupon.code} (-{appliedCoupon.discount_type === 'percentage' ? `${appliedCoupon.discount_value}%` : `${appliedCoupon.discount_value}€`})
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span className="text-xs font-black uppercase text-emerald-400 tracking-wider font-mono">
+                    {appliedCoupon.code} ({
+                      appliedCoupon.is_free_shipping || appliedCoupon.discount_type === 'free_shipping'
+                        ? 'Envío Gratis 🚚'
+                        : appliedCoupon.discount_type === 'percentage' 
+                          ? `-${appliedCoupon.discount_value}%` 
+                          : `-${appliedCoupon.discount_value}€`
+                    })
                   </span>
                 </div>
                 <button
@@ -744,8 +741,8 @@ export default function CheckoutPage() {
               <span className="font-black text-white">{subtotal.toFixed(2)}€</span>
             </div>
 
-            {appliedCoupon && (
-              <div className="flex justify-between text-green-400 font-bold">
+            {appliedCoupon && !isFreeShippingByCoupon && (
+              <div className="flex justify-between text-emerald-400 font-bold">
                 <span className="uppercase">Descuento ({appliedCoupon.code})</span>
                 <span>-{discountAmount.toFixed(2)}€</span>
               </div>
