@@ -434,25 +434,14 @@ export default function CheckoutPage() {
           setContactData({ email, phone });
 
           if (profile) {
-            setShippingData(prev => {
-              const updated = {
-                ...prev,
-                firstName: profile.full_name?.split(' ')[0] || prev.firstName,
-                lastName: profile.full_name?.split(' ').slice(1).join(' ') || prev.lastName,
-                address: address || prev.address,
-                city: city || prev.city,
-                postalCode: postalCode || prev.postalCode,
-              };
-
-              if (postalCode && postalCode.trim().length === 5) {
-                const detected = getCanaryLocationByZip(postalCode);
-                if (detected) {
-                  if (detected.municipality) updated.city = detected.municipality;
-                  if (detected.island) updated.province = detected.island;
-                }
-              }
-              return updated;
-            });
+            setShippingData(prev => ({
+              ...prev,
+              firstName: profile.full_name?.split(' ')[0] || prev.firstName,
+              lastName: profile.full_name?.split(' ').slice(1).join(' ') || prev.lastName,
+              address: address || prev.address,
+              city: city || prev.city,
+              postalCode: postalCode || prev.postalCode,
+            }));
           }
 
           if (address && city && postalCode) {
@@ -466,19 +455,30 @@ export default function CheckoutPage() {
     fetchUserAndPreFill();
   }, []);
 
+  // Autodetección reactiva siempre que cambie el código postal
+  useEffect(() => {
+    const zip = shippingData.postalCode?.trim() || "";
+    if (zip.length === 5) {
+      const detected = getCanaryLocationByZip(zip);
+      if (detected) {
+        setShippingData(prev => ({
+          ...prev,
+          city: detected.municipality || prev.city,
+          province: detected.island || prev.province
+        }));
+      }
+    }
+  }, [shippingData.postalCode]);
+
   const handlePostalCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newZip = e.target.value;
-    setShippingData(prev => {
-      const updated = { ...prev, postalCode: newZip };
-      if (newZip.trim().length === 5) {
-        const detected = getCanaryLocationByZip(newZip);
-        if (detected) {
-          if (detected.municipality) updated.city = detected.municipality;
-          if (detected.island) updated.province = detected.island;
-        }
-      }
-      return updated;
-    });
+    const detected = getCanaryLocationByZip(newZip);
+    setShippingData(prev => ({
+      ...prev,
+      postalCode: newZip,
+      city: newZip.trim().length === 5 && detected?.municipality ? detected.municipality : prev.city,
+      province: newZip.trim().length === 5 && detected?.island ? detected.island : prev.province
+    }));
   };
 
   const validateCouponCode = useCallback(async (codeToValidate: string) => {
@@ -773,10 +773,13 @@ export default function CheckoutPage() {
             <VerificationForm 
               userProfile={userProfile}
               onProceedToPayment={(data: any) => {
+                const zip = data.zipCode || "";
+                const detected = getCanaryLocationByZip(zip);
                 setShippingData(prev => ({
                   ...prev,
-                  postalCode: data.zipCode,
-                  province: data.island
+                  postalCode: zip,
+                  city: detected?.municipality || prev.city,
+                  province: detected?.island || data.island || prev.province
                 }));
                 setStep("contact");
               }}
