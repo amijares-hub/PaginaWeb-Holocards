@@ -568,8 +568,7 @@ export default function CheckoutPage() {
       } else {
         setCouponError(err.message || "Código no válido")
       }
-    } font-medium
-    finally {
+    } finally {
       setCouponLoading(false)
     }
   }, [subtotal, userProfile]);
