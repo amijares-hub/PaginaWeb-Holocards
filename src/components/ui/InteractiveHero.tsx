@@ -8,9 +8,6 @@ import {
   Star, 
   RotateCcw, 
   X, 
-  Truck,
-  ShieldCheck,
-  Award,
   Sparkles,
   ChevronDown,
   ChevronLeft,
@@ -913,8 +910,9 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                     </div>
                   </div>
 
+                  {/* CARA TRASERA DEL MODAL EN EL HERO: REEMPLAZO EXACTO DE LAS 3 CAJAS POR LA DESCRIPCIÓN */}
                   <div 
-                    className="absolute inset-0 bg-transparent rounded-2xl md:rounded-[2rem] overflow-hidden p-4 sm:p-5 border border-yellow-400/50 shadow-[0_0_80px_rgba(250,204,21,0.3)] flex flex-col gap-3" 
+                    className="absolute inset-0 bg-[#050914] rounded-2xl md:rounded-[2rem] overflow-hidden p-4 sm:p-5 border border-yellow-400/50 shadow-[0_0_80px_rgba(250,204,21,0.3)] flex flex-col justify-between" 
                     style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
                   >
                     <div className="flex items-center justify-between border-b border-white/10 pb-2 shrink-0">
@@ -924,6 +922,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                       <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 shrink-0"/>
                     </div>
 
+                    {/* COMPONENTE DE IMÁGENES INTACTO DE ARRIBA (flex-1 min-h-0) SIN REDUCIR SU TAMAÑO */}
                     <div className="relative w-full flex-1 min-h-0 bg-transparent rounded-xl overflow-hidden border border-yellow-400/20 group flex items-center justify-center">
                       {selectedImageIndex > 0 && (
                         <div className="absolute top-2 left-2 z-30 pointer-events-none">
@@ -982,39 +981,19 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                       )}
                     </div>
 
-                    <div className="flex flex-col gap-1.5 shrink-0">
-                      <div className="flex items-center gap-2.5 bg-yellow-400/5 border border-yellow-400/15 rounded-lg px-2.5 py-1.5">
-                        <div className="p-1 rounded-md bg-yellow-400/10 text-yellow-400 shrink-0">
-                          <Truck className="w-3.5 h-3.5"/>
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-black text-white leading-tight">Envíos solo a Canarias</p>
-                          <p className="text-[8.5px] text-gray-400 font-light leading-tight">Entregas rápidas sin aduanas ni sorpresas.</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2.5 bg-yellow-400/5 border border-yellow-400/15 rounded-lg px-2.5 py-1.5">
-                        <div className="p-1 rounded-md bg-yellow-400/10 text-yellow-400 shrink-0">
-                          <ShieldCheck className="w-3.5 h-3.5"/>
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-black text-white leading-tight">Compra 100% segura</p>
-                          <p className="text-[8.5px] text-gray-400 font-light leading-tight">Tus datos y pagos están protegidos.</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2.5 bg-yellow-400/5 border border-yellow-400/15 rounded-lg px-2.5 py-1.5">
-                        <div className="p-1 rounded-md bg-yellow-400/10 text-yellow-400 shrink-0">
-                          <Award className="w-3.5 h-3.5"/>
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-black text-white leading-tight">Productos originales</p>
-                          <p className="text-[8.5px] text-gray-400 font-light leading-tight">Todos nuestros productos son oficiales.</p>
-                        </div>
-                      </div>
+                    {/* SECCIÓN DE DESCRIPCIÓN QUE SUSTITUYE A LAS 3 CAJAS SIN ALTERAR EL TAMAÑO DE LA IMAGEN */}
+                    <div className="w-full shrink-0 max-h-28 overflow-y-auto text-left px-1 my-1 space-y-1 custom-scrollbar">
+                      <span className="text-[10px] font-black uppercase text-yellow-400 tracking-wider block">
+                        DESCRIPCIÓN DEL PRODUCTO
+                      </span>
+                      <p className="text-gray-200 text-xs leading-relaxed font-medium">
+                        {activeProduct.description && activeProduct.description.trim() !== ''
+                          ? activeProduct.description
+                          : 'Sin descripción asignada para este producto.'}
+                      </p>
                     </div>
 
-                    <div className="shrink-0 text-center">
+                    <div className="shrink-0 text-center pt-2 border-t border-white/10">
                       <span className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 text-gray-400 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full hover:text-white transition-colors">
                         <RotateCcw className="w-3 h-3"/> Volver a girar
                       </span>

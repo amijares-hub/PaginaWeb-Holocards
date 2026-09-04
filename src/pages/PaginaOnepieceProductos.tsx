@@ -115,6 +115,7 @@ export default function PaginaOnepieceProductos() {
                     price={`${priceNum.toFixed(2)}€`} 
                     badge={p.badge} 
                     image={p.image_url || p.image} 
+                    description={p.description}
                   />
                 </div>
               );
@@ -137,6 +138,7 @@ export default function PaginaOnepieceProductos() {
                     info={p.categories?.name || p.info || "One Piece TCG"} 
                     price={`${priceNum.toFixed(2)}€`} 
                     image={p.image_url || p.image} 
+                    description={p.description}
                   />
                 </div>
               );

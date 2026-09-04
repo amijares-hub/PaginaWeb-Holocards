@@ -496,7 +496,7 @@ export default function Catalog() {
           rating: 4.5 + Math.random() * 0.5,
           rarity: 'Rare',
           set: p.categories?.name || 'General',
-          description: p.description || 'Pieza de colección de alta demanda. Detalles exclusivos y acabado premium para los jugadores y coleccionistas más exigentes.'
+          description: p.description || ''
         };
       }));
     }
@@ -569,7 +569,6 @@ export default function Catalog() {
         return pLang.includes(sLang) || sLang.includes(pLang);
       });
 
-      // LÓGICA DE FRANQUICIA HERMÉTICA Y RESCATE DE PRÓXIMAMENTE
       const matchesFranchise = selectedFranchises.length === 0 || selectedFranchises.some(franchiseId => {
         const prodName = (product.name || '').toLowerCase();
         const catName = (product.categories?.name || '').toLowerCase();
@@ -579,10 +578,8 @@ export default function Catalog() {
         const setName = (product.set_name || product.set || '').toLowerCase();
         const description = (product.description || '').toLowerCase();
 
-        // Ahora combinamos TODO, incluyendo la descripción y el set (vital para productos incompletos)
         const combinedText = `${prodName} ${catName} ${gameName} ${gameType} ${franchiseField} ${setName} ${description}`;
 
-        // 1. Detección Estricta de Accesorios
         const accKeywords = [
           'funda', 'sleeve', 'binder', 'carpeta', 'deck box', 'caja de mazo', 
           'toploader', 'playmat', 'tapete', 'album', 'álbum', 'hojas', 'accesorio', 'dice', 'dados', 'protector', 'portadeck'
@@ -594,16 +591,12 @@ export default function Catalog() {
           return isAccessoryProduct;
         }
 
-        // Si filtramos por Pokemon/Magic, los accesorios quedan excluidos y ocultos
         if (isAccessoryProduct) {
           return false; 
         }
 
-        // 2. Filtro Pokémon
         if (franchiseId === 'pokemon') {
           if (gameName.includes('magic') || gameName.includes('mtg') || franchiseField.includes('magic')) return false;
-          
-          // Pase Automático: Si en la BD marcaste su franquicia/juego como pokemon, siempre sale.
           if (franchiseField.includes('pokemon') || franchiseField.includes('pokémon') || gameType.includes('pokemon') || gameName.includes('pokemon') || gameName.includes('pokémon')) return true;
 
           const pkmKeywords = [
@@ -616,11 +609,8 @@ export default function Catalog() {
           return pkmKeywords.some(kw => combinedText.includes(kw));
         }
 
-        // 3. Filtro Magic
         if (franchiseId === 'magic') {
           if (gameName.includes('pokemon') || gameName.includes('pokémon') || franchiseField.includes('pokemon')) return false;
-
-          // Pase Automático: Si en la BD marcaste su franquicia/juego como magic, siempre sale.
           if (franchiseField.includes('magic') || franchiseField.includes('mtg') || gameType.includes('magic') || gameName.includes('magic') || gameName.includes('mtg')) return true;
 
           const magicKeywords = [
@@ -929,6 +919,7 @@ export default function Catalog() {
                 animate={{ rotateY: isModalFlipped ? 180 : 0 }}
                 transition={{ duration: 0.7, type: "spring", stiffness: 200, damping: 25 }}
               >
+                {/* CARA FRONTAL DEL MODAL */}
                 <div 
                   className="absolute inset-0 bg-[#0a1628] rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_0_80px_rgba(6,182,212,0.4)] border border-cyan-500/50 flex items-center justify-center p-4 md:p-8" 
                   style={{ backfaceVisibility: "hidden" }}
@@ -952,8 +943,9 @@ export default function Catalog() {
                   </div>
                 </div>
 
+                {/* CARA TRASERA DEL MODAL: MUESTRA CARRUSEL DE IMÁGENES Y DESCRIPCIÓN */}
                 <div 
-                  className="absolute inset-0 bg-[#050914] rounded-2xl md:rounded-[2rem] overflow-hidden p-5 md:p-6 border border-cyan-500/50 shadow-[0_0_80px_rgba(6,182,212,0.4)] flex flex-col items-center justify-between text-center" 
+                  className="absolute inset-0 bg-[#050914] rounded-2xl md:rounded-[2rem] overflow-hidden p-4 md:p-5 border border-cyan-500/50 shadow-[0_0_80px_rgba(6,182,212,0.4)] flex flex-col items-center justify-between text-center" 
                   style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
                 >
                   <div className="w-full flex items-center justify-between border-b border-white/10 pb-2 shrink-0">
@@ -963,11 +955,12 @@ export default function Catalog() {
                     <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 shrink-0"/>
                   </div>
 
-                  <div className="relative w-full flex-1 min-h-0 bg-transparent rounded-xl overflow-hidden border border-yellow-400/20 group my-3 flex items-center justify-center">
+                  {/* CARRUSEL DE IMÁGENES */}
+                  <div className="relative w-full h-36 sm:h-40 bg-transparent rounded-xl overflow-hidden border border-yellow-400/20 group my-2 flex items-center justify-center shrink-0">
                     {selectedImageIndex > 0 && (
                       <div className="absolute top-2 left-2 z-30 pointer-events-none">
-                        <span className="bg-[#F3B91C] text-black font-extrabold text-[9px] uppercase tracking-wider px-2.5 py-1 rounded-lg shadow-xl border border-yellow-300">
-                          ⭐ Mejores cartas de la colección
+                        <span className="bg-[#F3B91C] text-black font-extrabold text-[8px] uppercase tracking-wider px-2 py-0.5 rounded-md shadow-xl border border-yellow-300">
+                          ⭐ Mejores cartas
                         </span>
                       </div>
                     )}
@@ -990,9 +983,9 @@ export default function Catalog() {
                             e.stopPropagation();
                             setSelectedImageIndex(prev => prev > 0 ? prev - 1 : allProductImages.length - 1);
                           }}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-[#F3B91C] hover:text-black text-white p-1.5 rounded-full transition-all z-20 backdrop-blur-sm"
+                          className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-[#F3B91C] hover:text-black text-white p-1 rounded-full transition-all z-20 backdrop-blur-sm"
                         >
-                          <ChevronLeft className="w-4 h-4"/>
+                          <ChevronLeft className="w-3.5 h-3.5"/>
                         </button>
 
                         <button
@@ -1001,12 +994,12 @@ export default function Catalog() {
                             e.stopPropagation();
                             setSelectedImageIndex(prev => prev < allProductImages.length - 1 ? prev + 1 : 0);
                           }}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-[#F3B91C] hover:text-black text-white p-1.5 rounded-full transition-all z-20 backdrop-blur-sm"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/70 hover:bg-[#F3B91C] hover:text-black text-white p-1 rounded-full transition-all z-20 backdrop-blur-sm"
                         >
-                          <ChevronRight className="w-4 h-4"/>
+                          <ChevronRight className="w-3.5 h-3.5"/>
                         </button>
 
-                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-20 bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                        <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1 z-20 bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-sm">
                           {allProductImages.map((_, idx) => (
                             <button
                               key={idx}
@@ -1022,17 +1015,30 @@ export default function Catalog() {
                     )}
                   </div>
 
-                  <div className="w-full flex flex-col items-center gap-2.5 shrink-0">
-                    <p className="text-white font-black text-sm uppercase tracking-tight line-clamp-1">
+                  {/* DESCRIPCIÓN DEL PRODUCTO */}
+                  <div className="w-full flex-1 overflow-y-auto text-left px-1 space-y-1 my-1 custom-scrollbar min-h-0">
+                    <span className="text-[10px] font-black uppercase text-yellow-400 tracking-wider block">
+                      DESCRIPCIÓN DEL PRODUCTO
+                    </span>
+                    <p className="text-gray-200 text-xs leading-relaxed font-medium">
+                      {activeProduct.description && activeProduct.description.trim() !== ''
+                        ? activeProduct.description
+                        : 'Sin descripción asignada para este producto.'}
+                    </p>
+                  </div>
+
+                  {/* FOOTER DEL REVERSO */}
+                  <div className="w-full flex flex-col items-center gap-2 shrink-0 pt-2 border-t border-white/10">
+                    <p className="text-white font-black text-xs sm:text-sm uppercase tracking-tight line-clamp-1">
                       {activeProduct.name}
                     </p>
 
                     {isProductUpcoming(activeProduct) ? (
                       <button 
                         disabled
-                        className="w-full bg-white/5 border border-yellow-500/30 text-yellow-400 font-extrabold uppercase tracking-widest py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 cursor-not-allowed select-none"
+                        className="w-full bg-white/5 border border-yellow-500/30 text-yellow-400 font-extrabold uppercase tracking-widest py-2 rounded-xl text-xs flex items-center justify-center gap-2 cursor-not-allowed select-none"
                       >
-                        <Lock className="w-4 h-4 text-yellow-400" /> PRÓXIMAMENTE
+                        <Lock className="w-3.5 h-3.5 text-yellow-400" /> PRÓXIMAMENTE
                       </button>
                     ) : (
                       <button 
@@ -1048,7 +1054,7 @@ export default function Catalog() {
                       </button>
                     )}
 
-                    <span className="bg-white/5 border border-white/10 text-muted-foreground text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1.5 hover:text-white transition-colors">
+                    <span className="bg-white/5 border border-white/10 text-muted-foreground text-[9px] font-black uppercase tracking-widest px-3 py-0.5 rounded-full flex items-center gap-1 hover:text-white transition-colors">
                       <RotateCcw className="w-3 h-3" /> Volver a girar
                     </span>
                   </div>
