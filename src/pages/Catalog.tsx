@@ -455,27 +455,36 @@ export default function Catalog() {
 
   const fetchData = async () => {
     setLoading(true);
-    const { data: cats } = await supabase.from('categories').select('*').order('name');
-    if (cats) {
-      const uniqueMap = new Map<string, CategoryItem>();
-      cats.forEach((c: any) => {
-        const normName = (c.name || '').trim().toUpperCase();
-        if (!normName) return;
-        if (!uniqueMap.has(normName)) {
-          uniqueMap.set(normName, { id: c.id, name: c.name.trim(), allIds: [c.id] });
-        } else {
-          uniqueMap.get(normName)!.allIds.push(c.id);
-        }
-      });
-      setCategories(Array.from(uniqueMap.values()));
-    }
+    try {
+      const { data: cats } = await supabase.from('categories').select('*').order('name');
+      if (cats) {
+        const uniqueMap = new Map<string, CategoryItem>();
+        cats.forEach((c: any) => {
+          const normName = (c.name || '').trim().toUpperCase();
+          if (!normName) return;
+          if (!uniqueMap.has(normName)) {
+            uniqueMap.set(normName, { id: c.id, name: c.name.trim(), allIds: [c.id] });
+          } else {
+            uniqueMap.get(normName)!.allIds.push(c.id);
+          }
+        });
+        setCategories(Array.from(uniqueMap.values()));
+      }
 
-    const { data: prods, error } = await supabase
-      .from('products')
-      .select('*, categories(name), games(name)');
-    
-    if (prods && !error) {
-      setProducts(prods.map(p => {
+      // Consulta Resiliente Dual
+      let prodsData: any[] = [];
+      const { data: relationalData, error: relErr } = await supabase
+        .from('products')
+        .select('*, categories(name), games(name)');
+
+      if (!relErr && relationalData && relationalData.length > 0) {
+        prodsData = relationalData;
+      } else {
+        const { data: plainData } = await supabase.from('products').select('*');
+        prodsData = plainData || [];
+      }
+
+      setProducts(prodsData.map(p => {
         const extraImgs: string[] = [];
         const mainImg = p.image_url || p.img_url || (Array.isArray(p.images) ? p.images[0] : '');
         
@@ -494,15 +503,18 @@ export default function Catalog() {
           image_url: mainImg,
           extra_images: extraImgs,
           base_price: Number(getRealPrice(p)) || 0,
-          rating: 4.5 + Math.random() * 0.5,
+          rating: 4.5,
           rarity: 'Rare',
-          set: p.categories?.name || 'General',
+          set: p.categories?.name || p.set || 'General',
           description: p.description || '',
           content: p.content || ''
         };
       }));
+    } catch (err) {
+      console.error("Error al cargar productos del catálogo:", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -552,10 +564,14 @@ export default function Catalog() {
         const selectedCat = categories.find(c => c.id === catId);
         if (!selectedCat) return false;
         
-        const prodCatName = (product.categories?.name || '').trim().toUpperCase();
-        const selCatName = selectedCat.name.trim().toUpperCase();
+        const prodCatId = String(product.category_id || '');
+        if (selectedCat.allIds.includes(prodCatId) || prodCatId === String(selectedCat.id)) return true;
+
+        const norm = (s: string) => s.toLowerCase().replace(/[\s\-\/_]/g, '');
+        const prodCatName = norm(product.categories?.name || '');
+        const selCatName = norm(selectedCat.name || '');
         
-        return selectedCat.allIds.includes(product.category_id) || (prodCatName === selCatName);
+        return prodCatName && selCatName && (prodCatName === selCatName || prodCatName.includes(selCatName) || selCatName.includes(prodCatName));
       });
 
       const matchesPrice = product.base_price >= priceRange[0] && product.base_price <= priceRange[1];
@@ -563,58 +579,52 @@ export default function Catalog() {
       const matchesLanguage = selectedLanguages.length === 0 || selectedLanguages.some(selLang => {
         const pLang = String(product.language || '').toLowerCase().trim();
         const sLang = selLang.toLowerCase().trim();
-        if (sLang === 'español' || sLang === 'es') return pLang.includes('es') || pLang.includes('spa');
-        if (sLang === 'inglés' || sLang === 'gb' || sLang === 'en') return pLang.includes('gb') || pLang.includes('en') || pLang.includes('ing');
-        if (sLang === 'japonés' || sLang === 'jp') return pLang.includes('jp') || pLang.includes('jap');
-        if (sLang === 'chino' || sLang === 'cn') return pLang.includes('cn') || pLang.includes('chin');
-        if (sLang === 'coreano' || sLang === 'kr') return pLang.includes('kr') || pLang.includes('cor');
+        if (sLang === 'español' || sLang === 'es') return pLang.includes('es') || pLang.includes('spa') || pLang.includes('español');
+        if (sLang === 'inglés' || sLang === 'gb' || sLang === 'en') return pLang.includes('gb') || pLang.includes('en') || pLang.includes('ing') || pLang.includes('ingles') || pLang.includes('english');
+        if (sLang === 'japonés' || sLang === 'jp') return pLang.includes('jp') || pLang.includes('jap') || pLang.includes('japonés') || pLang.includes('japanese');
+        if (sLang === 'chino' || sLang === 'cn') return pLang.includes('cn') || pLang.includes('chin') || pLang.includes('chinese');
+        if (sLang === 'coreano' || sLang === 'kr') return pLang.includes('kr') || pLang.includes('cor') || pLang.includes('korean');
         return pLang.includes(sLang) || sLang.includes(pLang);
       });
 
       const matchesFranchise = selectedFranchises.length === 0 || selectedFranchises.some(franchiseId => {
-        const prodName = (product.name || '').toLowerCase();
-        const catName = (product.categories?.name || '').toLowerCase();
-        const gameName = (product.games?.name || '').toLowerCase();
-        const gameType = (product.game_type || '').toLowerCase();
-        const franchiseField = (product.franchise || '').toLowerCase();
-        const setName = (product.set_name || product.set || '').toLowerCase();
-        const description = (product.description || '').toLowerCase();
-        const content = (product.content || '').toLowerCase();
+        const pName = (product.name || '').toLowerCase();
+        const pCat = (product.categories?.name || '').toLowerCase();
+        const pGame = (product.games?.name || '').toLowerCase();
+        const pGameType = (product.game_type || '').toLowerCase();
+        const pFranchise = (product.franchise || '').toLowerCase();
+        const pSet = (product.set_name || product.set || '').toLowerCase();
+        const pDesc = (product.description || '').toLowerCase();
+        const pContent = (product.content || '').toLowerCase();
 
-        const combinedText = `${prodName} ${catName} ${gameName} ${gameType} ${franchiseField} ${setName} ${description} ${content}`;
-
-        const accKeywords = [
-          'funda', 'sleeve', 'binder', 'carpeta', 'deck box', 'caja de mazo', 
-          'toploader', 'playmat', 'tapete', 'album', 'álbum', 'hojas', 'accesorio', 'dice', 'dados', 'protector', 'portadeck'
-        ];
-        
-        const isAccessoryProduct = accKeywords.some(kw => combinedText.includes(kw)) || gameType.includes('accesorio') || catName.includes('accesorio') || franchiseField.includes('accesorio');
+        const combinedText = `${pName} ${pCat} ${pGame} ${pGameType} ${pFranchise} ${pSet} ${pDesc} ${pContent}`;
 
         if (franchiseId === 'accesorios') {
-          return isAccessoryProduct;
-        }
-
-        if (isAccessoryProduct) {
-          return false; 
+          const accKeywords = [
+            'funda', 'sleeve', 'binder', 'carpeta', 'deck box', 'caja de mazo', 
+            'toploader', 'playmat', 'tapete', 'album', 'álbum', 'hojas', 'accesorio', 'dice', 'dados', 'protector', 'portadeck'
+          ];
+          return accKeywords.some(kw => combinedText.includes(kw)) || pGameType.includes('accesorio') || pCat.includes('accesorio') || pFranchise.includes('accesorio');
         }
 
         if (franchiseId === 'pokemon') {
-          if (gameName.includes('magic') || gameName.includes('mtg') || franchiseField.includes('magic')) return false;
-          if (franchiseField.includes('pokemon') || franchiseField.includes('pokémon') || gameType.includes('pokemon') || gameName.includes('pokemon') || gameName.includes('pokémon')) return true;
+          if (pGame.includes('magic') || pGame.includes('mtg') || pFranchise.includes('magic') || pGame.includes('one piece') || pGame.includes('onepiece')) return false;
+          if (pFranchise.includes('pokemon') || pFranchise.includes('pokémon') || pGameType.includes('pokemon') || pGame.includes('pokemon') || pGame.includes('pokémon')) return true;
 
           const pkmKeywords = [
             'pokemon', 'pokémon', 'pkmn', 'pkm', 'pikachu', 'charizard', 'mewtwo', 
             'scarlet', 'violet', 'escarlata', 'púrpura', 'purpura', 'paldea', '151', 
             'paradox', 'obsidian', 'stellar', 'surging', 'crown zenith', 'lost origin', 
             'silver tempest', 'fusion strike', 'brilliant stars', 'shrouded', 'twilight', 
-            'temporal', 'destinos', 'evoluciones', 'rivales', 'caos', 'etb', 'pokeball', 'pokéball', 'elite trainer'
+            'temporal', 'destinos', 'evoluciones', 'rivales', 'caos', 'etb', 'pokeball', 'pokéball', 
+            'elite trainer', 'booster', 'sobres', 'caja', 'vmax', 'vstar', 'ex'
           ];
           return pkmKeywords.some(kw => combinedText.includes(kw));
         }
 
         if (franchiseId === 'magic') {
-          if (gameName.includes('pokemon') || gameName.includes('pokémon') || franchiseField.includes('pokemon')) return false;
-          if (franchiseField.includes('magic') || franchiseField.includes('mtg') || gameType.includes('magic') || gameName.includes('magic') || gameName.includes('mtg')) return true;
+          if (pGame.includes('pokemon') || pGame.includes('pokémon') || pFranchise.includes('pokemon') || pGame.includes('one piece') || pGame.includes('onepiece')) return false;
+          if (pFranchise.includes('magic') || pFranchise.includes('mtg') || pGameType.includes('magic') || pGame.includes('magic') || pGame.includes('mtg')) return true;
 
           const magicKeywords = [
             'magic', 'mtg', 'gathering', 'commander', 'planeswalker', 'bloomburrow', 
@@ -940,7 +950,6 @@ export default function Catalog() {
                     </div>
                   )}
 
-                  {/* BOTÓN VER DETALLES PERMANENTE */}
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
                     <button 
                       type="button"
@@ -956,7 +965,7 @@ export default function Catalog() {
                   </div>
                 </div>
 
-                {/* CARA TRASERA DEL MODAL: CARRUSEL + DESCRIPCIÓN + CONTENIDO */}
+                {/* CARA TRASERA DEL MODAL */}
                 <div 
                   className="absolute inset-0 bg-[#050914] rounded-2xl md:rounded-[2rem] overflow-hidden p-4 md:p-5 border border-cyan-500/50 shadow-[0_0_80px_rgba(6,182,212,0.4)] flex flex-col items-center justify-between text-center" 
                   style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
@@ -968,7 +977,6 @@ export default function Catalog() {
                     <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 shrink-0"/>
                   </div>
 
-                  {/* CARRUSEL DE IMÁGENES INTACTO */}
                   <div className="relative w-full flex-1 min-h-0 bg-transparent rounded-xl overflow-hidden border border-yellow-400/20 group my-1 flex items-center justify-center">
                     {selectedImageIndex > 0 && (
                       <div className="absolute top-2 left-2 z-30 pointer-events-none">
@@ -1028,7 +1036,6 @@ export default function Catalog() {
                     )}
                   </div>
 
-                  {/* DESCRIPCIÓN Y CONTENIDO DEL PRODUCTO */}
                   <div className="w-full shrink-0 max-h-32 overflow-y-auto text-left px-1 my-1 space-y-2 custom-scrollbar">
                     <div>
                       <span className="text-[10px] font-black uppercase text-yellow-400 tracking-wider block">
@@ -1053,7 +1060,6 @@ export default function Catalog() {
                     </div>
                   </div>
 
-                  {/* FOOTER DEL REVERSO */}
                   <div className="w-full flex flex-col items-center gap-2 shrink-0 pt-2 border-t border-white/10">
                     <p className="text-white font-black text-xs sm:text-sm uppercase tracking-tight line-clamp-1">
                       {activeProduct.name}

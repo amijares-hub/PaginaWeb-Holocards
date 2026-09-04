@@ -160,9 +160,9 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       }
 
       const [prodsRes, catRes, gamesRes, prodTagsRes, prodColsRes] = await Promise.all([
-        supabase.from('products').select('*'),
-        supabase.from('categories').select('*, games(name)'),
-        supabase.from('games').select('*'),
+        supabase.from('products').select('*').then(r => r.error ? { data: [] } : r),
+        supabase.from('categories').select('*, games(name)').then(r => r.error ? { data: [] } : r),
+        supabase.from('games').select('*').then(r => r.error ? { data: [] } : r),
         supabase.from('product_tags').select('*').then(r => r.error ? { data: [] } : r),
         supabase.from('product_collections').select('*').then(r => r.error ? { data: [] } : r)
       ]);
@@ -218,11 +218,6 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
           const cId = String(p.collection_id);
           extractedColIds.add(cId);
           if (collectionsMap.has(cId)) extractedColNames.add(collectionsMap.get(cId)!);
-        }
-        if (p.tag_id) {
-          const tId = String(p.tag_id);
-          extractedColIds.add(tId);
-          if (collectionsMap.has(tId)) extractedColNames.add(collectionsMap.get(tId)!);
         }
 
         const colArray = Array.from(extractedColNames);
