@@ -386,36 +386,39 @@ export default function CheckoutPage() {
 
           const email = user.email || "";
           const phone = profile?.phone || user.user_metadata?.phone || "";
-          const address = profile?.address_street || "";
-          const city = profile?.address_city || "";
-          const postalCode = profile?.address_zip || "";
+          const address = profile?.address_street || profile?.address || "";
+          let city = profile?.address_city || profile?.city || "";
+          let postalCode = profile?.address_zip || profile?.postal_code || profile?.zip_code || "";
+          let province = profile?.address_province || profile?.island || "Tenerife";
+
+          if (postalCode && postalCode.trim().length === 5) {
+            const detected = getCanaryLocationByZip(postalCode);
+            if (detected) {
+              if (detected.municipality && !city) city = detected.municipality;
+              if (detected.island) province = detected.island;
+            }
+          }
+
+          const fullName = profile?.full_name || user.user_metadata?.full_name || "";
+          const firstName = fullName.split(' ')[0] || "";
+          const lastName = fullName.split(' ').slice(1).join(' ') || "";
 
           setContactData({ email, phone });
 
-          if (profile) {
-            setShippingData(prev => {
-              const updated = {
-                ...prev,
-                firstName: profile.full_name?.split(' ')[0] || prev.firstName,
-                lastName: profile.full_name?.split(' ').slice(1).join(' ') || prev.lastName,
-                address: address || prev.address,
-                city: city || prev.city,
-                postalCode: postalCode || prev.postalCode,
-              };
+          setShippingData({
+            firstName,
+            lastName,
+            address,
+            city,
+            postalCode,
+            province
+          });
 
-              if (postalCode && postalCode.trim().length === 5) {
-                const detected = getCanaryLocationByZip(postalCode);
-                if (detected) {
-                  if (detected.municipality) updated.city = detected.municipality;
-                  if (detected.island) updated.province = detected.island;
-                }
-              }
-              return updated;
-            });
-          }
-
+          // Si el usuario registrado ya tiene su dirección/CP guardados, pasa directamente al paso de pago de Stripe
           if (address && city && postalCode) {
             setStep("payment");
+          } else if (email) {
+            setStep("shipping");
           }
         }
       } catch (e) {
@@ -915,7 +918,7 @@ export default function CheckoutPage() {
                   onClick={() => setStep("payment")}
                   className="w-full mt-6 bg-yellow-400 hover:bg-yellow-300 text-black font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_rgba(250,204,21,0.2)] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  Continuar al Envío →
+                  Continuar al Pago →
                 </button>
               </>
             )}
