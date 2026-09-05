@@ -71,228 +71,149 @@ export const CANARY_MUNICIPALITIES_BY_ISLAND: Record<string, string[]> = {
   ]
 };
 
-const CANARY_CP_MAP: Record<string, CanaryLocation> = {
-  // --- GRAN CANARIA (35000 - 35499) ---
-  '35001': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35002': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35003': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35004': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35005': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35006': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35007': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35008': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35009': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35010': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35011': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35012': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35013': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35014': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35015': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35016': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35017': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35018': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35019': { municipality: 'Las Palmas de Gran Canaria', island: 'Gran Canaria' },
-  '35100': { municipality: 'San Bartolomé de Tirajana', island: 'Gran Canaria' },
-  '35108': { municipality: 'San Bartolomé de Tirajana', island: 'Gran Canaria' },
-  '35109': { municipality: 'San Bartolomé de Tirajana', island: 'Gran Canaria' },
-  '35110': { municipality: 'Santa Lucía de Tirajana', island: 'Gran Canaria' },
-  '35118': { municipality: 'Santa Lucía de Tirajana', island: 'Gran Canaria' },
-  '35120': { municipality: 'Mogán', island: 'Gran Canaria' },
-  '35130': { municipality: 'Mogán', island: 'Gran Canaria' },
-  '35138': { municipality: 'Mogán', island: 'Gran Canaria' },
-  '35140': { municipality: 'Mogán', island: 'Gran Canaria' },
-  '35200': { municipality: 'Telde', island: 'Gran Canaria' },
-  '35210': { municipality: 'Telde', island: 'Gran Canaria' },
-  '35211': { municipality: 'Telde', island: 'Gran Canaria' },
-  '35212': { municipality: 'Telde', island: 'Gran Canaria' },
-  '35213': { municipality: 'Telde', island: 'Gran Canaria' },
-  '35214': { municipality: 'Telde', island: 'Gran Canaria' },
-  '35215': { municipality: 'Telde', island: 'Gran Canaria' },
-  '35218': { municipality: 'Telde', island: 'Gran Canaria' },
-  '35220': { municipality: 'Telde', island: 'Gran Canaria' },
-  '35230': { municipality: 'Valsequillo de Gran Canaria', island: 'Gran Canaria' },
-  '35240': { municipality: 'Ingenio', island: 'Gran Canaria' },
-  '35250': { municipality: 'Ingenio', island: 'Gran Canaria' },
-  '35260': { municipality: 'Agüimes', island: 'Gran Canaria' },
-  '35270': { municipality: 'Telde', island: 'Gran Canaria' },
-  '35280': { municipality: 'Santa Brígida', island: 'Gran Canaria' },
-  '35290': { municipality: 'San Bartolomé de Tirajana', island: 'Gran Canaria' },
-  '35300': { municipality: 'Santa Brígida', island: 'Gran Canaria' },
-  '35310': { municipality: 'Vega de San Mateo', island: 'Gran Canaria' },
-  '35320': { municipality: 'Vega de San Mateo', island: 'Gran Canaria' },
-  '35330': { municipality: 'Teror', island: 'Gran Canaria' },
-  '35340': { municipality: 'Valleseco', island: 'Gran Canaria' },
-  '35350': { municipality: 'Artenara', island: 'Gran Canaria' },
-  '35360': { municipality: 'Tejeda', island: 'Gran Canaria' },
-  '35400': { municipality: 'Arucas', island: 'Gran Canaria' },
-  '35411': { municipality: 'Arucas', island: 'Gran Canaria' },
-  '35412': { municipality: 'Arucas', island: 'Gran Canaria' },
-  '35413': { municipality: 'Firgas', island: 'Gran Canaria' },
-  '35420': { municipality: 'Moya', island: 'Gran Canaria' },
-  '35430': { municipality: 'Firgas', island: 'Gran Canaria' },
-  '35440': { municipality: 'Moya', island: 'Gran Canaria' },
-  '35450': { municipality: 'Santa María de Guía', island: 'Gran Canaria' },
-  '35460': { municipality: 'Gáldar', island: 'Gran Canaria' },
-  '35470': { municipality: 'La Aldea de San Nicolás', island: 'Gran Canaria' },
-  '35480': { municipality: 'Agaete', island: 'Gran Canaria' },
-
-  // --- LANZAROTE Y LA GRACIOSA (35500 - 35599) ---
-  '35500': { municipality: 'Arrecife', island: 'Lanzarote' },
-  '35508': { municipality: 'Teguise', island: 'Lanzarote' },
-  '35509': { municipality: 'San Bartolomé', island: 'Lanzarote' },
-  '35510': { municipality: 'Tías', island: 'Lanzarote' },
-  '35520': { municipality: 'Haría', island: 'Lanzarote' },
-  '35530': { municipality: 'Teguise', island: 'Lanzarote' },
-  '35540': { municipality: 'Haría', island: 'Lanzarote' },
-  '35541': { municipality: 'Teguise', island: 'La Graciosa' },
-  '35542': { municipality: 'Haría', island: 'Lanzarote' },
-  '35543': { municipality: 'Haría', island: 'Lanzarote' },
-  '35550': { municipality: 'San Bartolomé', island: 'Lanzarote' },
-  '35559': { municipality: 'Tinajo', island: 'Lanzarote' },
-  '35560': { municipality: 'Tinajo', island: 'Lanzarote' },
-  '35570': { municipality: 'Yaiza', island: 'Lanzarote' },
-  '35571': { municipality: 'Yaiza', island: 'Lanzarote' },
-  '35572': { municipality: 'Tías', island: 'Lanzarote' },
-  '35580': { municipality: 'Yaiza', island: 'Lanzarote' },
-
-  // --- FUERTEVENTURA (35600 - 35699) ---
-  '35600': { municipality: 'Puerto del Rosario', island: 'Fuerteventura' },
-  '35610': { municipality: 'Antigua', island: 'Fuerteventura' },
-  '35611': { municipality: 'Antigua', island: 'Fuerteventura' },
-  '35612': { municipality: 'Puerto del Rosario', island: 'Fuerteventura' },
-  '35613': { municipality: 'Puerto del Rosario', island: 'Fuerteventura' },
-  '35620': { municipality: 'Tuineje', island: 'Fuerteventura' },
-  '35625': { municipality: 'Pájara', island: 'Fuerteventura' },
-  '35626': { municipality: 'Pájara', island: 'Fuerteventura' },
-  '35627': { municipality: 'Pájara', island: 'Fuerteventura' },
-  '35628': { municipality: 'Tuineje', island: 'Fuerteventura' },
-  '35630': { municipality: 'Betancuria', island: 'Fuerteventura' },
-  '35640': { municipality: 'La Oliva', island: 'Fuerteventura' },
-
-  // --- TENERIFE (38000 - 38699) ---
-  '38001': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
-  '38002': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
-  '38003': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
-  '38004': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
-  '38005': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
-  '38006': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
-  '38007': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
-  '38008': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
-  '38009': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
-  '38010': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
-  '38107': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
-  '38108': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
-  '38109': { municipality: 'Santa Cruz de Tenerife', island: 'Tenerife' },
-  '38201': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
-  '38202': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
-  '38203': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
-  '38204': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
-  '38205': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
-  '38206': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
-  '38207': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
-  '38208': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
-  '38280': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
-  '38290': { municipality: 'El Rosario', island: 'Tenerife' },
-  '38291': { municipality: 'Tacoronte', island: 'Tenerife' },
-  '38292': { municipality: 'Tegueste', island: 'Tenerife' },
-  '38296': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
-  '38300': { municipality: 'La Orotava', island: 'Tenerife' },
-  '38310': { municipality: 'La Orotava', island: 'Tenerife' },
-  '38311': { municipality: 'La Orotava', island: 'Tenerife' },
-  '38312': { municipality: 'La Orotava', island: 'Tenerife' },
-  '38320': { municipality: 'San Cristóbal de La Laguna', island: 'Tenerife' },
-  '38350': { municipality: 'Tacoronte', island: 'Tenerife' },
-  '38355': { municipality: 'El Sauzal', island: 'Tenerife' },
-  '38360': { municipality: 'La Matanza de Acentejo', island: 'Tenerife' },
-  '38370': { municipality: 'La Victoria de Acentejo', island: 'Tenerife' },
-  '38380': { municipality: 'Santa Úrsula', island: 'Tenerife' },
-  '38390': { municipality: 'La Orotava', island: 'Tenerife' },
-  '38400': { municipality: 'Puerto de la Cruz', island: 'Tenerife' },
-  '38410': { municipality: 'Los Realejos', island: 'Tenerife' },
-  '38420': { municipality: 'San Juan de la Rambla', island: 'Tenerife' },
-  '38429': { municipality: 'La Guancha', island: 'Tenerife' },
-  '38430': { municipality: 'Icod de los Vinos', island: 'Tenerife' },
-  '38440': { municipality: 'Garachico', island: 'Tenerife' },
-  '38450': { municipality: 'Los Silos', island: 'Tenerife' },
-  '38460': { municipality: 'Buenavista del Norte', island: 'Tenerife' },
-  '38470': { municipality: 'El Tanque', island: 'Tenerife' },
-  '38480': { municipality: 'Santiago del Teide', island: 'Tenerife' },
-  '38500': { municipality: 'Güímar', island: 'Tenerife' },
-  '38510': { municipality: 'Candelaria', island: 'Tenerife' },
-  '38520': { municipality: 'Arico', island: 'Tenerife' },
-  '38530': { municipality: 'Candelaria', island: 'Tenerife' },
-  '38540': { municipality: 'Arafo', island: 'Tenerife' },
-  '38570': { municipality: 'Fasnia', island: 'Tenerife' },
-  '38580': { municipality: 'Arico', island: 'Tenerife' },
-  '38590': { municipality: 'Granadilla de Abona', island: 'Tenerife' },
-  '38591': { municipality: 'San Miguel de Abona', island: 'Tenerife' },
-  '38594': { municipality: 'Vilaflor de Chasna', island: 'Tenerife' },
-  '38600': { municipality: 'Granadilla de Abona', island: 'Tenerife' },
-  '38611': { municipality: 'Granadilla de Abona', island: 'Tenerife' },
-  '38612': { municipality: 'Granadilla de Abona', island: 'Tenerife' },
-  '38620': { municipality: 'San Miguel de Abona', island: 'Tenerife' },
-  '38626': { municipality: 'Arona', island: 'Tenerife' },
-  '38630': { municipality: 'Arona', island: 'Tenerife' },
-  '38631': { municipality: 'Arona', island: 'Tenerife' },
-  '38639': { municipality: 'Arona', island: 'Tenerife' },
-  '38640': { municipality: 'Arona', island: 'Tenerife' },
-  '38650': { municipality: 'Arona', island: 'Tenerife' },
-  '38660': { municipality: 'Adeje', island: 'Tenerife' },
-  '38670': { municipality: 'Adeje', island: 'Tenerife' },
-  '38680': { municipality: 'Guía de Isora', island: 'Tenerife' },
-  '38683': { municipality: 'Santiago del Teide', island: 'Tenerife' },
-
-  // --- LA PALMA (38700 - 38799) ---
-  '38700': { municipality: 'Santa Cruz de La Palma', island: 'La Palma' },
-  '38710': { municipality: 'Breña Alta', island: 'La Palma' },
-  '38711': { municipality: 'Breña Baja', island: 'La Palma' },
-  '38715': { municipality: 'Puntallana', island: 'La Palma' },
-  '38720': { municipality: 'San Andrés y Sauces', island: 'La Palma' },
-  '38726': { municipality: 'Barlovento', island: 'La Palma' },
-  '38727': { municipality: 'Garafía', island: 'La Palma' },
-  '38730': { municipality: 'Villa de Mazo', island: 'La Palma' },
-  '38739': { municipality: 'Fuencaliente de La Palma', island: 'La Palma' },
-  '38750': { municipality: 'El Paso', island: 'La Palma' },
-  '38760': { municipality: 'Los Llanos de Aridane', island: 'La Palma' },
-  '38770': { municipality: 'Tazacorte', island: 'La Palma' },
-  '38780': { municipality: 'Tijarafe', island: 'La Palma' },
-  '38788': { municipality: 'Puntagorda', island: 'La Palma' },
-
-  // --- LA GOMERA (38800 - 38899) ---
-  '38800': { municipality: 'San Sebastián de La Gomera', island: 'La Gomera' },
-  '38810': { municipality: 'Hermigua', island: 'La Gomera' },
-  '38811': { municipality: 'Agulo', island: 'La Gomera' },
-  '38820': { municipality: 'Vallehermoso', island: 'La Gomera' },
-  '38870': { municipality: 'Valle Gran Rey', island: 'La Gomera' },
-  '38880': { municipality: 'Alajeró', island: 'La Gomera' },
-
-  // --- EL HIERRO (38900 - 38999) ---
-  '38900': { municipality: 'Valverde', island: 'El Hierro' },
-  '38911': { municipality: 'Frontera', island: 'El Hierro' },
-  '38912': { municipality: 'El Pinar de El Hierro', island: 'El Hierro' },
-};
-
 export function getCanaryLocationByZip(cp: string): CanaryLocation | null {
   const cleanCp = cp.trim();
   if (cleanCp.length < 5) return null;
+  const num = parseInt(cleanCp, 10);
+  if (isNaN(num)) return null;
 
-  if (CANARY_CP_MAP[cleanCp]) {
-    return CANARY_CP_MAP[cleanCp];
+  if (num >= 35000 && num <= 35499) {
+    const island = 'Gran Canaria';
+    if (num <= 35020) return { municipality: 'Las Palmas de Gran Canaria', island };
+    if (num >= 35100 && num <= 35109) return { municipality: 'San Bartolomé de Tirajana', island };
+    if (num >= 35110 && num <= 35119) return { municipality: 'Santa Lucía de Tirajana', island };
+    if (num >= 35120 && num <= 35140) return { municipality: 'Mogán', island };
+    if (num >= 35200 && num <= 35229) return { municipality: 'Telde', island };
+    if (num >= 35230 && num <= 35239) return { municipality: 'Valsequillo de Gran Canaria', island };
+    if (num >= 35240 && num <= 35259) return { municipality: 'Ingenio', island };
+    if (num >= 35260 && num <= 35279) return { municipality: 'Agüimes', island };
+    if (num >= 35280 && num <= 35309) return { municipality: 'Santa Brígida', island };
+    if (num >= 35310 && num <= 35329) return { municipality: 'Vega de San Mateo', island };
+    if (num >= 35330 && num <= 35339) return { municipality: 'Teror', island };
+    if (num >= 35340 && num <= 35349) return { municipality: 'Valleseco', island };
+    if (num >= 35350 && num <= 35359) return { municipality: 'Artenara', island };
+    if (num >= 35360 && num <= 35399) return { municipality: 'Tejeda', island };
+    if (num >= 35400 && num <= 35412) return { municipality: 'Arucas', island };
+    if (num >= 35413 && num <= 35419) return { municipality: 'Firgas', island };
+    if (num >= 35420 && num <= 35429) return { municipality: 'Moya', island };
+    if (num >= 35430 && num <= 35439) return { municipality: 'Firgas', island };
+    if (num >= 35440 && num <= 35449) return { municipality: 'Moya', island };
+    if (num >= 35450 && num <= 35459) return { municipality: 'Santa María de Guía', island };
+    if (num >= 35460 && num <= 35469) return { municipality: 'Gáldar', island };
+    if (num >= 35470 && num <= 35479) return { municipality: 'La Aldea de San Nicolás', island };
+    if (num >= 35480 && num <= 35499) return { municipality: 'Agaete', island };
+    return { municipality: 'Las Palmas de Gran Canaria', island };
   }
 
-  if (cleanCp.startsWith('35')) {
-    const num = parseInt(cleanCp, 10);
-    if (num >= 35500 && num <= 35599) return { municipality: '', island: 'Lanzarote' };
-    if (num >= 35600 && num <= 35699) return { municipality: '', island: 'Fuerteventura' };
-    return { municipality: '', island: 'Gran Canaria' };
+  if (num >= 35500 && num <= 35599) {
+    if (num === 35541) return { municipality: 'Teguise', island: 'La Graciosa' };
+    const island = 'Lanzarote';
+    if (num <= 35507) return { municipality: 'Arrecife', island };
+    if (num <= 35508) return { municipality: 'Teguise', island };
+    if (num <= 35509) return { municipality: 'San Bartolomé', island };
+    if (num <= 35519) return { municipality: 'Tías', island };
+    if (num <= 35529) return { municipality: 'Haría', island };
+    if (num <= 35539) return { municipality: 'Teguise', island };
+    if (num <= 35549) return { municipality: 'Haría', island };
+    if (num <= 35558) return { municipality: 'San Bartolomé', island };
+    if (num <= 35569) return { municipality: 'Tinajo', island };
+    if (num <= 35599) return { municipality: 'Yaiza', island };
+    return { municipality: 'Arrecife', island };
   }
 
-  if (cleanCp.startsWith('38')) {
-    const num = parseInt(cleanCp, 10);
-    if (num >= 38700 && num <= 38799) return { municipality: '', island: 'La Palma' };
-    if (num >= 38800 && num <= 38899) return { municipality: '', island: 'La Gomera' };
-    if (num >= 38900 && num <= 38999) return { municipality: '', island: 'El Hierro' };
-    return { municipality: '', island: 'Tenerife' };
+  if (num >= 35600 && num <= 35699) {
+    const island = 'Fuerteventura';
+    if (num <= 35619) return { municipality: 'Puerto del Rosario', island };
+    if (num <= 35624) return { municipality: 'Tuineje', island };
+    if (num <= 35627) return { municipality: 'Pájara', island };
+    if (num <= 35629) return { municipality: 'Tuineje', island };
+    if (num <= 35639) return { municipality: 'Betancuria', island };
+    if (num <= 35699) return { municipality: 'La Oliva', island };
+    return { municipality: 'Puerto del Rosario', island };
+  }
+
+  if (num >= 38000 && num <= 38699) {
+    const island = 'Tenerife';
+    if (num <= 38119) return { municipality: 'Santa Cruz de Tenerife', island };
+    if (num >= 38201 && num <= 38209) return { municipality: 'San Cristóbal de La Laguna', island };
+    if (num >= 38240 && num <= 38289) return { municipality: 'San Cristóbal de La Laguna', island };
+    if (num === 38290) return { municipality: 'El Rosario', island };
+    if (num === 38291) return { municipality: 'Tacoronte', island };
+    if (num >= 38292 && num <= 38295) return { municipality: 'Tegueste', island };
+    if (num >= 38296 && num <= 38299) return { municipality: 'San Cristóbal de La Laguna', island };
+    if (num >= 38300 && num <= 38315) return { municipality: 'La Orotava', island };
+    if (num >= 38320 && num <= 38339) return { municipality: 'San Cristóbal de La Laguna', island };
+    if (num >= 38340 && num <= 38354) return { municipality: 'Tacoronte', island };
+    if (num >= 38355 && num <= 38359) return { municipality: 'El Sauzal', island };
+    if (num >= 38360 && num <= 38369) return { municipality: 'La Matanza de Acentejo', island };
+    if (num >= 38370 && num <= 38379) return { municipality: 'La Victoria de Acentejo', island };
+    if (num >= 38380 && num <= 38389) return { municipality: 'Santa Úrsula', island };
+    if (num >= 38390 && num <= 38399) return { municipality: 'La Orotava', island };
+    if (num === 38400) return { municipality: 'Puerto de la Cruz', island };
+    if (num >= 38410 && num <= 38419) return { municipality: 'Los Realejos', island };
+    if (num >= 38420 && num <= 38428) return { municipality: 'San Juan de la Rambla', island };
+    if (num === 38429) return { municipality: 'La Guancha', island };
+    if (num >= 38430 && num <= 38439) return { municipality: 'Icod de los Vinos', island };
+    if (num >= 38440 && num <= 38449) return { municipality: 'Garachico', island };
+    if (num >= 38450 && num <= 38459) return { municipality: 'Los Silos', island };
+    if (num >= 38460 && num <= 38469) return { municipality: 'Buenavista del Norte', island };
+    if (num >= 38470 && num <= 38479) return { municipality: 'El Tanque', island };
+    if (num >= 38480 && num <= 38499) return { municipality: 'Santiago del Teide', island };
+    if (num >= 38500 && num <= 38509) return { municipality: 'Güímar', island };
+    if (num >= 38510 && num <= 38519) return { municipality: 'Candelaria', island };
+    if (num >= 38520 && num <= 38529) return { municipality: 'Arico', island };
+    if (num >= 38530 && num <= 38539) return { municipality: 'Candelaria', island };
+    if (num >= 38540 && num <= 38549) return { municipality: 'Arafo', island };
+    if (num >= 38550 && num <= 38569) return { municipality: 'Güímar', island };
+    if (num >= 38570 && num <= 38579) return { municipality: 'Fasnia', island };
+    if (num >= 38580 && num <= 38589) return { municipality: 'Arico', island };
+    if (num === 38590) return { municipality: 'Granadilla de Abona', island };
+    if (num >= 38591 && num <= 38593) return { municipality: 'San Miguel de Abona', island };
+    if (num >= 38594 && num <= 38599) return { municipality: 'Vilaflor de Chasna', island };
+    if (num >= 38600 && num <= 38619) return { municipality: 'Granadilla de Abona', island };
+    if (num >= 38620 && num <= 38625) return { municipality: 'San Miguel de Abona', island };
+    if (num >= 38626 && num <= 38659) return { municipality: 'Arona', island };
+    if (num >= 38660 && num <= 38679) return { municipality: 'Adeje', island };
+    if (num >= 38680 && num <= 38699) return { municipality: 'Guía de Isora', island };
+    return { municipality: 'Santa Cruz de Tenerife', island };
+  }
+
+  if (num >= 38700 && num <= 38799) {
+    const island = 'La Palma';
+    if (num <= 38709) return { municipality: 'Santa Cruz de La Palma', island };
+    if (num === 38710) return { municipality: 'Breña Alta', island };
+    if (num >= 38711 && num <= 38714) return { municipality: 'Breña Baja', island };
+    if (num >= 38715 && num <= 38719) return { municipality: 'Puntallana', island };
+    if (num >= 38720 && num <= 38725) return { municipality: 'San Andrés y Sauces', island };
+    if (num === 38726) return { municipality: 'Barlovento', island };
+    if (num >= 38727 && num <= 38729) return { municipality: 'Garafía', island };
+    if (num >= 38730 && num <= 38738) return { municipality: 'Villa de Mazo', island };
+    if (num >= 38739 && num <= 38749) return { municipality: 'Fuencaliente de La Palma', island };
+    if (num >= 38750 && num <= 38759) return { municipality: 'El Paso', island };
+    if (num >= 38760 && num <= 38769) return { municipality: 'Los Llanos de Aridane', island };
+    if (num >= 38770 && num <= 38779) return { municipality: 'Tazacorte', island };
+    if (num >= 38780 && num <= 38787) return { municipality: 'Tijarafe', island };
+    if (num >= 38788 && num <= 38799) return { municipality: 'Puntagorda', island };
+    return { municipality: 'Santa Cruz de La Palma', island };
+  }
+
+  if (num >= 38800 && num <= 38899) {
+    const island = 'La Gomera';
+    if (num <= 38809) return { municipality: 'San Sebastián de La Gomera', island };
+    if (num === 38810) return { municipality: 'Hermigua', island };
+    if (num >= 38811 && num <= 38819) return { municipality: 'Agulo', island };
+    if (num >= 38820 && num <= 38869) return { municipality: 'Vallehermoso', island };
+    if (num >= 38870 && num <= 38879) return { municipality: 'Valle Gran Rey', island };
+    if (num >= 38880 && num <= 38899) return { municipality: 'Alajeró', island };
+    return { municipality: 'San Sebastián de La Gomera', island };
+  }
+
+  if (num >= 38900 && num <= 38999) {
+    const island = 'El Hierro';
+    if (num <= 38910) return { municipality: 'Valverde', island };
+    if (num === 38911) return { municipality: 'Frontera', island };
+    if (num >= 38912 && num <= 38999) return { municipality: 'El Pinar de El Hierro', island };
+    return { municipality: 'Valverde', island };
   }
 
   return null;
@@ -994,7 +915,7 @@ export default function CheckoutPage() {
                   onClick={() => setStep("payment")}
                   className="w-full mt-6 bg-yellow-400 hover:bg-yellow-300 text-black font-black py-4 rounded-2xl text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_rgba(250,204,21,0.2)] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  Continuar al Pago →
+                  Continuar al Envío →
                 </button>
               </>
             )}
