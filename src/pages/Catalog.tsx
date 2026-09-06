@@ -1,3 +1,4 @@
+// Catalog.tsx - Catálogo completo con filtrado resiliente de franquicias e idiomas
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -48,6 +49,8 @@ interface Product {
   franchise?: string; 
   created_at?: string;
   is_upcoming?: boolean;
+  tags?: string[];
+  product_tags?: any[];
 }
 
 interface CategoryItem {
@@ -300,12 +303,12 @@ const ProductCardItem = ({
   onAddToCart,
   onImageClick 
 }: { 
+  key?: React.Key;
   product: Product; 
   quantity: number; 
   onUpdateQuantity: (id: string, delta: number) => void; 
   onAddToCart: (product: Product) => void; 
   onImageClick: (product: Product) => void;
-  key?: string | number;
 }) => {
   const isUpcoming = isProductUpcoming(product);
 
@@ -412,7 +415,7 @@ export default function Catalog() {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [selectedFranchises, setSelectedFranchises] = useState<string[]>([]);
   const [showToast, setShowToast] = useState(false);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 500]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
@@ -436,14 +439,25 @@ export default function Catalog() {
   }, [products, maxCatalogPrice]);
 
   useEffect(() => {
-    if (categories.length === 0) return;
-
-    const brand = searchParams.get('brand');
-    if (brand && FRANCHISE_OPTIONS.some(f => f.id === brand.toLowerCase())) {
-      setSelectedFranchises([brand.toLowerCase()]);
+    const brand = searchParams.get('brand') || searchParams.get('franchise') || searchParams.get('game');
+    if (brand) {
+      const b = brand.toLowerCase().trim();
+      if (b.includes('magic') || b.includes('mtg')) {
+        setSelectedFranchises(['magic']);
+      } else if (b.includes('pokem') || b.includes('pokém')) {
+        setSelectedFranchises(['pokemon']);
+      } else if (b.includes('accesori')) {
+        setSelectedFranchises(['accesorios']);
+      } else {
+        const matched = FRANCHISE_OPTIONS.find(f => f.id === b || f.label.toLowerCase() === b);
+        if (matched) setSelectedFranchises([matched.id]);
+      }
     }
+  }, [searchParams]);
 
-    const categoryParam = searchParams.get('category');
+  useEffect(() => {
+    if (categories.length === 0) return;
+    const categoryParam = searchParams.get('category') || searchParams.get('categoria');
     if (categoryParam) {
       const normalize = (str: string) => str.toLowerCase().replace(/[\s\-\/]/g, '');
       const matchedCat = categories.find(c => normalize(c.name) === normalize(categoryParam));
@@ -474,13 +488,27 @@ export default function Catalog() {
       let prodsData: any[] = [];
       const { data: relationalData, error: relErr } = await supabase
         .from('products')
-        .select('*, categories(name), games(name)');
+        .select('*, categories(name), games(name), product_tags(tag_id, tags(name, slug)), product_collections(collection_id, collections(name))');
 
       if (!relErr && relationalData && relationalData.length > 0) {
         prodsData = relationalData;
       } else {
         const { data: plainData } = await supabase.from('products').select('*');
         prodsData = plainData || [];
+      }
+
+      if (prodsData.length === 0) {
+        await new Promise(res => setTimeout(res, 350));
+        const { data: retryData } = await supabase
+          .from('products')
+          .select('*, categories(name), games(name), product_tags(tag_id, tags(name, slug)), product_collections(collection_id, collections(name))');
+        
+        if (retryData && retryData.length > 0) {
+          prodsData = retryData;
+        } else {
+          const { data: retryPlain } = await supabase.from('products').select('*');
+          if (retryPlain && retryPlain.length > 0) prodsData = retryPlain;
+        }
       }
 
       setProducts(prodsData.map(p => {
@@ -497,6 +525,14 @@ export default function Catalog() {
         if (Array.isArray(p.images)) p.images.forEach(addIfNew);
         if (Array.isArray(p.gallery)) p.gallery.forEach(addIfNew);
 
+        const extractedTags: string[] = [];
+        if (Array.isArray(p.product_tags)) {
+          p.product_tags.forEach((pt: any) => {
+            if (pt?.tags?.name) extractedTags.push(pt.tags.name);
+            else if (pt?.tags?.slug) extractedTags.push(pt.tags.slug);
+          });
+        }
+
         return {
           ...p,
           image_url: mainImg,
@@ -506,7 +542,8 @@ export default function Catalog() {
           rarity: 'Rare',
           set: p.categories?.name || p.set || 'General',
           description: p.description || '',
-          content: p.content || ''
+          content: p.content || '',
+          tags: extractedTags
         };
       }));
     } catch (err) {
@@ -587,64 +624,77 @@ export default function Catalog() {
       });
 
       const matchesFranchise = selectedFranchises.length === 0 || selectedFranchises.some(franchiseId => {
+        const fId = franchiseId.toLowerCase().trim();
+
+        const pTags = Array.isArray(product.tags) ? product.tags : [];
         const pName = (product.name || '').toLowerCase();
         const pCat = (product.categories?.name || '').toLowerCase();
         const pGame = (product.games?.name || '').toLowerCase();
         const pGameType = (product.game_type || '').toLowerCase();
         const pFranchise = (product.franchise || '').toLowerCase();
         const pSet = (product.set_name || product.set || '').toLowerCase();
+        const tagText = pTags.join(' ').toLowerCase();
 
-        // NUNCA incluir descripción o contenido en el filtro de franquicia
-        const coreText = `${pName} ${pCat} ${pGame} ${pGameType} ${pFranchise} ${pSet}`;
+        const coreText = `${pName} ${pCat} ${pGame} ${pGameType} ${pFranchise} ${pSet} ${tagText}`;
 
+        // Normalizamos el texto para búsqueda de palabras exactas (evitando falsos positivos)
+        const paddedText = ' ' + coreText.replace(/[.,!?;:'"()[\]{}-]/g, ' ').replace(/\s+/g, ' ') + ' ';
+        const hasWord = (kw: string) => paddedText.includes(` ${kw} `);
+
+        // 1. Accesorios
         const accKeywords = [
-          'funda', 'sleeve', 'binder', 'carpeta', 'deck box', 'caja de mazo', 
-          'toploader', 'playmat', 'tapete', 'album', 'álbum', 'hojas', 'accesorio', 'dice', 'dados', 'protector', 'portadeck', 'dragon shield', 'ultra pro', 'perfect fit'
+          'funda', 'fundas', 'sleeve', 'sleeves', 'binder', 'carpeta', 'deck box', 'caja de mazo', 'caja',
+          'toploader', 'toploaders', 'playmat', 'tapete', 'album', 'álbum', 'hojas', 'accesorio', 'accesorios', 'dice', 'dados', 'protector', 'portadeck', 'dragon shield', 'ultra pro', 'perfect fit', 'ultimate guard'
         ];
-        
-        const isAccessoryProduct = accKeywords.some(kw => coreText.includes(kw)) || pGameType.includes('accesorio') || pCat.includes('accesorio') || pFranchise.includes('accesorio');
+        const isAccessoryProduct = accKeywords.some(hasWord) || pGameType.includes('accesorio') || pCat.includes('accesorio') || pFranchise.includes('accesorio') || pTags.some(t => t.toLowerCase().includes('accesori'));
 
-        if (franchiseId === 'accesorios') {
+        // 2. Detección de Magic
+        const magicKeywords = [
+          'magic', 'mtg', 'gathering', 'commander', 'planeswalker', 'bloomburrow', 'duskmourn', 'tarkir', 'ixalan', 'ravnica', 
+          'eldraine', 'lorwyn', 'karlov', 'foundations', 'modern', 'draft booster', 'play booster', 
+          'collector booster', 'secret lair', 'multiverso', 'reforjado', 'malkor', 'tales of middle-earth',
+          'marvel super heroes', 'marvel', 'outlaws of thunder junction', 'horizons', 'sobres de magic', 'bundle', 'fat pack', 'prerelease', 'magic the gathering'
+        ];
+        let isMagicProduct = magicKeywords.some(hasWord) || pFranchise.includes('magic') || pGame.includes('magic') || pCat.includes('magic');
+
+        // 3. Detección de Pokémon
+        const pkmKeywords = [
+          'pokemon', 'pokémon', 'pikachu', 'charizard', 'mewtwo', 'scarlet', 'violet', 'escarlata', 'púrpura', 'purpura', 
+          'paldea', '151', 'paradox', 'obsidian', 'stellar', 'surging', 'crown zenith', 'lost origin', 
+          'silver tempest', 'fusion strike', 'brilliant stars', 'shrouded', 'twilight', 'temporal', 
+          'destinos de paldea', 'evoluciones en paldea', 'etb', 'pokeball', 'pokéball', 'elite trainer', 'booster box pokemon'
+        ];
+        const hasExTerm = /\b(ex|vmax|vstar)\b/i.test(pName);
+        let isPokemonProduct = pkmKeywords.some(hasWord) || hasExTerm || pFranchise.includes('pokemon') || pFranchise.includes('pokémon') || pGame.includes('pokemon') || pGame.includes('pokémon') || pCat.includes('pokemon') || pCat.includes('pokémon');
+
+        // Desambiguación estricta
+        if (isMagicProduct && isPokemonProduct) {
+           if (paddedText.includes(' magic ') || paddedText.includes(' mtg ') || paddedText.includes(' gathering ')) {
+             isPokemonProduct = false;
+           } else if (paddedText.includes(' pokemon ') || paddedText.includes(' pokémon ') || paddedText.includes(' pikachu ')) {
+             isMagicProduct = false;
+           } else {
+             // Si no hay un ganador claro, separamos según la marca en el nombre si la hay
+             if (/magic|mtg/i.test(pName)) isPokemonProduct = false;
+             else if (/pokemon|pokémon/i.test(pName)) isMagicProduct = false;
+           }
+        }
+
+        // Excluir accesorios de los juegos principales si es puramente un accesorio
+        if (isAccessoryProduct && !(/booster|sobre|caja de sobres|baraja|mazo|commander|etb|elite trainer/i.test(pName))) {
+           if (fId === 'accesorios' || fId.includes('accesori')) return true;
+        }
+
+        if (fId === 'accesorios' || fId.includes('accesori')) {
           return isAccessoryProduct;
         }
 
-        const hasExplicitPokemon = /\bpokemon\b|\bpokémon\b/i.test(coreText);
-        const hasExplicitMagic = /\bmagic\b|\bmtg\b|\bgathering\b/i.test(coreText);
-
-        if (isAccessoryProduct) {
-          if (franchiseId === 'pokemon') return hasExplicitPokemon && !hasExplicitMagic;
-          if (franchiseId === 'magic') return hasExplicitMagic && !hasExplicitPokemon;
-          return false;
+        if (fId === 'pokemon' || fId.includes('pokem')) {
+          return isPokemonProduct;
         }
 
-        if (franchiseId === 'pokemon') {
-          if (hasExplicitMagic) return false;
-          if (hasExplicitPokemon) return true;
-
-          const pkmKeywords = [
-            'pikachu', 'charizard', 'mewtwo', 'scarlet', 'violet', 'escarlata', 'púrpura', 'purpura', 
-            'paldea', '151', 'paradox', 'obsidian', 'stellar', 'surging', 'crown zenith', 'lost origin', 
-            'silver tempest', 'fusion strike', 'brilliant stars', 'shrouded', 'twilight', 'temporal', 
-            'destinos', 'evoluciones', 'rivales', 'caos', 'etb', 'pokeball', 'pokéball', 'elite trainer'
-          ];
-
-          const hasKeyword = pkmKeywords.some(kw => coreText.includes(kw));
-          const hasStandaloneEx = /\bex\b/i.test(pName) || /\bvmax\b/i.test(pName) || /\bvstar\b/i.test(pName);
-
-          return hasKeyword || hasStandaloneEx;
-        }
-
-        if (franchiseId === 'magic') {
-          if (hasExplicitPokemon) return false;
-          if (hasExplicitMagic) return true;
-
-          const magicKeywords = [
-            'commander', 'planeswalker', 'bloomburrow', 'duskmourn', 'tarkir', 'ixalan', 'ravnica', 
-            'eldraine', 'lorwyn', 'karlov', 'foundations', 'modern', 'draft booster', 'play booster', 
-            'collector booster', 'secret lair', 'multiverso', 'reforjado', 'malkor', 'tales of middle-earth'
-          ];
-
-          return magicKeywords.some(kw => coreText.includes(kw));
+        if (fId === 'magic' || fId.includes('magic') || fId.includes('mtg')) {
+          return isMagicProduct;
         }
 
         return false;
@@ -835,7 +885,7 @@ export default function Catalog() {
                   <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center">
                     <Filter className="w-8 h-8 text-muted-foreground/30" />
                   </div>
-                  <h3 className="text-xl font-black uppercase italic tracking-tighter">Sin coincidencias</h3>
+                  <h3 className="text-xl font-black uppercase italic tracking-tighter">Sin coincidencia</h3>
                   <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">No hay piezas que coincidan con tu búsqueda actual.</p>
                   <button onClick={handleReset} className="px-6 py-2.5 bg-primary text-black rounded-xl text-[10px] font-black uppercase tracking-widest">
                     Limpiar filtros
