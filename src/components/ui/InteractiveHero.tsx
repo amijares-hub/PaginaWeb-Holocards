@@ -39,6 +39,8 @@ type ProductCard = {
   collectionIds: string[];
   collectionsList: string[];
   sku?: string;
+  status?: string;
+  is_upcoming?: boolean;
 }
 
 type CollectionDb = {
@@ -65,6 +67,19 @@ const FEATURES = [
   { iconUrl: "https://dopieoflkqfalnuvpwch.supabase.co/storage/v1/object/public/Recursos%20Visuales%20Disenador/Iconos%20Pagina%20Web/Envios.png", title: "Envíos solo a Canarias", description: "Rápido y sin aduanas sorpresa" },
   { iconUrl: "https://dopieoflkqfalnuvpwch.supabase.co/storage/v1/object/public/Recursos%20Visuales%20Disenador/Iconos%20Pagina%20Web/Recurso%2025.png", title: "Sin Dropshipping", description: "Stock muy cerca de ti" }
 ]
+
+const isProductUpcoming = (p: any): boolean => {
+  if (!p) return false;
+  if (p.is_upcoming) return true;
+  
+  const st = String(p.status || '').toLowerCase().trim();
+  if (['upcoming', 'proximamente', 'próximamente', 'draft', 'soon', 'coming_soon', 'coming soon', 'pendiente'].includes(st)) {
+    return true;
+  }
+  
+  const fullText = `${p.name || ''} ${p.description || ''} ${p.content || ''} ${p.set || ''} ${p.status || ''}`.toLowerCase();
+  return fullText.includes('proximamente') || fullText.includes('próximamente') || fullText.includes('upcoming');
+};
 
 const tabs = ["Pokémon TCG", "Magic The Gathering", "One Piece TCG", "Accesorios"]
 
@@ -247,7 +262,9 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
           collection: colArray[0] || "",
           collectionIds: Array.from(extractedColIds),
           collectionsList: colArray,
-          sku: p.sku || ""
+          sku: p.sku || "",
+          status: p.status || "",
+          is_upcoming: p.is_upcoming || false
         };
       });
 
@@ -263,7 +280,6 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
 
     if (!supabase) return;
 
-    // Canal único con timestamp para evitar colisiones de socket
     const channelId = `hero-realtime-${Date.now()}`;
     const channel = supabase.channel(channelId);
 
@@ -274,7 +290,6 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       .subscribe();
 
     return () => {
-      // Desconexión limpia del canal
       supabase.removeChannel(channel);
     };
   }, [isHomePage]);
@@ -457,6 +472,8 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
   }, [activeProduct?.id]);
 
   const handleAddToCart = (card: ProductCard) => {
+    if (isProductUpcoming(card)) return;
+
     const cardPrice = Number(card.price) || 0;
     addItem({
       id: card.id, name: card.name, price: cardPrice,
@@ -669,6 +686,8 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
               const uniqueId = `mob-${card.id}-${index}`;
               const cardPrice = Number(card.price) || 0;
 
+              const isUpcoming = isProductUpcoming(card);
+
               return (
                 <div 
                   key={uniqueId} 
@@ -681,11 +700,18 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                     }}
                     className="w-full h-24 bg-transparent relative shrink-0 cursor-zoom-in p-1 flex items-center justify-center border-[1.5px] border-[#F3B91C]/40 rounded-xl overflow-hidden"
                   >
+                    {isUpcoming && (
+                      <div className="absolute top-1 left-1 z-30 pointer-events-none">
+                        <span className="bg-[#F3B91C] text-black font-extrabold text-[8px] uppercase px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                          <Lock className="w-2.5 h-2.5" /> PRÓXIMAMENTE
+                        </span>
+                      </div>
+                    )}
                     {card.imgUrl ? (
                       <img 
                         src={card.imgUrl} 
                         alt={card.name} 
-                        className="w-full h-full object-contain filter drop-shadow-md"
+                        className={`w-full h-full object-contain filter drop-shadow-md ${isUpcoming ? 'opacity-80 grayscale-[20%]' : ''}`}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-transparent rounded-xl border border-white/5">
@@ -705,16 +731,26 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                   </div>
 
                   <div className="mt-2 w-full flex flex-col gap-1 shrink-0">
-                    <button 
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        handleAddToCart(card); 
-                      }}
-                      className="w-full bg-yellow-400 hover:bg-blue-600 text-black hover:text-white font-bold py-1.5 rounded-lg text-[9px] flex items-center justify-center gap-1 transition-colors active:scale-95 uppercase tracking-wider"
-                    >
-                      <ShoppingCart className="w-3 h-3"/> 
-                      AGREGAR
-                    </button>
+                    {isUpcoming ? (
+                      <button 
+                        disabled
+                        className="w-full bg-white/5 border border-yellow-500/30 text-yellow-400 font-bold py-1.5 rounded-lg text-[9px] flex items-center justify-center gap-1 opacity-90 cursor-not-allowed uppercase tracking-wider"
+                      >
+                        <Lock className="w-3 h-3 text-yellow-400" />
+                        <span>PRÓXIMAMENTE</span>
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          handleAddToCart(card); 
+                        }}
+                        className="w-full bg-yellow-400 hover:bg-blue-600 text-black hover:text-white font-bold py-1.5 rounded-lg text-[9px] flex items-center justify-center gap-1 transition-colors active:scale-95 uppercase tracking-wider"
+                      >
+                        <ShoppingCart className="w-3 h-3"/> 
+                        AGREGAR
+                      </button>
+                    )}
 
                     <button 
                       onClick={(e) => { 
@@ -770,6 +806,8 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                   const uniqueId = `${card.id}-${index}-${carouselPage}`;
                   const cardPrice = Number(card.price) || 0;
                   
+                  const isUpcoming = isProductUpcoming(card);
+
                   return (
                     <div 
                       key={uniqueId} 
@@ -783,11 +821,18 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                         }}
                         className="w-full h-20 sm:h-28 md:h-32 xl:h-36 bg-transparent relative shrink-0 cursor-zoom-in p-1 flex items-center justify-center border-[1.5px] border-[#F3B91C]/40 rounded-xl overflow-hidden"
                       >
+                        {isUpcoming && (
+                          <div className="absolute top-1.5 left-1.5 z-30 pointer-events-none">
+                            <span className="bg-[#F3B91C] text-black font-extrabold text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full shadow-lg flex items-center gap-1 border border-yellow-300">
+                              <Lock className="w-3 h-3 text-black" /> PRÓXIMAMENTE
+                            </span>
+                          </div>
+                        )}
                         {card.imgUrl ? (
                           <img 
                             src={card.imgUrl} 
                             alt={card.name} 
-                            className="w-full h-full object-contain filter drop-shadow-md group-hover:scale-110 transition-all duration-500"
+                            className={`w-full h-full object-contain filter drop-shadow-md group-hover:scale-110 transition-all duration-500 ${isUpcoming ? 'opacity-80 grayscale-[20%]' : ''}`}
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-transparent rounded-xl border border-white/5">
@@ -807,16 +852,26 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                       </div>
 
                       <div className="mt-2 sm:mt-3 w-full flex flex-col gap-1 sm:gap-1.5 shrink-0">
-                        <button 
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            handleAddToCart(card); 
-                          }}
-                          className="w-full bg-yellow-400 hover:bg-blue-600 text-black hover:text-white font-bold py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-[11px] flex items-center justify-center gap-1 sm:gap-1.5 transition-colors duration-300 active:scale-95 shadow-[0_0_10px_rgba(250,204,21,0.2)] uppercase tracking-wider"
-                        >
-                          <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4"/> 
-                          AGREGAR
-                        </button>
+                        {isUpcoming ? (
+                          <button 
+                            disabled
+                            className="w-full bg-white/5 border border-yellow-500/30 text-yellow-400 font-extrabold uppercase tracking-widest text-[9px] sm:text-[11px] py-1 sm:py-1.5 rounded-lg flex items-center justify-center gap-1.5 cursor-not-allowed opacity-90 shadow-sm"
+                          >
+                            <Lock className="w-3.5 h-3.5 text-yellow-400" />
+                            <span>PRÓXIMAMENTE</span>
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              handleAddToCart(card); 
+                            }}
+                            className="w-full bg-yellow-400 hover:bg-blue-600 text-black hover:text-white font-bold py-1 sm:py-1.5 rounded-lg text-[9px] sm:text-[11px] flex items-center justify-center gap-1 sm:gap-1.5 transition-colors duration-300 active:scale-95 shadow-[0_0_10px_rgba(250,204,21,0.2)] uppercase tracking-wider"
+                          >
+                            <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4"/> 
+                            AGREGAR
+                          </button>
+                        )}
 
                         <button 
                           onClick={(e) => { 
@@ -1123,13 +1178,23 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
                 </p>
 
                 <div className="w-full flex flex-col gap-3">
-                  <button 
-                    onClick={() => handleAddToCart(activeProduct)}
-                    className="w-full bg-yellow-400 hover:bg-blue-600 text-black hover:text-white font-black uppercase tracking-widest py-3.5 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2.5 transition-colors duration-300 active:scale-95 shadow-[0_0_20px_rgba(250,204,21,0.3)] hover:shadow-[0_0_20px_rgba(37,99,235,0.5)]"
-                  >
-                    <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5"/> 
-                    Agregar al Carrito
-                  </button>
+                  {isProductUpcoming(activeProduct) ? (
+                    <button 
+                      disabled
+                      className="w-full bg-white/5 border border-yellow-500/30 text-yellow-400 font-extrabold uppercase tracking-widest py-3.5 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2.5 cursor-not-allowed opacity-90 shadow-sm"
+                    >
+                      <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
+                      <span>PRÓXIMAMENTE</span>
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => handleAddToCart(activeProduct)}
+                      className="w-full bg-yellow-400 hover:bg-blue-600 text-black hover:text-white font-black uppercase tracking-widest py-3.5 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2.5 transition-colors duration-300 active:scale-95 shadow-[0_0_20px_rgba(250,204,21,0.3)] hover:shadow-[0_0_20px_rgba(37,99,235,0.5)]"
+                    >
+                      <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5"/> 
+                      Agregar al Carrito
+                    </button>
+                  )}
 
                   <button 
                     onClick={(e) => { 
