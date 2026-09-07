@@ -303,7 +303,6 @@ const ProductCardItem = ({
   onAddToCart,
   onImageClick 
 }: { 
-  key?: React.Key;
   product: Product; 
   quantity: number; 
   onUpdateQuantity: (id: string, delta: number) => void; 
@@ -637,16 +636,37 @@ export default function Catalog() {
 
         const coreText = `${pName} ${pCat} ${pGame} ${pGameType} ${pFranchise} ${pSet} ${tagText}`;
 
-        // Normalizamos el texto para búsqueda de palabras exactas (evitando falsos positivos)
+        // Normalizamos el texto para búsqueda de palabras exactas
         const paddedText = ' ' + coreText.replace(/[.,!?;:'"()[\]{}-]/g, ' ').replace(/\s+/g, ' ') + ' ';
         const hasWord = (kw: string) => paddedText.includes(` ${kw} `);
 
-        // 1. Accesorios
+        // 1. Detección de Accesorios
         const accKeywords = [
-          'funda', 'fundas', 'sleeve', 'sleeves', 'binder', 'carpeta', 'deck box', 'caja de mazo', 'caja',
-          'toploader', 'toploaders', 'playmat', 'tapete', 'album', 'álbum', 'hojas', 'accesorio', 'accesorios', 'dice', 'dados', 'protector', 'portadeck', 'dragon shield', 'ultra pro', 'perfect fit', 'ultimate guard'
+          'funda', 'fundas', 'sleeve', 'sleeves', 'binder', 'binders', 'carpeta', 'carpetas', 
+          'deck box', 'deckbox', 'caja de mazo', 'toploader', 'toploaders', 'playmat', 'tapete', 
+          'album', 'álbum', 'hojas', 'accesorio', 'accesorios', 'dice', 'dados', 'protector', 
+          'portadeck', 'dragon shield', 'ultra pro', 'perfect fit', 'ultimate guard'
         ];
-        const isAccessoryProduct = accKeywords.some(hasWord) || pGameType.includes('accesorio') || pCat.includes('accesorio') || pFranchise.includes('accesorio') || pTags.some(t => t.toLowerCase().includes('accesori'));
+        
+        let isAccessoryProduct = accKeywords.some(hasWord) || 
+                             pGameType.includes('accesorio') || pCat.includes('accesorio') || pFranchise.includes('accesorio') || 
+                             pTags.some(t => String(t).toLowerCase().includes('accesori')) || 
+                             pCat.includes('sleeves') || pCat.includes('binders') || pCat.includes('cajas de mazo');
+
+        // Cajas de sobres, ETBs, Packs, Bundles NO son accesorios
+        if (accKeywords.some(kw => hasWord(kw)) === false && (coreText.includes('booster box') || coreText.includes('caja de sobres') || coreText.includes('etb') || coreText.includes('estuche cartas entrenador') || coreText.includes('elite trainer') || coreText.includes('build & battle'))) {
+          isAccessoryProduct = false;
+        }
+
+        // Si se filtra por 'Accesorios', mostrar solo accesorios
+        if (fId === 'accesorios' || fId.includes('accesori')) {
+          return isAccessoryProduct;
+        }
+
+        // Si el producto es un accesorio, NO mostrarlo en los filtros de Pokémon ni Magic
+        if (isAccessoryProduct) {
+          return false;
+        }
 
         // 2. Detección de Magic
         const magicKeywords = [
@@ -667,26 +687,16 @@ export default function Catalog() {
         const hasExTerm = /\b(ex|vmax|vstar)\b/i.test(pName);
         let isPokemonProduct = pkmKeywords.some(hasWord) || hasExTerm || pFranchise.includes('pokemon') || pFranchise.includes('pokémon') || pGame.includes('pokemon') || pGame.includes('pokémon') || pCat.includes('pokemon') || pCat.includes('pokémon');
 
-        // Desambiguación estricta
+        // Desambiguación estricta entre Magic y Pokémon
         if (isMagicProduct && isPokemonProduct) {
            if (paddedText.includes(' magic ') || paddedText.includes(' mtg ') || paddedText.includes(' gathering ')) {
              isPokemonProduct = false;
            } else if (paddedText.includes(' pokemon ') || paddedText.includes(' pokémon ') || paddedText.includes(' pikachu ')) {
              isMagicProduct = false;
            } else {
-             // Si no hay un ganador claro, separamos según la marca en el nombre si la hay
              if (/magic|mtg/i.test(pName)) isPokemonProduct = false;
              else if (/pokemon|pokémon/i.test(pName)) isMagicProduct = false;
            }
-        }
-
-        // Excluir accesorios de los juegos principales si es puramente un accesorio
-        if (isAccessoryProduct && !(/booster|sobre|caja de sobres|baraja|mazo|commander|etb|elite trainer/i.test(pName))) {
-           if (fId === 'accesorios' || fId.includes('accesori')) return true;
-        }
-
-        if (fId === 'accesorios' || fId.includes('accesori')) {
-          return isAccessoryProduct;
         }
 
         if (fId === 'pokemon' || fId.includes('pokem')) {

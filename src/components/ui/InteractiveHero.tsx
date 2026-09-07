@@ -280,6 +280,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
 
     if (!supabase) return;
 
+    // Canal único con timestamp para evitar colisiones de socket
     const channelId = `hero-realtime-${Date.now()}`;
     const channel = supabase.channel(channelId);
 
@@ -290,6 +291,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       .subscribe();
 
     return () => {
+      // Desconexión limpia del canal
       supabase.removeChannel(channel);
     };
   }, [isHomePage]);
@@ -375,20 +377,21 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       const pSkus = (card.sku || '').toLowerCase();
       const coreText = `${pName} ${pSet} ${pCat} ${pSkus} ${card.categoriesList.join(" ").toLowerCase()}`;
       
-      const isAccessoryProduct = accKeywords.some(kw => coreText.includes(kw));
+      const isAccessoryProduct = accKeywords.some(kw => coreText.includes(kw)) || 
+                                 pCat.includes('accesorio') || pCat.includes('sleeves') || pCat.includes('binders') || pCat.includes('cajas de mazo');
 
+      // Si la pestaña seleccionada es 'Accesorios', devolver solo accesorios
       if (activeTab === "Accesorios") {
         return isAccessoryProduct;
       }
 
-      const hasExplicitPokemon = /\bpokemon\b|\bpokémon\b/i.test(coreText);
-      const hasExplicitMagic = /\bmagic\b|\bmtg\b|\bgathering\b/i.test(coreText);
-
+      // Si el producto es un accesorio, NO mostrarlo en las pestañas de Pokémon TCG ni Magic
       if (isAccessoryProduct) {
-        if (activeTab === "Pokémon TCG") return hasExplicitPokemon && !hasExplicitMagic;
-        if (activeTab === "Magic The Gathering") return hasExplicitMagic && !hasExplicitPokemon;
         return false;
       }
+
+      const hasExplicitPokemon = /\bpokemon\b|\bpokémon\b/i.test(coreText);
+      const hasExplicitMagic = /\bmagic\b|\bmtg\b|\bgathering\b|\bcommander\b|\bplaneswalker\b|\bsecret lair\b|\bbooster\b|\bbundle\b|\bplay booster\b|\bcollector booster\b|marvel super heroes/i.test(coreText);
 
       if (activeTab === "Pokémon TCG") {
         if (hasExplicitMagic) return false;
@@ -399,7 +402,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
           'pikachu', 'charizard', 'mewtwo', 'scarlet', 'violet', 'escarlata', 'púrpura', 'purpura', 
           'paldea', '151', 'paradox', 'obsidian', 'stellar', 'surging', 'crown zenith', 'lost origin', 
           'silver tempest', 'fusion strike', 'brilliant stars', 'shrouded', 'twilight', 'temporal', 
-          'destinos', 'evoluciones', 'rivales', 'caos', 'etb', 'pokeball', 'pokéball', 'elite trainer'
+          'destinos', 'evoluciones', 'caos', 'etb', 'pokeball', 'pokéball', 'elite trainer'
         ];
         const hasKeyword = pkmKeywords.some(kw => coreText.includes(kw));
         const hasStandaloneEx = /\bex\b/i.test(pName) || /\bvmax\b/i.test(pName) || /\bvstar\b/i.test(pName);
@@ -473,7 +476,6 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
 
   const handleAddToCart = (card: ProductCard) => {
     if (isProductUpcoming(card)) return;
-
     const cardPrice = Number(card.price) || 0;
     addItem({
       id: card.id, name: card.name, price: cardPrice,
