@@ -289,6 +289,29 @@ const CheckoutForm = ({
 
       if (itemsError) throw itemsError;
 
+      // Descontar el stock (base_stock) de cada producto comprado según la cantidad (quantity)
+      for (const item of items) {
+        if (item.id) {
+          const boughtQty = Math.max(1, Number(item.quantity) || 1);
+          
+          const { data: currentProd } = await supabase
+            .from('products')
+            .select('base_stock')
+            .eq('id', item.id)
+            .maybeSingle();
+
+          if (currentProd) {
+            const currentStock = Number(currentProd.base_stock) || 0;
+            const newStock = Math.max(0, currentStock - boughtQty);
+
+            await supabase
+              .from('products')
+              .update({ base_stock: newStock })
+              .eq('id', item.id);
+          }
+        }
+      }
+
       await supabase.functions.invoke('send-order-email', {
         body: {
           order_id: order.id,
