@@ -1,4 +1,4 @@
-// Catalog.tsx - Catálogo completo con filtrado resiliente de franquicias e idiomas
+// Catalog.tsx - Catálogo completo con enlaces directos, modal auto-girado y filtrado de franquicias
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,7 +17,8 @@ import {
   X,
   SlidersHorizontal,
   RotateCcw,
-  Lock
+  Lock,
+  Share2
 } from 'lucide-react';
 import HeaderV2 from '../components/layout/HeaderV2';
 import AnnouncementBar from '../components/layout/AnnouncementBar';
@@ -296,18 +297,23 @@ const FiltersPanel = ({
   </div>
 );
 
-const ProductCardItem = ({ 
-  product, 
-  quantity, 
-  onUpdateQuantity, 
-  onAddToCart,
-  onImageClick 
-}: { 
+interface ProductCardItemProps {
+  key?: React.Key;
   product: Product; 
   quantity: number; 
   onUpdateQuantity: (id: string, delta: number) => void; 
   onAddToCart: (product: Product) => void; 
   onImageClick: (product: Product) => void;
+  onShareProduct?: (e: React.MouseEvent, product: Product) => void;
+}
+
+const ProductCardItem: React.FC<ProductCardItemProps> = ({ 
+  product, 
+  quantity, 
+  onUpdateQuantity, 
+  onAddToCart,
+  onImageClick,
+  onShareProduct
 }) => {
   const isUpcoming = isProductUpcoming(product);
 
@@ -333,6 +339,16 @@ const ProductCardItem = ({
             )} 
             alt={product.name} 
           />
+
+          {onShareProduct && (
+            <button
+              onClick={(e) => onShareProduct(e, product)}
+              title="Copiar enlace de este producto"
+              className="absolute top-2 right-2 z-30 p-2 bg-black/60 hover:bg-yellow-400 hover:text-black text-gray-300 rounded-full backdrop-blur-md transition-all border border-white/10 opacity-0 group-hover:opacity-100 shadow-lg"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+            </button>
+          )}
           
           {isUpcoming ? (
             <div className="absolute top-2 left-2 z-30 pointer-events-none">
@@ -417,6 +433,7 @@ export default function Catalog() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState('¡Pieza añadida al carrito!');
 
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
   const [isModalFlipped, setIsModalFlipped] = useState(false);
@@ -771,8 +788,43 @@ export default function Catalog() {
       set: product.set || 'General',
       stock: product.base_stock
     }, qty);
+    setToastMessage('¡Pieza añadida al carrito!');
     setShowToast(true);
   };
+
+  const handleShareProduct = (e: React.MouseEvent, productToShare: Product) => {
+    e.stopPropagation();
+    const param = (productToShare as any).slug || productToShare.id;
+    const url = `${window.location.origin}/catalogo?product=${encodeURIComponent(param)}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+      setToastMessage('¡Enlace del producto copiado al portapapeles!');
+      setShowToast(true);
+    }
+  };
+
+  // Abrir automáticamente el modal en la cara girada (información) al abrir un enlace directo
+  useEffect(() => {
+    if (products.length === 0) return;
+
+    const productParam = searchParams.get('product') || searchParams.get('p') || searchParams.get('id') || searchParams.get('slug');
+    if (productParam) {
+      const paramNorm = productParam.toLowerCase().trim();
+      const normalizeStr = (s: string) => s.toLowerCase().replace(/[\s\-\/_]/g, '');
+
+      const found = products.find(p => 
+        String(p.id).toLowerCase() === paramNorm ||
+        String((p as any).slug || '').toLowerCase() === paramNorm ||
+        normalizeStr(p.name) === normalizeStr(productParam)
+      );
+
+      if (found) {
+        setActiveProduct(found);
+        setSelectedImageIndex(0);
+        setIsModalFlipped(true);
+      }
+    }
+  }, [searchParams, products]);
 
   const handleReset = () => {
     setSelectedCategories([]);
@@ -911,6 +963,7 @@ export default function Catalog() {
                         quantity={quantities[product.id] || 1}
                         onUpdateQuantity={handleUpdateQuantity}
                         onAddToCart={handleAddToCart}
+                        onShareProduct={handleShareProduct}
                         onImageClick={(p) => {
                           setIsModalFlipped(false);
                           setSelectedImageIndex(0);
@@ -1157,27 +1210,46 @@ export default function Catalog() {
                       </button>
                     )}
 
-                    <span className="bg-white/5 border border-white/10 text-muted-foreground text-[9px] font-black uppercase tracking-widest px-3 py-0.5 rounded-full flex items-center gap-1 hover:text-white transition-colors">
-                      <RotateCcw className="w-3 h-3" /> Volver a girar
-                    </span>
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => handleShareProduct(e, activeProduct)}
+                        className="bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 hover:bg-yellow-400 hover:text-black text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 transition-all active:scale-95"
+                      >
+                        <Share2 className="w-3 h-3" /> Copiar Enlace
+                      </button>
+                      <span className="bg-white/5 border border-white/10 text-muted-foreground text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 hover:text-white transition-colors cursor-pointer">
+                        <RotateCcw className="w-3 h-3" /> Volver a girar
+                      </span>
+                    </div>
                   </div>
                 </div>
               </motion.div>
             </motion.div>
 
-            <button
-              onClick={(e) => { e.stopPropagation(); closeModal(); }}
-              className="absolute top-4 right-4 md:top-8 md:right-8 bg-black/60 backdrop-blur-md text-white p-3 rounded-full border border-white/10 hover:bg-cyan-500 hover:text-black transition-all hover:scale-110 z-50"
-            >
-              <X className="w-6 h-6" />
-            </button>
+            <div className="absolute top-4 right-4 md:top-8 md:right-8 flex items-center gap-2.5 z-50">
+              <button
+                onClick={(e) => handleShareProduct(e, activeProduct)}
+                title="Compartir enlace directo"
+                className="bg-black/70 backdrop-blur-md text-yellow-400 hover:bg-yellow-400 hover:text-black border border-yellow-400/40 p-3 rounded-full transition-all hover:scale-110 flex items-center gap-1.5 px-4 text-xs font-black uppercase tracking-wider shadow-2xl cursor-pointer"
+              >
+                <Share2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Compartir</span>
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); closeModal(); }}
+                className="bg-black/60 backdrop-blur-md text-white p-3 rounded-full border border-white/10 hover:bg-cyan-500 hover:text-black transition-all hover:scale-110 cursor-pointer shadow-xl"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       <Toast 
         show={showToast} 
-        message="¡Pieza añadida al carrito!" 
+        message={toastMessage} 
         onClose={() => setShowToast(false)} 
       />
     </div>
