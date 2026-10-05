@@ -148,10 +148,27 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
     try {
       if (!supabase) return;
 
-      const [tagsRes, colsRes] = await Promise.all([
+      // Petición paralela unificada para evitar waterfalls
+      const [tagsRes, colsRes, prodsRes, catRes, gamesRes, prodTagsRes, prodColsRes] = await Promise.all([
         supabase.from('tags').select('*').then(r => r.error ? { data: [] } : r),
-        supabase.from('collections').select('*').then(r => r.error ? { data: [] } : r)
+        supabase.from('collections').select('*').then(r => r.error ? { data: [] } : r),
+        supabase.from('products').select('*').then(r => r.error ? { data: [] } : r),
+        supabase.from('categories').select('*, games(name)').then(r => r.error ? { data: [] } : r),
+        supabase.from('games').select('*').then(r => r.error ? { data: [] } : r),
+        supabase.from('product_tags').select('*').then(r => r.error ? { data: [] } : r),
+        supabase.from('product_collections').select('*').then(r => r.error ? { data: [] } : r)
       ]);
+
+      let prods = prodsRes.data || [];
+
+      // Reintento automático en frío si Supabase devuelve vacío en el primer ms
+      if (prods.length === 0) {
+        await new Promise(res => setTimeout(res, 300));
+        const retryRes = await supabase.from('products').select('*');
+        if (retryRes.data && retryRes.data.length > 0) {
+          prods = retryRes.data;
+        }
+      }
 
       const rawCols = [...(tagsRes.data || []), ...(colsRes.data || [])];
       const collectionsMap = new Map<string, string>();
@@ -165,24 +182,6 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       });
 
       const collectionsList: CollectionDb[] = Array.from(collectionsMap.entries()).map(([id, name]) => ({ id, name }));
-      setDbCollections(collectionsList);
-
-      if (collectionsList.length > 0) {
-        if (!selectedCollectionId || !collectionsList.some(c => c.id === selectedCollectionId)) {
-          setSelectedCollectionId(collectionsList[0].id);
-          setHighlightType(collectionsList[0].name);
-        }
-      }
-
-      const [prodsRes, catRes, gamesRes, prodTagsRes, prodColsRes] = await Promise.all([
-        supabase.from('products').select('*').then(r => r.error ? { data: [] } : r),
-        supabase.from('categories').select('*, games(name)').then(r => r.error ? { data: [] } : r),
-        supabase.from('games').select('*').then(r => r.error ? { data: [] } : r),
-        supabase.from('product_tags').select('*').then(r => r.error ? { data: [] } : r),
-        supabase.from('product_collections').select('*').then(r => r.error ? { data: [] } : r)
-      ]);
-
-      const prods = prodsRes.data || [];
       const dbCategories = catRes.data || [];
       const gamesList = gamesRes.data || [];
       const prodPivot = [...(prodTagsRes.data || []), ...(prodColsRes.data || [])];
@@ -269,6 +268,23 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       });
 
       setDbProducts(formattedProducts);
+
+      const collectionsWithProds = collectionsList.filter(col => 
+        formattedProducts.some(p => p.collectionIds.includes(col.id) || p.collectionsList.some(colName => normalizeText(colName) === normalizeText(col.name)))
+      );
+
+      const finalCols = collectionsWithProds.length > 0 ? collectionsWithProds : collectionsList;
+      setDbCollections(finalCols);
+
+      if (finalCols.length > 0) {
+        const bestCandidate = finalCols.find(c => {
+          const norm = normalizeText(c.name);
+          return norm.includes('destacado') || norm.includes('top') || norm.includes('hits') || norm.includes('principal') || norm.includes('home');
+        }) || finalCols[0];
+
+        setSelectedCollectionId(bestCandidate.id);
+        setHighlightType(bestCandidate.name);
+      }
     } catch (error) {
       console.error("Error cargando colecciones:", error);
       setDbProducts([]);
@@ -280,7 +296,6 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
 
     if (!supabase) return;
 
-    // Canal único con timestamp para evitar colisiones de socket
     const channelId = `hero-realtime-${Date.now()}`;
     const channel = supabase.channel(channelId);
 
@@ -291,7 +306,6 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       .subscribe();
 
     return () => {
-      // Desconexión limpia del canal
       supabase.removeChannel(channel);
     };
   }, [isHomePage]);
@@ -342,7 +356,7 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       const activeId = activeCol?.id || selectedCollectionId;
       const activeNameNorm = normalizeText(activeCol?.name || highlightType);
 
-      return cards.filter(p => {
+      const filteredByCol = cards.filter(p => {
         if (activeId && p.collectionIds.includes(activeId)) {
           return true;
         }
@@ -357,6 +371,8 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
 
         return false;
       });
+
+      return filteredByCol.length > 0 ? filteredByCol : cards;
     }
 
     const currentGame = dbGames.find((g: any) => {
@@ -380,12 +396,10 @@ export function InteractiveHero({ isHomePage = true, onFranchiseTabClick }: Inte
       const isAccessoryProduct = accKeywords.some(kw => coreText.includes(kw)) || 
                                  pCat.includes('accesorio') || pCat.includes('sleeves') || pCat.includes('binders') || pCat.includes('cajas de mazo');
 
-      // Si la pestaña seleccionada es 'Accesorios', devolver solo accesorios
       if (activeTab === "Accesorios") {
         return isAccessoryProduct;
       }
 
-      // Si el producto es un accesorio, NO mostrarlo en las pestañas de Pokémon TCG ni Magic
       if (isAccessoryProduct) {
         return false;
       }

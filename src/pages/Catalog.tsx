@@ -653,11 +653,9 @@ export default function Catalog() {
 
         const coreText = `${pName} ${pCat} ${pGame} ${pGameType} ${pFranchise} ${pSet} ${tagText}`;
 
-        // Normalizamos el texto para búsqueda de palabras exactas
         const paddedText = ' ' + coreText.replace(/[.,!?;:'"()[\]{}-]/g, ' ').replace(/\s+/g, ' ') + ' ';
         const hasWord = (kw: string) => paddedText.includes(` ${kw} `);
 
-        // 1. Detección de Accesorios
         const accKeywords = [
           'funda', 'fundas', 'sleeve', 'sleeves', 'binder', 'binders', 'carpeta', 'carpetas', 
           'deck box', 'deckbox', 'caja de mazo', 'toploader', 'toploaders', 'playmat', 'tapete', 
@@ -670,22 +668,18 @@ export default function Catalog() {
                              pTags.some(t => String(t).toLowerCase().includes('accesori')) || 
                              pCat.includes('sleeves') || pCat.includes('binders') || pCat.includes('cajas de mazo');
 
-        // Cajas de sobres, ETBs, Packs, Bundles NO son accesorios
         if (accKeywords.some(kw => hasWord(kw)) === false && (coreText.includes('booster box') || coreText.includes('caja de sobres') || coreText.includes('etb') || coreText.includes('estuche cartas entrenador') || coreText.includes('elite trainer') || coreText.includes('build & battle'))) {
           isAccessoryProduct = false;
         }
 
-        // Si se filtra por 'Accesorios', mostrar solo accesorios
         if (fId === 'accesorios' || fId.includes('accesori')) {
           return isAccessoryProduct;
         }
 
-        // Si el producto es un accesorio, NO mostrarlo en los filtros de Pokémon ni Magic
         if (isAccessoryProduct) {
           return false;
         }
 
-        // 2. Detección de Magic
         const magicKeywords = [
           'magic', 'mtg', 'gathering', 'commander', 'planeswalker', 'bloomburrow', 'duskmourn', 'tarkir', 'ixalan', 'ravnica', 
           'eldraine', 'lorwyn', 'karlov', 'foundations', 'modern', 'draft booster', 'play booster', 
@@ -694,7 +688,6 @@ export default function Catalog() {
         ];
         let isMagicProduct = magicKeywords.some(hasWord) || pFranchise.includes('magic') || pGame.includes('magic') || pCat.includes('magic');
 
-        // 3. Detección de Pokémon
         const pkmKeywords = [
           'pokemon', 'pokémon', 'pikachu', 'charizard', 'mewtwo', 'scarlet', 'violet', 'escarlata', 'púrpura', 'purpura', 
           'paldea', '151', 'paradox', 'obsidian', 'stellar', 'surging', 'crown zenith', 'lost origin', 
@@ -704,7 +697,6 @@ export default function Catalog() {
         const hasExTerm = /\b(ex|vmax|vstar)\b/i.test(pName);
         let isPokemonProduct = pkmKeywords.some(hasWord) || hasExTerm || pFranchise.includes('pokemon') || pFranchise.includes('pokémon') || pGame.includes('pokemon') || pGame.includes('pokémon') || pCat.includes('pokemon') || pCat.includes('pokémon');
 
-        // Desambiguación estricta entre Magic y Pokémon
         if (isMagicProduct && isPokemonProduct) {
            if (paddedText.includes(' magic ') || paddedText.includes(' mtg ') || paddedText.includes(' gathering ')) {
              isPokemonProduct = false;
@@ -803,7 +795,6 @@ export default function Catalog() {
     }
   };
 
-  // Abrir automáticamente el modal en la cara girada (información) al abrir un enlace directo
   useEffect(() => {
     if (products.length === 0) return;
 
