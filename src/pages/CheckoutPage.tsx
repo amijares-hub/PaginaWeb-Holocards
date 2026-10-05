@@ -370,6 +370,37 @@ export default function CheckoutPage() {
   const { items, addItem, removeItem, updateQuantity, getTotalPrice, clearCart } = useCartStore()
   const [searchParams] = useSearchParams()
   
+  // CONFIGURACIÓN DINÁMICA DE ENVÍO DESDE SUPABASE (System Settings)
+  const [shippingConfig, setShippingConfig] = useState({
+    standard_fee: 5.95,
+    free_shipping_threshold: 50.00
+  });
+
+  useEffect(() => {
+    const fetchShippingConfig = async () => {
+      try {
+        if (!supabase) return;
+        const { data } = await supabase
+          .from('system_settings')
+          .select('value')
+          .eq('id', 'logistics_shipping')
+          .maybeSingle();
+
+        if (data?.value?.value) {
+          const val = data.value.value;
+          setShippingConfig({
+            standard_fee: Number(val.standard_fee) ?? 5.95,
+            free_shipping_threshold: Number(val.free_shipping_threshold) ?? 50.00
+          });
+        }
+      } catch (err) {
+        console.warn('Aviso cargando configuración de envíos desde Supabase:', err);
+      }
+    };
+
+    fetchShippingConfig();
+  }, []);
+
   const [step, setStep] = useState<"verification" | "contact" | "shipping" | "payment">("verification")
   const [userProfile, setUserProfile] = useState<any>(null)
 
@@ -519,7 +550,7 @@ export default function CheckoutPage() {
             p_code: cleanCode,
             p_user_id: userProfile?.id || null,
             p_order_amount: subtotal || 1,
-            p_shipping_cost: 5.95
+            p_shipping_cost: shippingConfig.standard_fee
           })
 
           if (!rpcError && rpcData && rpcData.valid) {
@@ -589,7 +620,7 @@ export default function CheckoutPage() {
     } finally {
       setCouponLoading(false)
     }
-  }, [subtotal, userProfile]);
+  }, [subtotal, userProfile, shippingConfig.standard_fee]);
 
   useEffect(() => {
     const codeFromUrl = searchParams.get('code') || searchParams.get('promo') || searchParams.get('coupon');
@@ -612,8 +643,11 @@ export default function CheckoutPage() {
 
   const subtotalWithDiscount = Math.max(0, subtotal - discountAmount)
   const isFreeShippingByCoupon = appliedCoupon?.is_free_shipping || appliedCoupon?.discount_type === 'free_shipping'
-  const shippingCost = (isFreeShippingByCoupon || subtotalWithDiscount >= 50 || subtotalWithDiscount === 0) ? 0 : 5.95
-  const freeShippingThreshold = 50.00
+  
+  // CÁLCULO DE ENVÍO DINÁMICO
+  const freeShippingThreshold = shippingConfig.free_shipping_threshold
+  const standardShippingFee = shippingConfig.standard_fee
+  const shippingCost = (isFreeShippingByCoupon || subtotalWithDiscount >= freeShippingThreshold || subtotalWithDiscount === 0) ? 0 : standardShippingFee
   const remainingForFreeShipping = isFreeShippingByCoupon ? 0 : Math.max(0, freeShippingThreshold - subtotalWithDiscount)
   const total = subtotalWithDiscount + shippingCost
 

@@ -12,6 +12,7 @@ import { cn } from '../lib/utils';
 import { StoreNavbar } from '../components/layout/StoreNavbar';
 import { useStore } from '../lib/StoreContext';
 import { Card } from '../types';
+import { supabase } from '../lib/supabase';
 
 interface Product {
   id: string;
@@ -26,7 +27,7 @@ interface Product {
   rarity?: string;
 }
 
-const SHIPPING_METHODS = [
+const DEFAULT_SHIPPING_METHODS = [
   { id: 'standard', name: 'Envío Estándar', price: 5.95, time: '3-5 días laborables' },
   { id: 'express', name: 'Envío Express', price: 9.90, time: '1-2 días laborables' },
   { id: 'priority', name: 'Prioritario HoloCards', price: 14.90, time: 'Entrega 24h Garantizada' },
@@ -85,7 +86,32 @@ export default function CheckoutFunnel() {
   const [notifMode, setNotifMode] = useState<'email' | 'sms'>('email');
   const [notifContact, setNotifContact] = useState('');
   
-  const [selectedShipping, setSelectedShipping] = useState(SHIPPING_METHODS[0]);
+  const [shippingMethods, setShippingMethods] = useState(DEFAULT_SHIPPING_METHODS);
+  const [selectedShipping, setSelectedShipping] = useState(DEFAULT_SHIPPING_METHODS[0]);
+
+  React.useEffect(() => {
+    const fetchShippingSetting = async () => {
+      try {
+        if (!supabase) return;
+        const { data } = await supabase
+          .from('system_settings')
+          .select('value')
+          .eq('id', 'logistics_shipping')
+          .maybeSingle();
+
+        if (data?.value?.value?.standard_fee !== undefined) {
+          const fee = Number(data.value.value.standard_fee) || 5.95;
+          setShippingMethods(prev => prev.map(m => m.id === 'standard' ? { ...m, price: fee } : m));
+          setSelectedShipping(prev => prev.id === 'standard' ? { ...prev, price: fee } : prev);
+        }
+      } catch (err) {
+        console.warn('Aviso cargando tarifa de envío en CheckoutFunnel:', err);
+      }
+    };
+
+    fetchShippingSetting();
+  }, []);
+
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; amount: number } | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'apple' | 'google'>('card');
@@ -280,7 +306,7 @@ export default function CheckoutFunnel() {
                       <h3 className="text-xl font-black uppercase tracking-widest">Método de Envío</h3>
                     </div>
                     <div className="grid gap-4">
-                      {SHIPPING_METHODS.map((method) => (
+                      {shippingMethods.map((method) => (
                         <div 
                           key={method.id}
                           onClick={() => setSelectedShipping(method)}

@@ -15,6 +15,7 @@ import {
   Truck 
 } from "lucide-react"
 import HeaderV2 from "./layout/HeaderV2"
+import { supabase } from "../lib/supabase"
 
 interface SectionData {
   id: string
@@ -27,7 +28,7 @@ interface SectionData {
   features: { icon: React.ReactNode; title: string; subtitle: string }[]
 }
 
-const SECTIONS: SectionData[] = [
+const getSections = (fee: number, threshold: number): SectionData[] => [
   {
     id: "sobre-nosotros",
     label: "Sobre Nosotros",
@@ -147,10 +148,10 @@ const SECTIONS: SectionData[] = [
     title: "ENVÍOS Y",
     highlight: "DEVOLUCIONES",
     icon: <Truck className="w-3.5 h-3.5 text-yellow-400" />,
-    shortDescription: "Envíos exclusivos a las Islas Canarias. Tarifas de 5,95€, envíos gratis a partir de 50€, plazos de 24/72h y política transparente sobre apertura de sobres.",
+    shortDescription: `Envíos exclusivos a las Islas Canarias. Tarifas de ${fee.toFixed(2)}€, envíos gratis a partir de ${threshold}€, plazos de 24/72h y política transparente sobre apertura de sobres.`,
     features: [
       { icon: <Truck className="w-4 h-4" />, title: "ENVÍOS CANARIAS", subtitle: "Tenerife 24-48h / Resto 24-72h" },
-      { icon: <Award className="w-4 h-4" />, title: "ENVÍO GRATIS >50€", subtitle: "Tarifa estándar 5,95€" }
+      { icon: <Award className="w-4 h-4" />, title: `ENVÍO GRATIS >${threshold}€`, subtitle: `Tarifa estándar ${fee.toFixed(2)}€` }
     ],
     fullContent: (
       <div className="space-y-4 text-gray-300 text-sm font-light leading-relaxed">
@@ -159,7 +160,7 @@ const SECTIONS: SectionData[] = [
           Realizamos envíos <strong>exclusivamente a todas las Islas Canarias</strong>. 
           <br />• <strong>Tenerife:</strong> 24 a 48 horas laborables.
           <br />• <strong>Resto de Islas Canarias:</strong> 24 a 72 horas laborables.
-          <br />Coste estándar de envío: <strong>5,95 €</strong>. ¡Envío <strong>GRATIS</strong> en pedidos superiores a 50 €!
+          <br />Coste estándar de envío: <strong>{fee.toFixed(2)} €</strong>. ¡Envío <strong>GRATIS</strong> en pedidos superiores a {threshold} €!
         </p>
         <h4 className="text-white font-bold text-base">2. Recepción e Incidencias</h4>
         <p>
@@ -178,22 +179,53 @@ const SECTIONS: SectionData[] = [
       </div>
     )
   }
-]
+];
 
 export function AboutUs() {
   const [activeTabId, setActiveTabId] = useState<string>("sobre-nosotros")
   const [searchParams] = useSearchParams()
+  const [shippingConfig, setShippingConfig] = useState({
+    standard_fee: 5.95,
+    free_shipping_threshold: 50.00
+  });
+
+  useEffect(() => {
+    const fetchShippingConfig = async () => {
+      try {
+        if (!supabase) return;
+        const { data } = await supabase
+          .from('system_settings')
+          .select('value')
+          .eq('id', 'logistics_shipping')
+          .maybeSingle();
+
+        if (data?.value?.value) {
+          const val = data.value.value;
+          setShippingConfig({
+            standard_fee: Number(val.standard_fee) ?? 5.95,
+            free_shipping_threshold: Number(val.free_shipping_threshold) ?? 50.00
+          });
+        }
+      } catch (err) {
+        console.warn('Aviso cargando configuración de envíos desde Supabase:', err);
+      }
+    };
+
+    fetchShippingConfig();
+  }, []);
+
+  const sections = getSections(shippingConfig.standard_fee, shippingConfig.free_shipping_threshold);
 
   useEffect(() => {
     const sectionParam = searchParams.get("section")
-    if (sectionParam && SECTIONS.some(s => s.id === sectionParam)) {
+    if (sectionParam && sections.some(s => s.id === sectionParam)) {
       setActiveTabId(sectionParam)
     }
-  }, [searchParams])
+  }, [searchParams, sections])
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
 
-  const activeSection = SECTIONS.find((s) => s.id === activeTabId) || SECTIONS[0]
+  const activeSection = sections.find((s) => s.id === activeTabId) || sections[0]
 
   return (
     <>
@@ -213,7 +245,7 @@ export function AboutUs() {
         {/* BOTONES NAVEGACIÓN */}
         <div className="relative z-20 w-full px-4 sm:px-8 mt-2 sm:mt-4 flex flex-col items-center">
           <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 max-w-6xl w-full">
-            {SECTIONS.map((section) => {
+            {sections.map((section) => {
               const isSelected = activeTabId === section.id
               return (
                 <button
