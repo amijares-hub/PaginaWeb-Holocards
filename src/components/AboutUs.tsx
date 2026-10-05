@@ -147,10 +147,10 @@ const SECTIONS: SectionData[] = [
     title: "ENVÍOS Y",
     highlight: "DEVOLUCIONES",
     icon: <Truck className="w-3.5 h-3.5 text-yellow-400" />,
-    shortDescription: "Envíos exclusivos a las Islas Canarias. Tarifas de 4,95€, envíos gratis a partir de 100€, plazos de 24/72h y política transparente sobre apertura de sobres.",
+    shortDescription: "Envíos exclusivos a las Islas Canarias. Tarifas de 5,95€, envíos gratis a partir de 50€, plazos de 24/72h y política transparente sobre apertura de sobres.",
     features: [
       { icon: <Truck className="w-4 h-4" />, title: "ENVÍOS CANARIAS", subtitle: "Tenerife 24-48h / Resto 24-72h" },
-      { icon: <Award className="w-4 h-4" />, title: "ENVÍO GRATIS >100€", subtitle: "Tarifa estándar 4,95€" }
+      { icon: <Award className="w-4 h-4" />, title: "ENVÍO GRATIS >50€", subtitle: "Tarifa estándar 5,95€" }
     ],
     fullContent: (
       <div className="space-y-4 text-gray-300 text-sm font-light leading-relaxed">
@@ -159,7 +159,7 @@ const SECTIONS: SectionData[] = [
           Realizamos envíos <strong>exclusivamente a todas las Islas Canarias</strong>. 
           <br />• <strong>Tenerife:</strong> 24 a 48 horas laborables.
           <br />• <strong>Resto de Islas Canarias:</strong> 24 a 72 horas laborables.
-          <br />Coste estándar de envío: <strong>4,95 €</strong>. ¡Envío <strong>GRATIS</strong> en pedidos superiores a 100 €!
+          <br />Coste estándar de envío: <strong>5,95 €</strong>. ¡Envío <strong>GRATIS</strong> en pedidos superiores a 50 €!
         </p>
         <h4 className="text-white font-bold text-base">2. Recepción e Incidencias</h4>
         <p>

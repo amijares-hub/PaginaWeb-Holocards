@@ -256,12 +256,13 @@ const CheckoutForm = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!stripe || !elements) return
+    if (!stripe || !elements || isProcessing) return
     
     setIsProcessing(true)
     setErrorMessage(null)
 
     try {
+      // 1. Guardar la orden principal en 'orders'
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -276,6 +277,7 @@ const CheckoutForm = ({
 
       if (orderError) throw orderError;
 
+      // 2. Mapear e insertar los ítems de la orden
       const orderItems = items.map(item => ({
         order_id: order.id,
         product_id: item.id,
@@ -287,9 +289,13 @@ const CheckoutForm = ({
         .from('order_items')
         .insert(orderItems)
 
-      if (itemsError) throw itemsError;
+      // SI FALLA LA INSERCIÓN DE PRODUCTOS, REVERTIR LA ORDEN HUÉRFANA
+      if (itemsError) {
+        await supabase.from('orders').delete().eq('id', order.id);
+        throw new Error("Error registrando los productos del pedido. Por favor, reintenta.");
+      }
 
-      // Descontar el stock (base_stock) de cada producto comprado según la cantidad (quantity)
+      // 3. Descontar el stock (base_stock) de cada producto comprado según la cantidad
       for (const item of items) {
         if (item.id) {
           const boughtQty = Math.max(1, Number(item.quantity) || 1);
@@ -437,7 +443,6 @@ export default function CheckoutPage() {
             province
           });
 
-          // Si el usuario registrado ya tiene su dirección/CP guardados, pasa directamente al paso de pago de Stripe
           if (address && city && postalCode) {
             setStep("payment");
           } else if (email) {
@@ -451,7 +456,6 @@ export default function CheckoutPage() {
     fetchUserAndPreFill();
   }, []);
 
-  // Autodetección reactiva cuando cambia el código postal
   useEffect(() => {
     const zip = shippingData.postalCode?.trim() || "";
     if (zip.length === 5) {
@@ -515,7 +519,7 @@ export default function CheckoutPage() {
             p_code: cleanCode,
             p_user_id: userProfile?.id || null,
             p_order_amount: subtotal || 1,
-            p_shipping_cost: 4.95
+            p_shipping_cost: 5.95
           })
 
           if (!rpcError && rpcData && rpcData.valid) {
@@ -608,8 +612,8 @@ export default function CheckoutPage() {
 
   const subtotalWithDiscount = Math.max(0, subtotal - discountAmount)
   const isFreeShippingByCoupon = appliedCoupon?.is_free_shipping || appliedCoupon?.discount_type === 'free_shipping'
-  const shippingCost = (isFreeShippingByCoupon || subtotalWithDiscount >= 100 || subtotalWithDiscount === 0) ? 0 : 4.95
-  const freeShippingThreshold = 100.00
+  const shippingCost = (isFreeShippingByCoupon || subtotalWithDiscount >= 50 || subtotalWithDiscount === 0) ? 0 : 5.95
+  const freeShippingThreshold = 50.00
   const remainingForFreeShipping = isFreeShippingByCoupon ? 0 : Math.max(0, freeShippingThreshold - subtotalWithDiscount)
   const total = subtotalWithDiscount + shippingCost
 

@@ -27,7 +27,7 @@ interface Product {
 }
 
 const SHIPPING_METHODS = [
-  { id: 'standard', name: 'Envío Estándar', price: 4.90, time: '3-5 días laborables' },
+  { id: 'standard', name: 'Envío Estándar', price: 5.95, time: '3-5 días laborables' },
   { id: 'express', name: 'Envío Express', price: 9.90, time: '1-2 días laborables' },
   { id: 'priority', name: 'Prioritario HoloCards', price: 14.90, time: 'Entrega 24h Garantizada' },
 ];
