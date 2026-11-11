@@ -277,22 +277,50 @@ const CheckoutForm = ({
 
       if (orderError) throw orderError;
 
-      // 2. Mapear e insertar los ítems de la orden
-      const orderItems = items.map(item => ({
+      // 2. Mapear e insertar los ítems de la orden de forma inteligente y resiliente
+      let itemsError: any = null;
+
+      // Intentar inserción con compatibilidad de nombres (price_at_purchase y price_at_time_of_purchase)
+      const orderItemsBoth = items.map(item => ({
         order_id: order.id,
         product_id: item.id,
         quantity: item.quantity,
-        price_at_purchase: item.price
-      }))
+        price_at_purchase: item.price,
+        price_at_time_of_purchase: item.price
+      }));
 
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems)
+      const resBoth = await supabase.from('order_items').insert(orderItemsBoth);
+      itemsError = resBoth.error;
 
-      // SI FALLA LA INSERCIÓN DE PRODUCTOS, REVERTIR LA ORDEN HUÉRFANA
+      // Si falla por columna no encontrada en el esquema, intentar solo con price_at_purchase
+      if (itemsError && (itemsError.code === 'PGRST204' || itemsError.message?.includes('column') || itemsError.message?.includes('schema'))) {
+        const orderItemsSingle1 = items.map(item => ({
+          order_id: order.id,
+          product_id: item.id,
+          quantity: item.quantity,
+          price_at_purchase: item.price
+        }));
+        const resSingle1 = await supabase.from('order_items').insert(orderItemsSingle1);
+        itemsError = resSingle1.error;
+
+        // Si vuelve a fallar por columna, intentar con price_at_time_of_purchase
+        if (itemsError && (itemsError.code === 'PGRST204' || itemsError.message?.includes('column') || itemsError.message?.includes('schema'))) {
+          const orderItemsSingle2 = items.map(item => ({
+            order_id: order.id,
+            product_id: item.id,
+            quantity: item.quantity,
+            price_at_time_of_purchase: item.price
+          }));
+          const resSingle2 = await supabase.from('order_items').insert(orderItemsSingle2);
+          itemsError = resSingle2.error;
+        }
+      }
+
+      // SI FALLA LA INSERCIÓN DE PRODUCTOS, REVERTIR LA ORDEN HUÉRFANA Y MOSTRAR DETALLE
       if (itemsError) {
+        console.error("Error al registrar order_items en Supabase:", itemsError);
         await supabase.from('orders').delete().eq('id', order.id);
-        throw new Error("Error registrando los productos del pedido. Por favor, reintenta.");
+        throw new Error(itemsError.message ? `Error en productos: ${itemsError.message}` : "Error registrando los productos del pedido. Por favor, reintenta.");
       }
 
       // 3. Descontar el stock (base_stock) de cada producto comprado según la cantidad
